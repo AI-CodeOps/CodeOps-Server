@@ -12,9 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
@@ -144,6 +147,42 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMissingParam(MissingServletRequestParameterException ex) {
         log.warn("Missing request parameter: {}", ex.getParameterName());
         return ResponseEntity.status(400).body(new ErrorResponse(400, "Missing required parameter: " + ex.getParameterName()));
+    }
+
+    /**
+     * Handles missing required request headers by returning a 400 response.
+     *
+     * @param ex the thrown missing request header exception
+     * @return a 400 response with an {@link ErrorResponse} body
+     */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingHeader(MissingRequestHeaderException ex) {
+        log.warn("Missing request header: {}", ex.getHeaderName());
+        return ResponseEntity.status(400).body(new ErrorResponse(400, "Missing required header: " + ex.getHeaderName()));
+    }
+
+    /**
+     * Handles type mismatch errors for request parameters (e.g., invalid UUID format).
+     *
+     * @param ex the thrown method argument type mismatch exception
+     * @return a 400 response with an {@link ErrorResponse} body
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.warn("Type mismatch for parameter '{}': {}", ex.getName(), ex.getValue());
+        return ResponseEntity.status(400).body(new ErrorResponse(400, "Invalid value for parameter '" + ex.getName() + "': " + ex.getValue()));
+    }
+
+    /**
+     * Handles unsupported HTTP methods by returning a 405 response.
+     *
+     * @param ex the thrown HTTP request method not supported exception
+     * @return a 405 response with an {@link ErrorResponse} body
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        log.warn("Method not supported: {}", ex.getMethod());
+        return ResponseEntity.status(405).body(new ErrorResponse(405, "HTTP method '" + ex.getMethod() + "' is not supported for this endpoint"));
     }
 
     /**

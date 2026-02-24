@@ -2,6 +2,9 @@ package com.codeops.config;
 
 import com.codeops.entity.*;
 import com.codeops.entity.enums.*;
+import com.codeops.logger.entity.*;
+import com.codeops.logger.entity.enums.*;
+import com.codeops.logger.repository.*;
 import com.codeops.registry.entity.*;
 import com.codeops.registry.entity.enums.*;
 import com.codeops.repository.*;
@@ -21,6 +24,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -67,6 +71,23 @@ public class DataSeeder implements CommandLineRunner {
     private final WorkstationProfileRepository workstationProfileRepository;
     private final InfraResourceRepository infraResourceRepository;
 
+    // Logger repositories
+    private final LogEntryRepository logEntryRepository;
+    private final LogSourceRepository logSourceRepository;
+    private final LogTrapRepository logTrapRepository;
+    private final TrapConditionRepository trapConditionRepository;
+    private final AlertChannelRepository alertChannelRepository;
+    private final AlertRuleRepository alertRuleRepository;
+    private final AlertHistoryRepository alertHistoryRepository;
+    private final MetricRepository metricRepository;
+    private final MetricSeriesRepository metricSeriesRepository;
+    private final DashboardRepository dashboardRepository;
+    private final DashboardWidgetRepository dashboardWidgetRepository;
+    private final TraceSpanRepository traceSpanRepository;
+    private final RetentionPolicyRepository retentionPolicyRepository;
+    private final AnomalyBaselineRepository anomalyBaselineRepository;
+    private final SavedQueryRepository savedQueryRepository;
+
     // Shared references across seed methods
     private User adam, sarah, mike;
     private Team team;
@@ -111,6 +132,7 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         seedRegistryData();
+        seedLoggerData();
     }
 
     private void seedUsers() {
@@ -1211,5 +1233,318 @@ public class DataSeeder implements CommandLineRunner {
                 .service(service).environment("local").configKey(key)
                 .configValue(value).configSource(ConfigSource.MANUAL)
                 .description(description).build();
+    }
+
+    // ── Logger Seed Data ──
+
+    private static final Random LOGGER_RANDOM = new Random(42);
+
+    private void seedLoggerData() {
+        if (logSourceRepository.count() > 0) {
+            log.info("Logger data already seeded — skipping");
+            return;
+        }
+        log.info("Seeding Logger data...");
+
+        UUID teamId = team.getId();
+        UUID userId = adam.getId();
+
+        List<LogSource> sources = seedLogSources(teamId);
+        seedLogEntries(sources, teamId);
+        List<LogTrap> traps = seedLogTraps(teamId, userId);
+        List<AlertChannel> channels = seedAlertChannels(teamId, userId);
+        seedAlertRules(traps, channels, teamId);
+        List<Metric> metrics = seedLoggerMetrics(teamId);
+        seedMetricSeries(metrics);
+        seedDashboards(teamId, userId);
+        seedRetentionPolicies(teamId, userId);
+        seedAnomalyBaselines(teamId);
+        seedTraceSpans(teamId);
+
+        log.info("Logger development data seeded successfully");
+    }
+
+    private List<LogSource> seedLogSources(UUID teamId) {
+        List<LogSource> sources = List.of(
+                LogSource.builder().name("codeops-server").environment("local").isActive(true).teamId(teamId).logCount(0L).build(),
+                LogSource.builder().name("codeops-registry").environment("local").isActive(true).teamId(teamId).logCount(0L).build(),
+                LogSource.builder().name("codeops-vault").environment("local").isActive(true).teamId(teamId).logCount(0L).build(),
+                LogSource.builder().name("codeops-courier").environment("local").isActive(true).teamId(teamId).logCount(0L).build(),
+                LogSource.builder().name("codeops-logger").environment("local").isActive(true).teamId(teamId).logCount(0L).build()
+        );
+        List<LogSource> saved = logSourceRepository.saveAll(sources);
+        log.info("Seeded {} log sources", saved.size());
+        return saved;
+    }
+
+    private void seedLogEntries(List<LogSource> sources, UUID teamId) {
+        Instant now = Instant.now();
+        List<LogEntry> entries = new ArrayList<>();
+        String[] infoMessages = {
+                "Application started successfully", "Health check passed", "Request processed",
+                "Cache refreshed", "Configuration loaded", "Scheduled task completed",
+                "Connection pool initialized", "JWT token validated", "API response sent",
+                "Metrics collected", "Session created", "Data synced", "Backup completed",
+                "Index rebuilt", "Queue drained", "Websocket connected", "File uploaded",
+                "Email sent", "Webhook delivered", "Rate limit reset"
+        };
+
+        for (int i = 0; i < 20; i++) {
+            LogSource source = sources.get(i % sources.size());
+            entries.add(LogEntry.builder()
+                    .source(source).level(LogLevel.INFO).message(infoMessages[i])
+                    .timestamp(now.minus(i * 15L, ChronoUnit.MINUTES))
+                    .serviceName(source.getName()).teamId(teamId)
+                    .loggerName("com.codeops." + source.getName().replace("codeops-", ""))
+                    .threadName("main").hostName("localhost").build());
+        }
+        for (int i = 0; i < 10; i++) {
+            LogSource source = sources.get(i % sources.size());
+            entries.add(LogEntry.builder()
+                    .source(source).level(LogLevel.DEBUG).message("Debug trace #" + i)
+                    .timestamp(now.minus(i * 30L, ChronoUnit.MINUTES))
+                    .serviceName(source.getName()).teamId(teamId).build());
+        }
+        for (int i = 0; i < 10; i++) {
+            LogSource source = sources.get(i % sources.size());
+            entries.add(LogEntry.builder()
+                    .source(source).level(LogLevel.WARN).message("High memory usage detected: " + (80 + i) + "%")
+                    .timestamp(now.minus(i * 45L, ChronoUnit.MINUTES))
+                    .serviceName(source.getName()).teamId(teamId).build());
+        }
+        for (int i = 0; i < 7; i++) {
+            LogSource source = sources.get(i % sources.size());
+            entries.add(LogEntry.builder()
+                    .source(source).level(LogLevel.ERROR).message("Connection timeout after 5000ms")
+                    .timestamp(now.minus(i * 60L, ChronoUnit.MINUTES))
+                    .serviceName(source.getName()).teamId(teamId)
+                    .exceptionClass("java.net.SocketTimeoutException")
+                    .exceptionMessage("Connection timed out")
+                    .stackTrace("java.net.SocketTimeoutException: Connection timed out\n\tat java.net.Socket.connect(Socket.java:600)").build());
+        }
+        for (int i = 0; i < 3; i++) {
+            LogSource source = sources.get(i % sources.size());
+            entries.add(LogEntry.builder()
+                    .source(source).level(LogLevel.FATAL).message("Out of memory error — JVM heap exhausted")
+                    .timestamp(now.minus(i * 120L, ChronoUnit.MINUTES))
+                    .serviceName(source.getName()).teamId(teamId)
+                    .exceptionClass("java.lang.OutOfMemoryError")
+                    .exceptionMessage("Java heap space").build());
+        }
+
+        logEntryRepository.saveAll(entries);
+        for (LogSource source : sources) {
+            long count = entries.stream().filter(e -> e.getSource().getId().equals(source.getId())).count();
+            source.setLogCount(count);
+            source.setLastLogReceivedAt(now);
+        }
+        logSourceRepository.saveAll(sources);
+        log.info("Seeded {} log entries", entries.size());
+    }
+
+    private List<LogTrap> seedLogTraps(UUID teamId, UUID userId) {
+        LogTrap highError = LogTrap.builder().name("High Error Rate").description("Triggers on repeated errors")
+                .trapType(TrapType.PATTERN).isActive(true).teamId(teamId).createdBy(userId).triggerCount(0L).build();
+        LogTrap fatal = LogTrap.builder().name("Fatal Alert").description("Triggers on any FATAL log")
+                .trapType(TrapType.PATTERN).isActive(true).teamId(teamId).createdBy(userId).triggerCount(0L).build();
+        LogTrap authFail = LogTrap.builder().name("Auth Failures").description("Triggers on authentication failures")
+                .trapType(TrapType.FREQUENCY).isActive(true).teamId(teamId).createdBy(userId).triggerCount(0L).build();
+
+        List<LogTrap> traps = logTrapRepository.saveAll(List.of(highError, fatal, authFail));
+
+        trapConditionRepository.saveAll(List.of(
+                TrapCondition.builder().trap(traps.get(0)).conditionType(ConditionType.REGEX)
+                        .field("message").pattern("(?i)(error|exception|fail)").build(),
+                TrapCondition.builder().trap(traps.get(0)).conditionType(ConditionType.KEYWORD)
+                        .field("level").pattern("ERROR").build(),
+                TrapCondition.builder().trap(traps.get(1)).conditionType(ConditionType.KEYWORD)
+                        .field("level").pattern("FATAL").build(),
+                TrapCondition.builder().trap(traps.get(2)).conditionType(ConditionType.FREQUENCY_THRESHOLD)
+                        .field("message").pattern("authentication failed").threshold(5).windowSeconds(300).build()
+        ));
+        log.info("Seeded {} log traps with conditions", traps.size());
+        return traps;
+    }
+
+    private List<AlertChannel> seedAlertChannels(UUID teamId, UUID userId) {
+        List<AlertChannel> channels = alertChannelRepository.saveAll(List.of(
+                AlertChannel.builder().name("Dev Email").channelType(AlertChannelType.EMAIL)
+                        .configuration("{\"recipients\":[\"dev@codeops.dev\"]}")
+                        .isActive(true).teamId(teamId).createdBy(userId).build(),
+                AlertChannel.builder().name("Ops Webhook").channelType(AlertChannelType.WEBHOOK)
+                        .configuration("{\"url\":\"https://hooks.example.com/codeops\"}")
+                        .isActive(true).teamId(teamId).createdBy(userId).build(),
+                AlertChannel.builder().name("Slack Alerts").channelType(AlertChannelType.SLACK)
+                        .configuration("{\"webhook_url\":\"https://hooks.slack.com/services/FAKE/FAKE/FAKE\"}")
+                        .isActive(true).teamId(teamId).createdBy(userId).build()
+        ));
+        log.info("Seeded {} alert channels", channels.size());
+        return channels;
+    }
+
+    private void seedAlertRules(List<LogTrap> traps, List<AlertChannel> channels, UUID teamId) {
+        alertRuleRepository.saveAll(List.of(
+                AlertRule.builder().name("High Error Rate -> Slack").trap(traps.get(0)).channel(channels.get(2))
+                        .severity(AlertSeverity.WARNING).isActive(true).throttleMinutes(15).teamId(teamId).build(),
+                AlertRule.builder().name("Fatal Alert -> Email").trap(traps.get(1)).channel(channels.get(0))
+                        .severity(AlertSeverity.CRITICAL).isActive(true).throttleMinutes(5).teamId(teamId).build()
+        ));
+        log.info("Seeded 2 alert rules");
+    }
+
+    private List<Metric> seedLoggerMetrics(UUID teamId) {
+        List<Metric> metrics = metricRepository.saveAll(List.of(
+                Metric.builder().name("http_requests_total").metricType(MetricType.COUNTER)
+                        .description("Total HTTP requests").unit("requests").serviceName("codeops-server").teamId(teamId).build(),
+                Metric.builder().name("active_connections").metricType(MetricType.GAUGE)
+                        .description("Active database connections").unit("connections").serviceName("codeops-server").teamId(teamId).build(),
+                Metric.builder().name("response_time_ms").metricType(MetricType.TIMER)
+                        .description("API response time").unit("ms").serviceName("codeops-server").teamId(teamId).build(),
+                Metric.builder().name("request_size_bytes").metricType(MetricType.HISTOGRAM)
+                        .description("Request body size distribution").unit("bytes").serviceName("codeops-server").teamId(teamId).build(),
+                Metric.builder().name("cache_hit_ratio").metricType(MetricType.GAUGE)
+                        .description("Cache hit ratio").unit("ratio").serviceName("codeops-server").teamId(teamId).build(),
+                Metric.builder().name("queue_depth").metricType(MetricType.GAUGE)
+                        .description("Message queue depth").unit("messages").serviceName("codeops-server").teamId(teamId).build()
+        ));
+        log.info("Seeded {} metrics", metrics.size());
+        return metrics;
+    }
+
+    private void seedMetricSeries(List<Metric> metrics) {
+        Instant now = Instant.now();
+        List<MetricSeries> allSeries = new ArrayList<>();
+        for (Metric metric : metrics) {
+            for (int h = 0; h < 24; h++) {
+                allSeries.add(MetricSeries.builder()
+                        .metric(metric).timestamp(now.minus(h, ChronoUnit.HOURS))
+                        .value(generateMetricValue(metric.getName(), h)).resolution(3600).build());
+            }
+        }
+        metricSeriesRepository.saveAll(allSeries);
+        log.info("Seeded {} metric series data points", allSeries.size());
+    }
+
+    private double generateMetricValue(String metricName, int hour) {
+        return switch (metricName) {
+            case "http_requests_total" -> 1000 + 500 * Math.sin(hour * Math.PI / 12) + LOGGER_RANDOM.nextInt(100);
+            case "active_connections" -> 20 + 10 * Math.sin(hour * Math.PI / 12) + LOGGER_RANDOM.nextInt(5);
+            case "response_time_ms" -> 50 + 30 * Math.sin(hour * Math.PI / 12) + LOGGER_RANDOM.nextInt(20);
+            case "request_size_bytes" -> 2048 + 1024 * Math.sin(hour * Math.PI / 12) + LOGGER_RANDOM.nextInt(512);
+            case "cache_hit_ratio" -> 0.85 + 0.1 * Math.sin(hour * Math.PI / 12) + LOGGER_RANDOM.nextDouble() * 0.05;
+            case "queue_depth" -> 5 + 3 * Math.sin(hour * Math.PI / 12) + LOGGER_RANDOM.nextInt(3);
+            default -> LOGGER_RANDOM.nextDouble() * 100;
+        };
+    }
+
+    private void seedDashboards(UUID teamId, UUID userId) {
+        Dashboard ops = dashboardRepository.save(Dashboard.builder()
+                .name("Operations Overview").description("Real-time operations monitoring")
+                .teamId(teamId).createdBy(userId).isShared(true).isTemplate(false)
+                .refreshIntervalSeconds(30).build());
+
+        dashboardWidgetRepository.saveAll(List.of(
+                DashboardWidget.builder().dashboard(ops).title("Error Rate").widgetType(WidgetType.TIME_SERIES_CHART)
+                        .gridX(0).gridY(0).gridWidth(6).gridHeight(3).sortOrder(0).build(),
+                DashboardWidget.builder().dashboard(ops).title("Active Connections").widgetType(WidgetType.GAUGE)
+                        .gridX(6).gridY(0).gridWidth(3).gridHeight(3).sortOrder(1).build(),
+                DashboardWidget.builder().dashboard(ops).title("Request Volume").widgetType(WidgetType.COUNTER)
+                        .gridX(9).gridY(0).gridWidth(3).gridHeight(3).sortOrder(2).build(),
+                DashboardWidget.builder().dashboard(ops).title("Recent Errors").widgetType(WidgetType.LOG_STREAM)
+                        .gridX(0).gridY(3).gridWidth(12).gridHeight(4).sortOrder(3).build()
+        ));
+
+        Dashboard healthTpl = dashboardRepository.save(Dashboard.builder()
+                .name("Service Health Template").description("Template for service health monitoring")
+                .teamId(teamId).createdBy(userId).isShared(true).isTemplate(true)
+                .refreshIntervalSeconds(60).build());
+
+        dashboardWidgetRepository.saveAll(List.of(
+                DashboardWidget.builder().dashboard(healthTpl).title("Response Time P95").widgetType(WidgetType.TIME_SERIES_CHART)
+                        .gridX(0).gridY(0).gridWidth(6).gridHeight(3).sortOrder(0).build(),
+                DashboardWidget.builder().dashboard(healthTpl).title("Error Count").widgetType(WidgetType.COUNTER)
+                        .gridX(6).gridY(0).gridWidth(3).gridHeight(3).sortOrder(1).build(),
+                DashboardWidget.builder().dashboard(healthTpl).title("Recent Logs").widgetType(WidgetType.LOG_STREAM)
+                        .gridX(0).gridY(3).gridWidth(12).gridHeight(4).sortOrder(2).build()
+        ));
+        log.info("Seeded 2 dashboards with 7 widgets");
+    }
+
+    private void seedRetentionPolicies(UUID teamId, UUID userId) {
+        retentionPolicyRepository.saveAll(List.of(
+                RetentionPolicy.builder().name("Debug Log Cleanup").retentionDays(7)
+                        .action(RetentionAction.PURGE).logLevel(LogLevel.DEBUG)
+                        .isActive(true).teamId(teamId).createdBy(userId).build(),
+                RetentionPolicy.builder().name("Error Log Archive").retentionDays(90)
+                        .action(RetentionAction.ARCHIVE).logLevel(LogLevel.ERROR)
+                        .archiveDestination("s3://codeops-archive/logs/errors/")
+                        .isActive(true).teamId(teamId).createdBy(userId).build(),
+                RetentionPolicy.builder().name("Default Retention").retentionDays(30)
+                        .action(RetentionAction.PURGE)
+                        .isActive(true).teamId(teamId).createdBy(userId).build()
+        ));
+        log.info("Seeded 3 retention policies");
+    }
+
+    private void seedAnomalyBaselines(UUID teamId) {
+        Instant now = Instant.now();
+        anomalyBaselineRepository.saveAll(List.of(
+                AnomalyBaseline.builder().serviceName("codeops-server").metricName("log_volume")
+                        .baselineValue(150.0).standardDeviation(25.0).sampleCount(168L)
+                        .windowStartTime(now.minus(7, ChronoUnit.DAYS)).windowEndTime(now)
+                        .deviationThreshold(2.0).isActive(true).teamId(teamId).lastComputedAt(now).build(),
+                AnomalyBaseline.builder().serviceName("codeops-server").metricName("error_rate")
+                        .baselineValue(2.5).standardDeviation(1.0).sampleCount(168L)
+                        .windowStartTime(now.minus(7, ChronoUnit.DAYS)).windowEndTime(now)
+                        .deviationThreshold(2.5).isActive(true).teamId(teamId).lastComputedAt(now).build()
+        ));
+        log.info("Seeded 2 anomaly baselines");
+    }
+
+    private void seedTraceSpans(UUID teamId) {
+        Instant now = Instant.now();
+        String corrId1 = "corr-trace-001";
+        String traceId1 = "trace-001";
+
+        traceSpanRepository.saveAll(List.of(
+                TraceSpan.builder().correlationId(corrId1).traceId(traceId1).spanId("span-001")
+                        .serviceName("codeops-server").operationName("POST /api/v1/jobs")
+                        .startTime(now.minus(1, ChronoUnit.HOURS)).endTime(now.minus(1, ChronoUnit.HOURS).plusMillis(250))
+                        .durationMs(250L).status(SpanStatus.OK).teamId(teamId).build(),
+                TraceSpan.builder().correlationId(corrId1).traceId(traceId1).spanId("span-002").parentSpanId("span-001")
+                        .serviceName("codeops-server").operationName("AuthService.validate")
+                        .startTime(now.minus(1, ChronoUnit.HOURS).plusMillis(5)).endTime(now.minus(1, ChronoUnit.HOURS).plusMillis(30))
+                        .durationMs(25L).status(SpanStatus.OK).teamId(teamId).build(),
+                TraceSpan.builder().correlationId(corrId1).traceId(traceId1).spanId("span-003").parentSpanId("span-001")
+                        .serviceName("codeops-server").operationName("QaJobService.create")
+                        .startTime(now.minus(1, ChronoUnit.HOURS).plusMillis(35)).endTime(now.minus(1, ChronoUnit.HOURS).plusMillis(200))
+                        .durationMs(165L).status(SpanStatus.OK).teamId(teamId).build(),
+                TraceSpan.builder().correlationId(corrId1).traceId(traceId1).spanId("span-004").parentSpanId("span-003")
+                        .serviceName("codeops-server").operationName("PostgreSQL INSERT")
+                        .startTime(now.minus(1, ChronoUnit.HOURS).plusMillis(40)).endTime(now.minus(1, ChronoUnit.HOURS).plusMillis(55))
+                        .durationMs(15L).status(SpanStatus.OK).teamId(teamId).build(),
+                TraceSpan.builder().correlationId(corrId1).traceId(traceId1).spanId("span-005").parentSpanId("span-003")
+                        .serviceName("codeops-server").operationName("Kafka PRODUCE codeops-logs")
+                        .startTime(now.minus(1, ChronoUnit.HOURS).plusMillis(60)).endTime(now.minus(1, ChronoUnit.HOURS).plusMillis(75))
+                        .durationMs(15L).status(SpanStatus.OK).teamId(teamId).build()
+        ));
+
+        String corrId2 = "corr-trace-002";
+        String traceId2 = "trace-002";
+        traceSpanRepository.saveAll(List.of(
+                TraceSpan.builder().correlationId(corrId2).traceId(traceId2).spanId("span-010")
+                        .serviceName("codeops-server").operationName("GET /api/v1/projects/999")
+                        .startTime(now.minus(30, ChronoUnit.MINUTES)).endTime(now.minus(30, ChronoUnit.MINUTES).plusMillis(120))
+                        .durationMs(120L).status(SpanStatus.ERROR).statusMessage("404 Not Found").teamId(teamId).build(),
+                TraceSpan.builder().correlationId(corrId2).traceId(traceId2).spanId("span-011").parentSpanId("span-010")
+                        .serviceName("codeops-server").operationName("ProjectService.findById")
+                        .startTime(now.minus(30, ChronoUnit.MINUTES).plusMillis(10)).endTime(now.minus(30, ChronoUnit.MINUTES).plusMillis(100))
+                        .durationMs(90L).status(SpanStatus.ERROR).statusMessage("Project not found").teamId(teamId).build(),
+                TraceSpan.builder().correlationId(corrId2).traceId(traceId2).spanId("span-012").parentSpanId("span-011")
+                        .serviceName("codeops-server").operationName("PostgreSQL SELECT")
+                        .startTime(now.minus(30, ChronoUnit.MINUTES).plusMillis(15)).endTime(now.minus(30, ChronoUnit.MINUTES).plusMillis(25))
+                        .durationMs(10L).status(SpanStatus.OK).teamId(teamId).build()
+        ));
+        log.info("Seeded 8 trace spans across 2 traces");
     }
 }

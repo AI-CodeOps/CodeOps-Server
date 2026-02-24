@@ -111,4 +111,54 @@ public final class AppConstants {
     public static final String TOPOLOGY_LAYER_FRONTEND = "frontend";
     public static final String TOPOLOGY_LAYER_GATEWAY = "gateway";
     public static final String TOPOLOGY_LAYER_STANDALONE = "standalone";
+
+    // ── Logger Constants ──
+
+    // Logger API prefix
+    public static final String API_PREFIX = "/api/v1/logger";
+
+    // Log ingestion
+    public static final int MAX_BATCH_SIZE = 1000;
+    public static final int MAX_LOG_MESSAGE_LENGTH = 65_536;
+    public static final int MAX_CUSTOM_FIELDS = 50;
+
+    // Kafka topics
+    public static final String KAFKA_LOG_TOPIC = "codeops-logs";
+    public static final String KAFKA_METRICS_TOPIC = "codeops-metrics";
+    public static final String KAFKA_CONSUMER_GROUP = "codeops-logger";
+
+    // Retention
+    public static final int DEFAULT_RETENTION_DAYS = 30;
+    public static final int MAX_RETENTION_DAYS = 365;
+    public static final int MIN_RETENTION_DAYS = 1;
+
+    // Query
+    public static final int MAX_QUERY_RESULTS = 10_000;
+    public static final int DEFAULT_QUERY_LIMIT = 100;
+    public static final int MAX_QUERY_TIME_RANGE_DAYS = 90;
+
+    // Metrics resolution
+    public static final int DEFAULT_METRIC_RESOLUTION_SECONDS = 60;
+    public static final int MIN_METRIC_RESOLUTION_SECONDS = 10;
+    public static final int MAX_METRIC_RESOLUTION_SECONDS = 3600;
+
+    // Dashboards
+    public static final int MAX_WIDGETS_PER_DASHBOARD = 20;
+    public static final int MAX_DASHBOARDS_PER_TEAM = 50;
+    public static final int DEFAULT_REFRESH_INTERVAL_SECONDS = 30;
+
+    // Traps
+    public static final int MAX_TRAPS_PER_TEAM = 100;
+    public static final int MAX_TRAP_CONDITIONS = 10;
+
+    // Alerts
+    public static final int DEFAULT_THROTTLE_MINUTES = 5;
+    public static final int MAX_ALERT_CHANNELS = 20;
+
+    // Anomaly detection
+    public static final int DEFAULT_BASELINE_WINDOW_HOURS = 168;
+    public static final double DEFAULT_DEVIATION_THRESHOLD = 2.0;
+
+    // Timeouts
+    public static final int REQUEST_TIMEOUT_SECONDS = 30;
 }
