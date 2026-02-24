@@ -23,7 +23,7 @@ import java.util.UUID;
  * Supports single and batch ingestion of log entries.
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/logs")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/logs")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Log Ingestion", description = "Ingest log entries via HTTP push")

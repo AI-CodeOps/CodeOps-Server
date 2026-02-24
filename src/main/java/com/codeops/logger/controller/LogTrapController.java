@@ -25,7 +25,7 @@ import java.util.UUID;
  * REST controller for managing log traps and testing trap definitions.
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/traps")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/traps")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Log Traps", description = "Manage log traps and test definitions")

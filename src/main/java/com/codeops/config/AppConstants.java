@@ -116,8 +116,6 @@ public final class AppConstants {
 
     // Logger API prefix
     public static final String LOGGER_API_PREFIX = "/api/v1/logger";
-    /** @deprecated Use LOGGER_API_PREFIX — kept for backward compatibility */
-    public static final String API_PREFIX = LOGGER_API_PREFIX;
 
     // Log ingestion
     public static final int MAX_BATCH_SIZE = 1000;

@@ -25,7 +25,7 @@ import java.util.UUID;
  * Supports baseline CRUD, single-metric anomaly checks, and full team reports.
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/anomalies")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/anomalies")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Anomaly Detection", description = "Anomaly baselines, checks, and reports")

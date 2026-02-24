@@ -31,7 +31,7 @@ import java.util.UUID;
  * Supports dashboard CRUD, widget management, layouts, templates, and duplication.
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/dashboards")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/dashboards")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Dashboards", description = "Dashboard CRUD, widget management, templates, and layouts")

@@ -23,7 +23,7 @@ import java.util.UUID;
  * REST controller for managing log sources (registered services/applications).
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/sources")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/sources")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Log Sources", description = "Manage log sources (services)")

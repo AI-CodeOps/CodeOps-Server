@@ -30,7 +30,7 @@ import java.util.UUID;
  * root cause analysis, and trace listing.
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/traces")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/traces")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Traces", description = "Distributed tracing: span ingestion, flow visualization, and analysis")

@@ -28,7 +28,7 @@ import java.util.UUID;
  * REST controller for log querying, saved queries, and query history.
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/logs")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/logs")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Log Query", description = "Query, search, and manage saved queries")

@@ -26,7 +26,7 @@ import java.util.UUID;
  * Supports CRUD operations on retention policies, manual execution, and storage usage.
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/retention")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/retention")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Retention", description = "Data retention policy management and storage monitoring")

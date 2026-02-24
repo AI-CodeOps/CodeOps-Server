@@ -33,7 +33,7 @@ import java.util.UUID;
  * REST controller for managing alert channels, rules, and alert history.
  */
 @RestController
-@RequestMapping(AppConstants.API_PREFIX + "/alerts")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/alerts")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Alerts", description = "Manage alert channels, rules, and history")

@@ -33,7 +33,7 @@ import java.util.UUID;
  * Supports metric registration, data push, time-series queries, and aggregations.
  */
 @RestController("loggerMetricsController")
-@RequestMapping(AppConstants.API_PREFIX + "/metrics")
+@RequestMapping(AppConstants.LOGGER_API_PREFIX + "/metrics")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Metrics", description = "Application metrics registration, data ingestion, and querying")
