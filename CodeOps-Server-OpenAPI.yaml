@@ -4080,3 +4080,3468 @@ paths:
               schema: {$ref: '#/components/schemas/TrapTestResult'}
         '401': {description: Unauthorized}
       security: [{bearerAuth: []}]
+
+  # ============================================================
+  # LOGGER MODULE - Dashboard Controller (18 endpoints)
+  # ============================================================
+  /api/v1/logger/dashboards:
+    post:
+      tags: [Logger - Dashboards]
+      operationId: createDashboard
+      summary: Create a dashboard
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateDashboardRequest'}
+      responses:
+        '201':
+          description: Dashboard created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '400': {description: Validation error}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+    get:
+      tags: [Logger - Dashboards]
+      operationId: listDashboards
+      summary: List all dashboards for the team
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: List of dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/paged:
+    get:
+      tags: [Logger - Dashboards]
+      operationId: listDashboardsPaged
+      summary: List dashboards with pagination
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: page, in: query, schema: {type: integer, default: 0}}
+        - {name: size, in: query, schema: {type: integer, default: 20}}
+      responses:
+        '200':
+          description: Paginated dashboards
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageResponseDashboardResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/shared:
+    get:
+      tags: [Logger - Dashboards]
+      operationId: listSharedDashboards
+      summary: List shared dashboards
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Shared dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/mine:
+    get:
+      tags: [Logger - Dashboards]
+      operationId: listMyDashboards
+      summary: List dashboards created by current user
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: User dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/{dashboardId}:
+    get:
+      tags: [Logger - Dashboards]
+      operationId: getDashboard
+      summary: Get a dashboard by ID
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Dashboard
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    put:
+      tags: [Logger - Dashboards]
+      operationId: updateDashboard
+      summary: Update a dashboard
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateDashboardRequest'}
+      responses:
+        '200':
+          description: Dashboard updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Logger - Dashboards]
+      operationId: deleteDashboard
+      summary: Delete a dashboard
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Dashboard deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/{dashboardId}/widgets:
+    post:
+      tags: [Logger - Dashboards]
+      operationId: addDashboardWidget
+      summary: Add a widget to a dashboard
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateDashboardWidgetRequest'}
+      responses:
+        '201':
+          description: Widget added
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardWidgetResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/{dashboardId}/widgets/{widgetId}:
+    put:
+      tags: [Logger - Dashboards]
+      operationId: updateDashboardWidget
+      summary: Update a dashboard widget
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: widgetId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateDashboardWidgetRequest'}
+      responses:
+        '200':
+          description: Widget updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardWidgetResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Logger - Dashboards]
+      operationId: removeDashboardWidget
+      summary: Remove a widget from a dashboard
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: widgetId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Widget removed}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/{dashboardId}/widgets/reorder:
+    put:
+      tags: [Logger - Dashboards]
+      operationId: reorderDashboardWidgets
+      summary: Reorder dashboard widgets
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ReorderWidgetsRequest'}
+      responses:
+        '200':
+          description: Widgets reordered
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/{dashboardId}/layout:
+    put:
+      tags: [Logger - Dashboards]
+      operationId: updateDashboardLayout
+      summary: Update dashboard layout (widget positions)
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateLayoutRequest'}
+      responses:
+        '200':
+          description: Layout updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/{dashboardId}/template:
+    post:
+      tags: [Logger - Dashboards]
+      operationId: markAsTemplate
+      summary: Mark dashboard as a template
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Dashboard marked as template
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Logger - Dashboards]
+      operationId: unmarkAsTemplate
+      summary: Unmark dashboard as template
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Dashboard unmarked as template
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/templates:
+    get:
+      tags: [Logger - Dashboards]
+      operationId: listDashboardTemplates
+      summary: List dashboard templates
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Dashboard templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/from-template:
+    post:
+      tags: [Logger - Dashboards]
+      operationId: createDashboardFromTemplate
+      summary: Create a dashboard from a template
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateFromTemplateRequest'}
+      responses:
+        '201':
+          description: Dashboard created from template
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Template not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/dashboards/{dashboardId}/duplicate:
+    post:
+      tags: [Logger - Dashboards]
+      operationId: duplicateDashboard
+      summary: Duplicate a dashboard
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: dashboardId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '201':
+          description: Dashboard duplicated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DashboardResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # LOGGER MODULE - Metrics Controller (14 endpoints)
+  # ============================================================
+  /api/v1/logger/metrics:
+    post:
+      tags: [Logger - Metrics]
+      operationId: registerMetric
+      summary: Register a metric (idempotent)
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RegisterMetricRequest'}
+      responses:
+        '201':
+          description: Metric registered
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MetricResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+    get:
+      tags: [Logger - Metrics]
+      operationId: listMetrics
+      summary: List all metrics for the team
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: List of metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/MetricResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/paged:
+    get:
+      tags: [Logger - Metrics]
+      operationId: listMetricsPaged
+      summary: List metrics with pagination
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: page, in: query, schema: {type: integer, default: 0}}
+        - {name: size, in: query, schema: {type: integer, default: 20}}
+      responses:
+        '200':
+          description: Paginated metrics
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageResponseMetricResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/service/{serviceName}:
+    get:
+      tags: [Logger - Metrics]
+      operationId: listMetricsByService
+      summary: List metrics for a specific service
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: serviceName, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Metrics for service
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/MetricResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/service/{serviceName}/summary:
+    get:
+      tags: [Logger - Metrics]
+      operationId: getServiceMetricsSummary
+      summary: Get metrics summary for a service
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: serviceName, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Service metrics summary
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceMetricsSummaryResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/{metricId}:
+    get:
+      tags: [Logger - Metrics]
+      operationId: getMetric
+      summary: Get a metric by ID
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: metricId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Metric
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MetricResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    put:
+      tags: [Logger - Metrics]
+      operationId: updateMetric
+      summary: Update a metric
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: metricId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateMetricRequest'}
+      responses:
+        '200':
+          description: Metric updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MetricResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Logger - Metrics]
+      operationId: deleteMetric
+      summary: Delete a metric
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: metricId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Metric deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/data:
+    post:
+      tags: [Logger - Metrics]
+      operationId: pushMetricData
+      summary: Push metric data points
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PushMetricDataRequest'}
+      responses:
+        '201':
+          description: Data points ingested
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ingested: {type: integer}
+                  total: {type: integer}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/{metricId}/timeseries:
+    get:
+      tags: [Logger - Metrics]
+      operationId: getMetricTimeSeries
+      summary: Get metric time series data
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: metricId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: startTime, in: query, required: true, schema: {type: string, format: date-time}}
+        - {name: endTime, in: query, required: true, schema: {type: string, format: date-time}}
+      responses:
+        '200':
+          description: Time series data
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MetricTimeSeriesResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/{metricId}/timeseries/aggregated:
+    get:
+      tags: [Logger - Metrics]
+      operationId: getMetricTimeSeriesAggregated
+      summary: Get aggregated metric time series data
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: metricId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: startTime, in: query, required: true, schema: {type: string, format: date-time}}
+        - {name: endTime, in: query, required: true, schema: {type: string, format: date-time}}
+        - {name: resolution, in: query, required: true, schema: {type: integer, minimum: 10, maximum: 3600}}
+      responses:
+        '200':
+          description: Aggregated time series
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MetricTimeSeriesResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/{metricId}/aggregation:
+    get:
+      tags: [Logger - Metrics]
+      operationId: getMetricAggregation
+      summary: Get metric aggregation (sum, avg, min, max, percentiles)
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: metricId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: startTime, in: query, required: true, schema: {type: string, format: date-time}}
+        - {name: endTime, in: query, required: true, schema: {type: string, format: date-time}}
+      responses:
+        '200':
+          description: Metric aggregation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MetricAggregationResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/{metricId}/latest:
+    get:
+      tags: [Logger - Metrics]
+      operationId: getLatestMetricValue
+      summary: Get latest metric data point
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: metricId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Latest data point
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MetricDataPointResponse'}
+        '204': {description: No data points}
+        '401': {description: Unauthorized}
+        '404': {description: Metric not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/metrics/service/{serviceName}/latest:
+    get:
+      tags: [Logger - Metrics]
+      operationId: getLatestMetricValuesByService
+      summary: Get latest values for all metrics of a service
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: serviceName, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Latest values map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {type: number, format: double}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # LOGGER MODULE - Trace Controller (11 endpoints)
+  # ============================================================
+  /api/v1/logger/traces/spans:
+    post:
+      tags: [Logger - Traces]
+      operationId: createTraceSpan
+      summary: Create a trace span
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateTraceSpanRequest'}
+      responses:
+        '201':
+          description: Span created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TraceSpanResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/spans/batch:
+    post:
+      tags: [Logger - Traces]
+      operationId: createTraceSpanBatch
+      summary: Create trace spans in batch
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: {$ref: '#/components/schemas/CreateTraceSpanRequest'}
+      responses:
+        '201':
+          description: Spans created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created: {type: integer}
+                  total: {type: integer}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/spans/{spanId}:
+    get:
+      tags: [Logger - Traces]
+      operationId: getTraceSpan
+      summary: Get a trace span by ID
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: spanId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Trace span
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TraceSpanResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/flow/{correlationId}:
+    get:
+      tags: [Logger - Traces]
+      operationId: getTraceFlow
+      summary: Get trace flow by correlation ID
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: correlationId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Trace flow
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TraceFlowResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/flow/by-trace-id/{traceId}:
+    get:
+      tags: [Logger - Traces]
+      operationId: getTraceFlowByTraceId
+      summary: Get trace flow by trace ID
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: traceId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Trace flow
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TraceFlowResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/waterfall/{correlationId}:
+    get:
+      tags: [Logger - Traces]
+      operationId: getTraceWaterfall
+      summary: Get trace waterfall visualization data
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: correlationId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Trace waterfall
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TraceWaterfallResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/rca/{correlationId}:
+    get:
+      tags: [Logger - Traces]
+      operationId: getRootCauseAnalysis
+      summary: Get root cause analysis for a trace
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: correlationId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Root cause analysis
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RootCauseAnalysisResponse'}
+        '204': {description: No root cause found}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces:
+    get:
+      tags: [Logger - Traces]
+      operationId: listRecentTraces
+      summary: List recent traces
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: page, in: query, schema: {type: integer, default: 0}}
+        - {name: size, in: query, schema: {type: integer, default: 20}}
+      responses:
+        '200':
+          description: Recent traces
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageResponseTraceListResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/service/{serviceName}:
+    get:
+      tags: [Logger - Traces]
+      operationId: listTracesByService
+      summary: List traces by service name
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: serviceName, in: path, required: true, schema: {type: string}}
+        - {name: page, in: query, schema: {type: integer, default: 0}}
+        - {name: size, in: query, schema: {type: integer, default: 20}}
+      responses:
+        '200':
+          description: Traces for service
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageResponseTraceListResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/errors:
+    get:
+      tags: [Logger - Traces]
+      operationId: listErrorTraces
+      summary: List traces with errors
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Error traces
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/TraceListResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/traces/{correlationId}/logs:
+    get:
+      tags: [Logger - Traces]
+      operationId: getRelatedLogEntries
+      summary: Get log entry IDs related to a trace
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: correlationId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Related log entry IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {type: string, format: uuid}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # LOGGER MODULE - Anomaly Controller (8 endpoints)
+  # ============================================================
+  /api/v1/logger/anomalies/baselines:
+    post:
+      tags: [Logger - Anomalies]
+      operationId: createAnomalyBaseline
+      summary: Create or update an anomaly baseline
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateBaselineRequest'}
+      responses:
+        '201':
+          description: Baseline created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AnomalyBaselineResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+    get:
+      tags: [Logger - Anomalies]
+      operationId: listAnomalyBaselines
+      summary: List anomaly baselines for the team
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: List of baselines
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/AnomalyBaselineResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/anomalies/baselines/service/{serviceName}:
+    get:
+      tags: [Logger - Anomalies]
+      operationId: listBaselinesByService
+      summary: List anomaly baselines for a service
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: serviceName, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Baselines for service
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/AnomalyBaselineResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/anomalies/baselines/{baselineId}:
+    get:
+      tags: [Logger - Anomalies]
+      operationId: getAnomalyBaseline
+      summary: Get an anomaly baseline by ID
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: baselineId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Anomaly baseline
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AnomalyBaselineResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    put:
+      tags: [Logger - Anomalies]
+      operationId: updateAnomalyBaseline
+      summary: Update an anomaly baseline
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: baselineId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateBaselineRequest'}
+      responses:
+        '200':
+          description: Baseline updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AnomalyBaselineResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Logger - Anomalies]
+      operationId: deleteAnomalyBaseline
+      summary: Delete an anomaly baseline
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: baselineId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Baseline deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/anomalies/check:
+    get:
+      tags: [Logger - Anomalies]
+      operationId: checkAnomaly
+      summary: Check for anomaly on a specific service metric
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: serviceName, in: query, required: true, schema: {type: string}}
+        - {name: metricName, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Anomaly check result
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AnomalyCheckResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/anomalies/report:
+    get:
+      tags: [Logger - Anomalies]
+      operationId: getAnomalyReport
+      summary: Get full anomaly report for the team
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Anomaly report
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AnomalyReportResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # LOGGER MODULE - Retention Controller (8 endpoints)
+  # ============================================================
+  /api/v1/logger/retention/policies:
+    post:
+      tags: [Logger - Retention]
+      operationId: createRetentionPolicy
+      summary: Create a retention policy
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateRetentionPolicyRequest'}
+      responses:
+        '201':
+          description: Policy created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RetentionPolicyResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+    get:
+      tags: [Logger - Retention]
+      operationId: listRetentionPolicies
+      summary: List retention policies
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: List of retention policies
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/RetentionPolicyResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/retention/policies/{policyId}:
+    get:
+      tags: [Logger - Retention]
+      operationId: getRetentionPolicy
+      summary: Get a retention policy by ID
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: policyId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Retention policy
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RetentionPolicyResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    put:
+      tags: [Logger - Retention]
+      operationId: updateRetentionPolicy
+      summary: Update a retention policy
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: policyId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateRetentionPolicyRequest'}
+      responses:
+        '200':
+          description: Policy updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RetentionPolicyResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Logger - Retention]
+      operationId: deleteRetentionPolicy
+      summary: Delete a retention policy
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: policyId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Policy deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/retention/policies/{policyId}/toggle:
+    put:
+      tags: [Logger - Retention]
+      operationId: toggleRetentionPolicy
+      summary: Toggle a retention policy active/inactive
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: policyId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Policy toggled
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RetentionPolicyResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/retention/policies/{policyId}/execute:
+    post:
+      tags: [Logger - Retention]
+      operationId: executeRetentionPolicy
+      summary: Manually execute a retention policy
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+        - {name: policyId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Policy executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: string}
+                  policyId: {type: string}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/logger/retention/storage:
+    get:
+      tags: [Logger - Retention]
+      operationId: getStorageUsage
+      summary: Get storage usage statistics
+      parameters:
+        - {name: X-Team-Id, in: header, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Storage usage
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/StorageUsageResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Registry Controller / Services (11 endpoints)
+  # ============================================================
+  /api/v1/registry/teams/{teamId}/services:
+    post:
+      tags: [Registry - Services]
+      operationId: createRegistryService
+      summary: Register a new service
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateServiceRequest'}
+      responses:
+        '201':
+          description: Service registered
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceRegistrationResponse'}
+        '400': {description: Validation error}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+    get:
+      tags: [Registry - Services]
+      operationId: getServicesForTeam
+      summary: List services for a team (paginated with filters)
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: status, in: query, schema: {type: string, enum: [ACTIVE, INACTIVE, DEPRECATED, ARCHIVED]}}
+        - {name: type, in: query, schema: {type: string, enum: [SPRING_BOOT_API, FLUTTER_WEB, FLUTTER_DESKTOP, FLUTTER_MOBILE, REACT_SPA, VUE_SPA, NEXT_JS, EXPRESS_API, FASTAPI, DOTNET_API, GO_API, LIBRARY, WORKER, GATEWAY, DATABASE_SERVICE, MESSAGE_BROKER, CACHE_SERVICE, MCP_SERVER, CLI_TOOL, OTHER]}}
+        - {name: search, in: query, schema: {type: string}}
+        - {name: page, in: query, schema: {type: integer, default: 0}}
+        - {name: size, in: query, schema: {type: integer, default: 20}}
+      responses:
+        '200':
+          description: Paginated services
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageResponseServiceRegistrationResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/services/by-slug/{slug}:
+    get:
+      tags: [Registry - Services]
+      operationId: getServiceBySlug
+      summary: Get a service by team and slug
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: slug, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Service
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceRegistrationResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/services/health:
+    post:
+      tags: [Registry - Services]
+      operationId: checkAllServiceHealth
+      summary: Check health of all active services in a team
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Health check results
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ServiceHealthResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}:
+    get:
+      tags: [Registry - Services]
+      operationId: getRegistryService
+      summary: Get a service by ID
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Service details
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceRegistrationResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    put:
+      tags: [Registry - Services]
+      operationId: updateRegistryService
+      summary: Update a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateServiceRequest'}
+      responses:
+        '200':
+          description: Service updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceRegistrationResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Registry - Services]
+      operationId: deleteRegistryService
+      summary: Delete a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Service deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/status:
+    patch:
+      tags: [Registry - Services]
+      operationId: updateServiceStatus
+      summary: Update a service lifecycle status
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateServiceStatusRequest'}
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceRegistrationResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/clone:
+    post:
+      tags: [Registry - Services]
+      operationId: cloneService
+      summary: Clone a service with new name and slug
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CloneServiceRequest'}
+      responses:
+        '201':
+          description: Service cloned
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceRegistrationResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/identity:
+    get:
+      tags: [Registry - Services]
+      operationId: getServiceIdentity
+      summary: Get complete service identity (ports, deps, routes, infra, configs)
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Service identity
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceIdentityResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/health:
+    post:
+      tags: [Registry - Services]
+      operationId: checkServiceHealth
+      summary: Check health of a single service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Health result
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceHealthResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Solution Controller (11 endpoints)
+  # ============================================================
+  /api/v1/registry/teams/{teamId}/solutions:
+    post:
+      tags: [Registry - Solutions]
+      operationId: createSolution
+      summary: Create a solution
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateSolutionRequest'}
+      responses:
+        '201':
+          description: Solution created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SolutionResponse'}
+        '400': {description: Validation error}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+    get:
+      tags: [Registry - Solutions]
+      operationId: getSolutionsForTeam
+      summary: List solutions for a team
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: status, in: query, schema: {type: string, enum: [ACTIVE, IN_DEVELOPMENT, DEPRECATED, ARCHIVED]}}
+        - {name: category, in: query, schema: {type: string, enum: [PLATFORM, APPLICATION, LIBRARY_SUITE, INFRASTRUCTURE, TOOLING, OTHER]}}
+        - {name: page, in: query, schema: {type: integer, default: 0}}
+        - {name: size, in: query, schema: {type: integer, default: 20}}
+      responses:
+        '200':
+          description: Paginated solutions
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageResponseSolutionResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}:
+    get:
+      tags: [Registry - Solutions]
+      operationId: getSolution
+      summary: Get a solution by ID
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Solution
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SolutionResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    put:
+      tags: [Registry - Solutions]
+      operationId: updateSolution
+      summary: Update a solution
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateSolutionRequest'}
+      responses:
+        '200':
+          description: Solution updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SolutionResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Registry - Solutions]
+      operationId: deleteSolution
+      summary: Delete a solution
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Solution deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/detail:
+    get:
+      tags: [Registry - Solutions]
+      operationId: getSolutionDetail
+      summary: Get full solution detail with all members
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Solution detail
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SolutionDetailResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/members:
+    post:
+      tags: [Registry - Solutions]
+      operationId: addSolutionMember
+      summary: Add a service as a member of a solution
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AddSolutionMemberRequest'}
+      responses:
+        '201':
+          description: Member added
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SolutionMemberResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/members/{serviceId}:
+    put:
+      tags: [Registry - Solutions]
+      operationId: updateSolutionMember
+      summary: Update a solution member
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateSolutionMemberRequest'}
+      responses:
+        '200':
+          description: Member updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SolutionMemberResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Registry - Solutions]
+      operationId: removeSolutionMember
+      summary: Remove a service from a solution
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Member removed}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/members/reorder:
+    put:
+      tags: [Registry - Solutions]
+      operationId: reorderSolutionMembers
+      summary: Reorder solution members
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Members reordered
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/SolutionMemberResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/health:
+    get:
+      tags: [Registry - Solutions]
+      operationId: getSolutionHealth
+      summary: Get aggregated health of a solution
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Solution health
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SolutionHealthResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Port Controller (11 endpoints)
+  # ============================================================
+  /api/v1/registry/ports/auto-allocate:
+    post:
+      tags: [Registry - Ports]
+      operationId: autoAllocatePort
+      summary: Auto-allocate a port from configured range
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AutoAllocatePortRequest'}
+      responses:
+        '201':
+          description: Port allocated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PortAllocationResponse'}
+        '400': {description: Validation error}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/ports/allocate:
+    post:
+      tags: [Registry - Ports]
+      operationId: manualAllocatePort
+      summary: Manually allocate a specific port
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AllocatePortRequest'}
+      responses:
+        '201':
+          description: Port allocated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PortAllocationResponse'}
+        '400': {description: Validation error or port conflict}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/ports/{allocationId}:
+    delete:
+      tags: [Registry - Ports]
+      operationId: releasePort
+      summary: Release a port allocation
+      parameters:
+        - {name: allocationId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Port released}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/ports:
+    get:
+      tags: [Registry - Ports]
+      operationId: getPortsForService
+      summary: Get port allocations for a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Port allocations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PortAllocationResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/ports:
+    get:
+      tags: [Registry - Ports]
+      operationId: getPortsForTeam
+      summary: Get all port allocations for a team in an environment
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Team port allocations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PortAllocationResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/ports/map:
+    get:
+      tags: [Registry - Ports]
+      operationId: getPortMap
+      summary: Get structured port map with ranges and capacity
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Port map
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PortMapResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/ports/check:
+    get:
+      tags: [Registry - Ports]
+      operationId: checkPortAvailability
+      summary: Check if a port number is available
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: portNumber, in: query, required: true, schema: {type: integer}}
+        - {name: environment, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Port availability
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PortCheckResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/ports/conflicts:
+    get:
+      tags: [Registry - Ports]
+      operationId: detectPortConflicts
+      summary: Detect port conflicts across services
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Port conflicts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PortConflictResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/ports/ranges:
+    get:
+      tags: [Registry - Ports]
+      operationId: getPortRanges
+      summary: List port ranges for a team
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Port ranges
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PortRangeResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/ports/ranges/seed:
+    post:
+      tags: [Registry - Ports]
+      operationId: seedDefaultPortRanges
+      summary: Seed default port ranges for a team (idempotent)
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, schema: {type: string, default: local}}
+      responses:
+        '200':
+          description: Port ranges seeded
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PortRangeResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/ports/ranges/{rangeId}:
+    put:
+      tags: [Registry - Ports]
+      operationId: updatePortRange
+      summary: Update a port range
+      parameters:
+        - {name: rangeId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdatePortRangeRequest'}
+      responses:
+        '200':
+          description: Range updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PortRangeResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Dependency Controller (6 endpoints)
+  # ============================================================
+  /api/v1/registry/dependencies:
+    post:
+      tags: [Registry - Dependencies]
+      operationId: createDependency
+      summary: Create a service dependency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateDependencyRequest'}
+      responses:
+        '201':
+          description: Dependency created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceDependencyResponse'}
+        '400': {description: Validation error (cycle, self-dependency, duplicate)}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/dependencies/{dependencyId}:
+    delete:
+      tags: [Registry - Dependencies]
+      operationId: removeDependency
+      summary: Remove a service dependency
+      parameters:
+        - {name: dependencyId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Dependency removed}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/dependencies/graph:
+    get:
+      tags: [Registry - Dependencies]
+      operationId: getDependencyGraph
+      summary: Get full dependency graph for a team
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Dependency graph
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DependencyGraphResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/dependencies/impact:
+    get:
+      tags: [Registry - Dependencies]
+      operationId: getImpactAnalysis
+      summary: Get impact analysis for a service (transitive dependents)
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Impact analysis
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ImpactAnalysisResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/dependencies/startup-order:
+    get:
+      tags: [Registry - Dependencies]
+      operationId: getStartupOrder
+      summary: Get topological startup order for services
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Startup order
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/DependencyNodeResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/dependencies/cycles:
+    get:
+      tags: [Registry - Dependencies]
+      operationId: detectCycles
+      summary: Detect dependency cycles
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Cycle-participating service IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {type: string, format: uuid}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Route Controller (5 endpoints)
+  # ============================================================
+  /api/v1/registry/routes:
+    post:
+      tags: [Registry - Routes]
+      operationId: createRoute
+      summary: Register an API route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateRouteRequest'}
+      responses:
+        '201':
+          description: Route created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ApiRouteResponse'}
+        '400': {description: Validation error or route overlap}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/routes/{routeId}:
+    delete:
+      tags: [Registry - Routes]
+      operationId: deleteRoute
+      summary: Delete a route
+      parameters:
+        - {name: routeId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Route deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/routes:
+    get:
+      tags: [Registry - Routes]
+      operationId: getRoutesForService
+      summary: Get routes for a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Routes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ApiRouteResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{gatewayServiceId}/routes/gateway:
+    get:
+      tags: [Registry - Routes]
+      operationId: getRoutesForGateway
+      summary: Get routes behind a gateway in an environment
+      parameters:
+        - {name: gatewayServiceId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Gateway routes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ApiRouteResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/routes/check:
+    get:
+      tags: [Registry - Routes]
+      operationId: checkRouteAvailability
+      summary: Check if a route prefix is available
+      parameters:
+        - {name: gatewayServiceId, in: query, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, required: true, schema: {type: string}}
+        - {name: routePrefix, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Route availability
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RouteCheckResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Config Controller (6 endpoints)
+  # ============================================================
+  /api/v1/registry/services/{serviceId}/config/generate:
+    post:
+      tags: [Registry - Config]
+      operationId: generateConfig
+      summary: Generate a config template for a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: type, in: query, required: true, schema: {type: string, enum: [DOCKER_COMPOSE, APPLICATION_YML, APPLICATION_PROPERTIES, ENV_FILE, TERRAFORM_MODULE, CLAUDE_CODE_HEADER, CONVENTIONS_MD, NGINX_CONF, GITHUB_ACTIONS, DOCKERFILE, MAKEFILE, README_SECTION]}}
+        - {name: environment, in: query, schema: {type: string, default: local}}
+      responses:
+        '200':
+          description: Generated config
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ConfigTemplateResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/config/generate-all:
+    post:
+      tags: [Registry - Config]
+      operationId: generateAllConfigs
+      summary: Generate all config templates for a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, schema: {type: string, default: local}}
+      responses:
+        '200':
+          description: Generated configs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ConfigTemplateResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/config/docker-compose:
+    post:
+      tags: [Registry - Config]
+      operationId: generateSolutionDockerCompose
+      summary: Generate docker-compose for entire solution
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: environment, in: query, schema: {type: string, default: local}}
+      responses:
+        '200':
+          description: Generated docker-compose
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ConfigTemplateResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/config:
+    get:
+      tags: [Registry - Config]
+      operationId: getConfigTemplate
+      summary: Get a stored config template
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: type, in: query, required: true, schema: {type: string}}
+        - {name: environment, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Config template
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ConfigTemplateResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/config/all:
+    get:
+      tags: [Registry - Config]
+      operationId: getTemplatesForService
+      summary: Get all config templates for a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Config templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ConfigTemplateResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/config/{templateId}:
+    delete:
+      tags: [Registry - Config]
+      operationId: deleteConfigTemplate
+      summary: Delete a config template
+      parameters:
+        - {name: templateId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Template deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Infra Controller (8 endpoints)
+  # ============================================================
+  /api/v1/registry/teams/{teamId}/infra-resources:
+    post:
+      tags: [Registry - InfraResources]
+      operationId: createInfraResource
+      summary: Register an infrastructure resource
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateInfraResourceRequest'}
+      responses:
+        '201':
+          description: Resource created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InfraResourceResponse'}
+        '400': {description: Validation error}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+    get:
+      tags: [Registry - InfraResources]
+      operationId: getInfraResourcesForTeam
+      summary: List infra resources for a team
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: type, in: query, schema: {type: string}}
+        - {name: environment, in: query, schema: {type: string}}
+        - {name: page, in: query, schema: {type: integer, default: 0}}
+        - {name: size, in: query, schema: {type: integer, default: 20}}
+      responses:
+        '200':
+          description: Paginated infra resources
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageResponseInfraResourceResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/infra-resources/{resourceId}:
+    put:
+      tags: [Registry - InfraResources]
+      operationId: updateInfraResource
+      summary: Update an infra resource
+      parameters:
+        - {name: resourceId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateInfraResourceRequest'}
+      responses:
+        '200':
+          description: Resource updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InfraResourceResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Registry - InfraResources]
+      operationId: deleteInfraResource
+      summary: Delete an infra resource
+      parameters:
+        - {name: resourceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Resource deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/infra-resources:
+    get:
+      tags: [Registry - InfraResources]
+      operationId: getInfraResourcesForService
+      summary: Get infra resources owned by a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Infra resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/InfraResourceResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/infra-resources/orphans:
+    get:
+      tags: [Registry - InfraResources]
+      operationId: findOrphanedResources
+      summary: Find infra resources with no owning service
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Orphaned resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/InfraResourceResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/infra-resources/{resourceId}/reassign:
+    patch:
+      tags: [Registry - InfraResources]
+      operationId: reassignInfraResource
+      summary: Reassign an infra resource to a different service
+      parameters:
+        - {name: resourceId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: newServiceId, in: query, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Resource reassigned
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InfraResourceResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/infra-resources/{resourceId}/orphan:
+    patch:
+      tags: [Registry - InfraResources]
+      operationId: orphanInfraResource
+      summary: Remove service ownership from a resource
+      parameters:
+        - {name: resourceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Resource orphaned
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/InfraResourceResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Topology Controller (4 endpoints)
+  # ============================================================
+  /api/v1/registry/teams/{teamId}/topology:
+    get:
+      tags: [Registry - Topology]
+      operationId: getTopology
+      summary: Get full ecosystem topology for a team
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Topology
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TopologyResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/topology:
+    get:
+      tags: [Registry - Topology]
+      operationId: getSolutionTopology
+      summary: Get topology scoped to a solution
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Solution topology
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TopologyResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/topology/neighborhood:
+    get:
+      tags: [Registry - Topology]
+      operationId: getServiceNeighborhood
+      summary: Get BFS neighborhood of a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: depth, in: query, schema: {type: integer, default: 1, maximum: 3}}
+      responses:
+        '200':
+          description: Service neighborhood
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TopologyResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/topology/stats:
+    get:
+      tags: [Registry - Topology]
+      operationId: getEcosystemStats
+      summary: Get ecosystem statistics
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Ecosystem stats
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TopologyStatsResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Health Management Controller (6 endpoints)
+  # ============================================================
+  /api/v1/registry/teams/{teamId}/health/summary:
+    get:
+      tags: [Registry - Health Management]
+      operationId: getTeamHealthSummary
+      summary: Get aggregated team health summary (cached)
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Health summary
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TeamHealthSummaryResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/health/check:
+    post:
+      tags: [Registry - Health Management]
+      operationId: checkTeamHealth
+      summary: Live health check of all active services
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Health summary after live checks
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TeamHealthSummaryResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/health/unhealthy:
+    get:
+      tags: [Registry - Health Management]
+      operationId: getUnhealthyServices
+      summary: Get DOWN or DEGRADED services
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Unhealthy services
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ServiceHealthResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/health/never-checked:
+    get:
+      tags: [Registry - Health Management]
+      operationId: getServicesNeverChecked
+      summary: Get services that have never been health checked
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Never-checked services
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ServiceHealthResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/health/check:
+    post:
+      tags: [Registry - Health Management]
+      operationId: checkSolutionHealth
+      summary: Live health check of all solution members
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Solution health after live checks
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SolutionHealthResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/services/{serviceId}/health/cached:
+    get:
+      tags: [Registry - Health Management]
+      operationId: getServiceHealthCached
+      summary: Get cached health status for a service
+      parameters:
+        - {name: serviceId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Cached service health
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServiceHealthResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  # ============================================================
+  # REGISTRY MODULE - Workstation Controller (9 endpoints)
+  # ============================================================
+  /api/v1/registry/teams/{teamId}/workstations:
+    post:
+      tags: [Registry - Profiles]
+      operationId: createWorkstationProfile
+      summary: Create a workstation profile
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateWorkstationProfileRequest'}
+      responses:
+        '201':
+          description: Profile created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WorkstationProfileResponse'}
+        '400': {description: Validation error}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+    get:
+      tags: [Registry - Profiles]
+      operationId: getProfilesForTeam
+      summary: List workstation profiles for a team
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/WorkstationProfileResponse'}
+        '401': {description: Unauthorized}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/workstations/{profileId}:
+    get:
+      tags: [Registry - Profiles]
+      operationId: getWorkstationProfile
+      summary: Get a workstation profile by ID
+      parameters:
+        - {name: profileId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WorkstationProfileResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    put:
+      tags: [Registry - Profiles]
+      operationId: updateWorkstationProfile
+      summary: Update a workstation profile
+      parameters:
+        - {name: profileId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/UpdateWorkstationProfileRequest'}
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WorkstationProfileResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+    delete:
+      tags: [Registry - Profiles]
+      operationId: deleteWorkstationProfile
+      summary: Delete a workstation profile
+      parameters:
+        - {name: profileId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Profile deleted}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/teams/{teamId}/workstations/default:
+    get:
+      tags: [Registry - Profiles]
+      operationId: getDefaultWorkstationProfile
+      summary: Get the default workstation profile for a team
+      parameters:
+        - {name: teamId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Default profile
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WorkstationProfileResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: No default set}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/workstations/{profileId}/set-default:
+    patch:
+      tags: [Registry - Profiles]
+      operationId: setDefaultWorkstationProfile
+      summary: Set a profile as the team default
+      parameters:
+        - {name: profileId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Profile set as default
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WorkstationProfileResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/solutions/{solutionId}/workstations/from-solution:
+    post:
+      tags: [Registry - Profiles]
+      operationId: createProfileFromSolution
+      summary: Quick-create a workstation profile from a solution
+      parameters:
+        - {name: solutionId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: teamId, in: query, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '201':
+          description: Profile created from solution
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WorkstationProfileResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Solution not found}
+      security: [{bearerAuth: []}]
+
+  /api/v1/registry/workstations/{profileId}/refresh-startup-order:
+    post:
+      tags: [Registry - Profiles]
+      operationId: refreshStartupOrder
+      summary: Recompute startup order from current dependency graph
+      parameters:
+        - {name: profileId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Startup order refreshed
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WorkstationProfileResponse'}
+        '401': {description: Unauthorized}
+        '404': {description: Not found}
+      security: [{bearerAuth: []}]
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token (24h expiry)
+
+  schemas:
+    # ============================================================
+    # ERROR RESPONSE
+    # ============================================================
+    ErrorResponse:
+      type: object
+      properties:
+        status: {type: integer}
+        message: {type: string}
+
+    # ============================================================
+    # CORE MODULE - Auth DTOs
+    # ============================================================
+    RegisterRequest:
+      type: object
+      required: [email, password, displayName]
+      properties:
+        email: {type: string, format: email, maxLength: 255}
+        password: {type: string, minLength: 4, maxLength: 100}
+        displayName: {type: string, maxLength: 100}
+        avatarUrl: {type: string, maxLength: 500}
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: {type: string, format: email}
+        password: {type: string}
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken: {type: string}
+        refreshToken: {type: string}
+        tokenType: {type: string}
+        expiresIn: {type: integer, format: int64}
+        user:
+          \: "#/components/schemas/UserResponse"
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: {type: string}
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: {type: string}
+        newPassword: {type: string, minLength: 4, maxLength: 100}
+
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email: {type: string, format: email}
+
+    ResetPasswordRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: {type: string}
+        newPassword: {type: string, minLength: 4, maxLength: 100}
+
+    SetupMfaRequest:
+      type: object
+      required: [method]
+      properties:
+        method: {type: string, enum: [NONE, TOTP, EMAIL]}
+
+    SetupMfaResponse:
+      type: object
+      properties:
+        method: {type: string, enum: [NONE, TOTP, EMAIL]}
+        secret: {type: string}
+        qrCodeUri: {type: string}
+        recoveryCodes: {type: array, items: {type: string}}
+
+    VerifyMfaRequest:
+      type: object
+      required: [code]
+      properties:
+        code: {type: string}
+
+    DisableMfaRequest:
+      type: object
+      required: [password]
+      properties:
+        password: {type: string}
+
+    MfaLoginRequest:
+      type: object
+      required: [email, password, mfaCode]
+      properties:
+        email: {type: string, format: email}
+        password: {type: string}
+        mfaCode: {type: string}
+
+    # ============================================================
+    # CORE MODULE - User DTOs
+    # ============================================================
+    UserResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        email: {type: string}
+        displayName: {type: string}
+        avatarUrl: {type: string}
+        isActive: {type: boolean}
+        lastLoginAt: {type: string, format: date-time}
+        mfaEnabled: {type: boolean}
+        mfaMethod: {type: string, enum: [NONE, TOTP, EMAIL]}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        displayName: {type: string, maxLength: 100}
+        avatarUrl: {type: string, maxLength: 500}
+
+    # ============================================================
+    # CORE MODULE - Team DTOs
+    # ============================================================
+    CreateTeamRequest:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, maxLength: 100}
+        description: {type: string}
+        teamsWebhookUrl: {type: string, maxLength: 500}
+        settingsJson: {type: string}
+
+    UpdateTeamRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 100}
+        description: {type: string}
+        teamsWebhookUrl: {type: string, maxLength: 500}
+        settingsJson: {type: string}
+
+    TeamResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        description: {type: string}
+        teamsWebhookUrl: {type: string}
+        settingsJson: {type: string}
+        ownerId: {type: string, format: uuid}
+        ownerName: {type: string}
+        memberCount: {type: integer}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    TeamMemberResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        teamId: {type: string, format: uuid}
+        userId: {type: string, format: uuid}
+        email: {type: string}
+        displayName: {type: string}
+        avatarUrl: {type: string}
+        role: {type: string, enum: [OWNER, ADMIN, MEMBER, VIEWER]}
+        joinedAt: {type: string, format: date-time}
+
+    AddTeamMemberRequest:
+      type: object
+      required: [email, role]
+      properties:
+        email: {type: string, format: email}
+        role: {type: string, enum: [OWNER, ADMIN, MEMBER, VIEWER]}
+
+    UpdateMemberRoleRequest:
+      type: object
+      required: [role]
+      properties:
+        role: {type: string, enum: [OWNER, ADMIN, MEMBER, VIEWER]}
+
+    InviteMemberRequest:
+      type: object
+      required: [email, role]
+      properties:
+        email: {type: string, format: email}
+        role: {type: string, enum: [OWNER, ADMIN, MEMBER, VIEWER]}
+
+    InvitationResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        email: {type: string}
+        teamId: {type: string, format: uuid}
+        teamName: {type: string}
+        role: {type: string, enum: [OWNER, ADMIN, MEMBER, VIEWER]}
+        status: {type: string, enum: [PENDING, ACCEPTED, EXPIRED, REVOKED]}
+        invitedByName: {type: string}
+        expiresAt: {type: string, format: date-time}
+        createdAt: {type: string, format: date-time}
+
+    # ============================================================
+    # CORE MODULE - Admin DTOs
+    # ============================================================
+    AdminUserResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        email: {type: string}
+        displayName: {type: string}
+        avatarUrl: {type: string}
+        isActive: {type: boolean}
+        lastLoginAt: {type: string, format: date-time}
+        mfaEnabled: {type: boolean}
+        mfaMethod: {type: string}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+        teamCount: {type: integer}
+
+    SystemSettingResponse:
+      type: object
+      properties:
+        key: {type: string}
+        value: {type: string}
+        description: {type: string}
+        updatedAt: {type: string, format: date-time}
+
+    UpdateSystemSettingRequest:
+      type: object
+      required: [value]
+      properties:
+        value: {type: string}
+        description: {type: string}
+
+    AuditLogResponse:
+      type: object
+      properties:
+        id: {type: integer, format: int64}
+        userId: {type: string, format: uuid}
+        action: {type: string}
+        entityType: {type: string}
+        entityId: {type: string}
+        details: {type: string}
+        ipAddress: {type: string}
+        createdAt: {type: string, format: date-time}
+
+    # ============================================================
+    # CORE MODULE - Project DTOs
+    # ============================================================
+    CreateProjectRequest:
+      type: object
+      required: [name, teamId]
+      properties:
+        name: {type: string, maxLength: 200}
+        description: {type: string}
+        teamId: {type: string, format: uuid}
+        repoUrl: {type: string, maxLength: 500}
+        repoFullName: {type: string, maxLength: 200}
+        defaultBranch: {type: string, maxLength: 100}
+        jiraProjectKey: {type: string, maxLength: 20}
+        jiraDefaultIssueType: {type: string, maxLength: 50}
+        jiraLabels: {type: string}
+        jiraComponent: {type: string, maxLength: 100}
+        techStack: {type: string, maxLength: 200}
+        githubConnectionId: {type: string, format: uuid}
+        jiraConnectionId: {type: string, format: uuid}
+        settingsJson: {type: string}
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 200}
+        description: {type: string}
+        repoUrl: {type: string, maxLength: 500}
+        repoFullName: {type: string, maxLength: 200}
+        defaultBranch: {type: string, maxLength: 100}
+        jiraProjectKey: {type: string, maxLength: 20}
+        jiraDefaultIssueType: {type: string, maxLength: 50}
+        jiraLabels: {type: string}
+        jiraComponent: {type: string, maxLength: 100}
+        techStack: {type: string, maxLength: 200}
+        githubConnectionId: {type: string, format: uuid}
+        jiraConnectionId: {type: string, format: uuid}
+        settingsJson: {type: string}
+
+    ProjectResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        description: {type: string}
+        teamId: {type: string, format: uuid}
+        teamName: {type: string}
+        repoUrl: {type: string}
+        repoFullName: {type: string}
+        defaultBranch: {type: string}
+        jiraProjectKey: {type: string}
+        jiraDefaultIssueType: {type: string}
+        jiraLabels: {type: string}
+        jiraComponent: {type: string}
+        techStack: {type: string}
+        healthScore: {type: integer}
+        lastAuditAt: {type: string, format: date-time}
+        isArchived: {type: boolean}
+        githubConnectionId: {type: string, format: uuid}
+        jiraConnectionId: {type: string, format: uuid}
+        settingsJson: {type: string}
+        createdById: {type: string, format: uuid}
+        createdByName: {type: string}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    # ============================================================
+    # CORE MODULE - Task, Job, Finding DTOs
+    # ============================================================
+    CreateTaskRequest:
+      type: object
+      required: [title, projectId]
+      properties:
+        title: {type: string, maxLength: 200}
+        description: {type: string}
+        projectId: {type: string, format: uuid}
+        priority: {type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL]}
+        status: {type: string, enum: [OPEN, IN_PROGRESS, REVIEW, DONE, CANCELLED]}
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title: {type: string, maxLength: 200}
+        description: {type: string}
+        priority: {type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL]}
+        status: {type: string, enum: [OPEN, IN_PROGRESS, REVIEW, DONE, CANCELLED]}
+
+    TaskResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string}
+        description: {type: string}
+        projectId: {type: string, format: uuid}
+        projectName: {type: string}
+        priority: {type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL]}
+        status: {type: string, enum: [OPEN, IN_PROGRESS, REVIEW, DONE, CANCELLED]}
+        createdById: {type: string, format: uuid}
+        createdByName: {type: string}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    CreateJobRequest:
+      type: object
+      required: [projectId, agentType]
+      properties:
+        projectId: {type: string, format: uuid}
+        agentType: {type: string, enum: [CODE_REVIEWER, SECURITY_SCANNER, DEPENDENCY_CHECKER, TECH_DEBT_ANALYZER, COMPLIANCE_CHECKER, DOCUMENTATION_GENERATOR, TEST_GENERATOR, PERFORMANCE_ANALYZER, ARCHITECTURE_REVIEWER, HEALTH_MONITOR, CODEOPS_AGENT, CUSTOM]}
+        parameters: {type: string}
+        personaId: {type: string, format: uuid}
+
+    JobResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        projectId: {type: string, format: uuid}
+        projectName: {type: string}
+        agentType: {type: string}
+        status: {type: string, enum: [PENDING, RUNNING, COMPLETED, FAILED, CANCELLED]}
+        parameters: {type: string}
+        resultSummary: {type: string}
+        resultData: {type: string}
+        errorMessage: {type: string}
+        findingsCount: {type: integer}
+        startedAt: {type: string, format: date-time}
+        completedAt: {type: string, format: date-time}
+        durationMs: {type: integer, format: int64}
+        startedById: {type: string, format: uuid}
+        startedByName: {type: string}
+        personaId: {type: string, format: uuid}
+        personaName: {type: string}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    FindingResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        jobId: {type: string, format: uuid}
+        projectId: {type: string, format: uuid}
+        agentType: {type: string}
+        category: {type: string}
+        severity: {type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL]}
+        title: {type: string}
+        description: {type: string}
+        filePath: {type: string}
+        lineNumber: {type: integer}
+        recommendation: {type: string}
+        status: {type: string, enum: [OPEN, ACKNOWLEDGED, FIXED, WONT_FIX, FALSE_POSITIVE]}
+        assignedToId: {type: string, format: uuid}
+        assignedToName: {type: string}
+        resolvedById: {type: string, format: uuid}
+        resolvedByName: {type: string}
+        resolvedAt: {type: string, format: date-time}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    UpdateFindingStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status: {type: string, enum: [OPEN, ACKNOWLEDGED, FIXED, WONT_FIX, FALSE_POSITIVE]}
+
+    # ============================================================
+    # CORE MODULE - Persona DTOs
+    # ============================================================
+    CreatePersonaRequest:
+      type: object
+      required: [name, agentType, contentMd, scope]
+      properties:
+        name: {type: string, maxLength: 100}
+        description: {type: string}
+        agentType: {type: string, enum: [CODE_REVIEWER, SECURITY_SCANNER, DEPENDENCY_CHECKER, TECH_DEBT_ANALYZER, COMPLIANCE_CHECKER, DOCUMENTATION_GENERATOR, TEST_GENERATOR, PERFORMANCE_ANALYZER, ARCHITECTURE_REVIEWER, HEALTH_MONITOR, CODEOPS_AGENT, CUSTOM]}
+        contentMd: {type: string}
+        scope: {type: string, enum: [SYSTEM, TEAM, USER]}
+        teamId: {type: string, format: uuid}
+        isDefault: {type: boolean}
+
+    UpdatePersonaRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 100}
+        description: {type: string}
+        contentMd: {type: string}
+        isDefault: {type: boolean}
+
+    PersonaResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        description: {type: string}
+        agentType: {type: string}
+        contentMd: {type: string}
+        scope: {type: string}
+        teamId: {type: string, format: uuid}
+        createdById: {type: string, format: uuid}
+        createdByName: {type: string}
+        isDefault: {type: boolean}
+        version: {type: integer}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    # ============================================================
+    # CORE MODULE - Directive DTOs
+    # ============================================================
+    CreateDirectiveRequest:
+      type: object
+      required: [title, contentMd, category, scope]
+      properties:
+        title: {type: string, maxLength: 200}
+        contentMd: {type: string}
+        category: {type: string, enum: [CODING_STANDARD, SECURITY, TESTING, DOCUMENTATION, ARCHITECTURE, PERFORMANCE, NAMING_CONVENTION, GIT_WORKFLOW, DEPLOYMENT, CUSTOM]}
+        scope: {type: string, enum: [SYSTEM, TEAM, USER]}
+        teamId: {type: string, format: uuid}
+        isSecret: {type: boolean}
+
+    UpdateDirectiveRequest:
+      type: object
+      properties:
+        title: {type: string, maxLength: 200}
+        contentMd: {type: string}
+        category: {type: string}
+        isSecret: {type: boolean}
+
+    DirectiveResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        title: {type: string}
+        contentMd: {type: string}
+        category: {type: string}
+        scope: {type: string}
+        teamId: {type: string, format: uuid}
+        createdById: {type: string, format: uuid}
+        createdByName: {type: string}
+        isSecret: {type: boolean}
+        version: {type: integer}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    AssignDirectiveRequest:
+      type: object
+      required: [directiveId]
+      properties:
+        directiveId: {type: string, format: uuid}
+        enabled: {type: boolean, default: true}
+
+    ProjectDirectiveResponse:
+      type: object
+      properties:
+        projectId: {type: string, format: uuid}
+        directiveId: {type: string, format: uuid}
+        directiveTitle: {type: string}
+        directiveCategory: {type: string}
+        enabled: {type: boolean}
+
+    # ============================================================
+    # CORE MODULE - TechDebt, Compliance, Dependency, HealthMonitor, Metrics DTOs
+    # ============================================================
+    TechDebtItemResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        projectId: {type: string, format: uuid}
+        jobId: {type: string, format: uuid}
+        title: {type: string}
+        description: {type: string}
+        category: {type: string}
+        severity: {type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL]}
+        estimatedEffort: {type: string}
+        filePath: {type: string}
+        lineNumber: {type: integer}
+        status: {type: string, enum: [OPEN, ACKNOWLEDGED, FIXED, WONT_FIX, FALSE_POSITIVE]}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    ComplianceRuleResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        projectId: {type: string, format: uuid}
+        name: {type: string}
+        description: {type: string}
+        category: {type: string}
+        severity: {type: string}
+        isActive: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    ComplianceCheckResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        projectId: {type: string, format: uuid}
+        ruleId: {type: string, format: uuid}
+        ruleName: {type: string}
+        status: {type: string}
+        details: {type: string}
+        checkedAt: {type: string, format: date-time}
+
+    DependencyInfoResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        projectId: {type: string, format: uuid}
+        groupId: {type: string}
+        artifactId: {type: string}
+        currentVersion: {type: string}
+        latestVersion: {type: string}
+        isOutdated: {type: boolean}
+        hasVulnerability: {type: boolean}
+        vulnerabilitySeverity: {type: string}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    HealthSnapshotResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        projectId: {type: string, format: uuid}
+        healthScore: {type: integer}
+        details: {type: string}
+        createdAt: {type: string, format: date-time}
+
+    # ============================================================
+    # CORE MODULE - Integration DTOs
+    # ============================================================
+    CreateGitHubConnectionRequest:
+      type: object
+      required: [name, personalAccessToken, teamId]
+      properties:
+        name: {type: string, maxLength: 100}
+        personalAccessToken: {type: string}
+        teamId: {type: string, format: uuid}
+
+    CreateJiraConnectionRequest:
+      type: object
+      required: [name, serverUrl, email, apiToken, teamId]
+      properties:
+        name: {type: string, maxLength: 100}
+        serverUrl: {type: string, maxLength: 500}
+        email: {type: string, maxLength: 255}
+        apiToken: {type: string}
+        teamId: {type: string, format: uuid}
+
+    GitHubConnectionResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        teamId: {type: string, format: uuid}
+        isActive: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    JiraConnectionResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        serverUrl: {type: string}
+        email: {type: string}
+        teamId: {type: string, format: uuid}
+        isActive: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    # ============================================================
+    # COURIER MODULE - DTOs
+    # ============================================================
+    CreateCollectionRequest:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, maxLength: 200}
+        description: {type: string}
+        teamId: {type: string, format: uuid}
+
+    UpdateCollectionRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 200}
+        description: {type: string}
+
+    CollectionResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        description: {type: string}
+        teamId: {type: string, format: uuid}
+        createdById: {type: string, format: uuid}
+        requestCount: {type: integer}
+        folderCount: {type: integer}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    CreateApiRequestRequest:
+      type: object
+      required: [name, method, url, collectionId]
+      properties:
+        name: {type: string, maxLength: 200}
+        method: {type: string, enum: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS]}
+        url: {type: string, maxLength: 2000}
+        collectionId: {type: string, format: uuid}
+        folderId: {type: string, format: uuid}
+        description: {type: string}
+        headersJson: {type: string}
+        queryParamsJson: {type: string}
+        bodyType: {type: string, enum: [NONE, FORM_DATA, X_WWW_FORM_URLENCODED, RAW_JSON, RAW_XML, RAW_HTML, RAW_TEXT, RAW_YAML, BINARY, GRAPHQL]}
+        bodyContent: {type: string}
+        authType: {type: string, enum: [NO_AUTH, API_KEY, BEARER_TOKEN, BASIC_AUTH, OAUTH2_AUTHORIZATION_CODE, OAUTH2_CLIENT_CREDENTIALS, OAUTH2_IMPLICIT, OAUTH2_PASSWORD, JWT_BEARER, INHERIT_FROM_PARENT]}
+        authConfigJson: {type: string}
+        preRequestScript: {type: string}
+        postResponseScript: {type: string}
+        sortOrder: {type: integer}
+
+    UpdateApiRequestRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 200}
+        method: {type: string, enum: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS]}
+        url: {type: string, maxLength: 2000}
+        folderId: {type: string, format: uuid}
+        description: {type: string}
+        headersJson: {type: string}
+        queryParamsJson: {type: string}
+        bodyType: {type: string}
+        bodyContent: {type: string}
+        authType: {type: string}
+        authConfigJson: {type: string}
+        preRequestScript: {type: string}
+        postResponseScript: {type: string}
+        sortOrder: {type: integer}
+
+    ApiRequestResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        method: {type: string}
+        url: {type: string}
+        collectionId: {type: string, format: uuid}
+        folderId: {type: string, format: uuid}
+        description: {type: string}
+        headersJson: {type: string}
+        queryParamsJson: {type: string}
+        bodyType: {type: string}
+        bodyContent: {type: string}
+        authType: {type: string}
+        authConfigJson: {type: string}
+        preRequestScript: {type: string}
+        postResponseScript: {type: string}
+        sortOrder: {type: integer}
+        lastRunStatus: {type: integer}
+        lastRunAt: {type: string, format: date-time}
+        createdById: {type: string, format: uuid}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    CreateFolderRequest:
+      type: object
+      required: [name, collectionId]
+      properties:
+        name: {type: string, maxLength: 200}
+        collectionId: {type: string, format: uuid}
+        parentFolderId: {type: string, format: uuid}
+        description: {type: string}
+        sortOrder: {type: integer}
+
+    UpdateFolderRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 200}
+        description: {type: string}
+        parentFolderId: {type: string, format: uuid}
+        sortOrder: {type: integer}
+
+    FolderResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        collectionId: {type: string, format: uuid}
+        parentFolderId: {type: string, format: uuid}
+        description: {type: string}
+        sortOrder: {type: integer}
+        requestCount: {type: integer}
+        subFolderCount: {type: integer}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    CreateEnvironmentRequest:
+      type: object
+      required: [name, collectionId]
+      properties:
+        name: {type: string, maxLength: 100}
+        collectionId: {type: string, format: uuid}
+        isActive: {type: boolean}
+
+    UpdateEnvironmentRequest:
+      type: object
+      properties:
+        name: {type: string, maxLength: 100}
+        isActive: {type: boolean}
+
+    EnvironmentResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        collectionId: {type: string, format: uuid}
+        isActive: {type: boolean}
+        variableCount: {type: integer}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    CreateVariableRequest:
+      type: object
+      required: [key, value, environmentId]
+      properties:
+        key: {type: string, maxLength: 200}
+        value: {type: string}
+        environmentId: {type: string, format: uuid}
+        isSecret: {type: boolean}
+
+    UpdateVariableRequest:
+      type: object
+      properties:
+        key: {type: string, maxLength: 200}
+        value: {type: string}
+        isSecret: {type: boolean}
+
+    VariableResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        key: {type: string}
+        value: {type: string}
+        environmentId: {type: string, format: uuid}
+        isSecret: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+
+    ShareCollectionRequest:
+      type: object
+      required: [collectionId, targetTeamId, permission]
+      properties:
+        collectionId: {type: string, format: uuid}
+        targetTeamId: {type: string, format: uuid}
+        permission: {type: string, enum: [READ, WRITE, ADMIN]}
+
+    ShareResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        collectionId: {type: string, format: uuid}
+        collectionName: {type: string}
+        sourceTeamId: {type: string, format: uuid}
+        targetTeamId: {type: string, format: uuid}
+        permission: {type: string}
+        sharedById: {type: string, format: uuid}
+        createdAt: {type: string, format: date-time}
+
+    RequestHistoryResponse:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        requestId: {type: string, format: uuid}
+        requestName: {type: string}
+        method: {type: string}
+        url: {type: string}
+        statusCode: {type: integer}
+        responseTimeMs: {type: integer, format: int64}
+        requestHeaders: {type: string}
+        requestBody: {type: string}
+        responseHeaders: {type: string}
+        responseBody: {type: string}
+        responseSize: {type: integer, format: int64}
+        executedById: {type: string, format: uuid}
+        environmentId: {type: string, format: uuid}
+        createdAt: {type: string, format: date-time}
+
+    CourierImportRequest:
+      type: object
+      required: [format, content, collectionId]
+      properties:
+        format: {type: string, enum: [POSTMAN_V2, OPENAPI_3, SWAGGER_2, CURL, HAR]}
+        content: {type: string}
+        collectionId: {type: string, format: uuid}
+
+    CourierImportResponse:
+      type: object
+      properties:
+        importedRequests: {type: integer}
+        importedFolders: {type: integer}
+        importedEnvironments: {type: integer}
+        errors: {type: array, items: {type: string}}
+
+    CourierRunRequest:
+      type: object
+      required: [requestId]
+      properties:
+        requestId: {type: string, format: uuid}
+        environmentId: {type: string, format: uuid}
+        overrideHeaders: {type: object, additionalProperties: {type: string}}
+        overrideParams: {type: object, additionalProperties: {type: string}}
+
+    CourierRunResponse:
+      type: object
+      properties:
+        requestId: {type: string, format: uuid}
+        requestName: {type: string}
+        method: {type: string}
+        url: {type: string}
+        statusCode: {type: integer}
+        statusText: {type: string}
+        responseTimeMs: {type: integer, format: int64}
+        responseHeaders: {type: object, additionalProperties: {type: string}}
+        responseBody: {type: string}
+        responseSize: {type: integer, format: int64}
+        testResults: {type: array, items: {$ref: '#/components/schemas/TestResult'}}
+
+    TestResult:
+      type: object
+      properties:
+        name: {type: string}
+        passed: {type: boolean}
+        message: {type: string}
+
+    CourierBatchRunRequest:
+      type: object
+      required: [requestIds]
+      properties:
+        requestIds: {type: array, items: {type: string, format: uuid}}
+        environmentId: {type: string, format: uuid}
+        delayMs: {type: integer}
+        stopOnFailure: {type: boolean}
+
+    CourierBatchRunResponse:
+      type: object
+      properties:
+        totalRequests: {type: integer}
+        successful: {type: integer}
+        failed: {type: integer}
+        totalTimeMs: {type: integer, format: int64}
+        results: {type: array, items: {$ref: '#/components/schemas/CourierRunResponse'}}
+
+    GraphqlRequest:
+      type: object
+      required: [url, query]
+      properties:
+        url: {type: string}
+        query: {type: string}
+        variables: {type: string}
+        operationName: {type: string}
+        headers: {type: object, additionalProperties: {type: string}}
+
+    GraphqlResponse:
+      type: object
+      properties:
+        statusCode: {type: integer}
+        data: {type: string}
+        errors: {type: array, items: {type: string}}
+        responseTimeMs: {type: integer, format: int64}
+
+    CodeGenRequest:
+      type: object
+      required: [requestId, language]
+      properties:
+        requestId: {type: string, format: uuid}
+        language: {type: string, enum: [CURL, PYTHON, JAVASCRIPT, JAVA, CSHARP, GO, RUBY, PHP, SWIFT, KOTLIN, RUST, DART]}
+        environmentId: {type: string, format: uuid}
+
+    CodeGenResponse:
+      type: object
+      properties:
+        language: {type: string}
+        code: {type: string}
+        requestName: {type: string}
+
+    ProxyConfigResponse:
+      type: object
+      properties:
+        proxyEnabled: {type: boolean}
+        proxyHost: {type: string}
+        proxyPort: {type: integer}
+        noProxyHosts: {type: array, items: {type: string}}
