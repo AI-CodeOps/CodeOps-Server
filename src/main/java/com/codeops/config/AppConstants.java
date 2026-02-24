@@ -188,4 +188,52 @@ public final class AppConstants {
     public static final int COURIER_SCRIPT_MAX_STATEMENTS = 100000;
     public static final int COURIER_SCRIPT_MAX_CONSOLE_LINES = 1000;
     public static final int COURIER_SCRIPT_MAX_OUTPUT_SIZE = 1024 * 1024;
+
+    // ── Relay Constants ──
+
+    /** Base path prefix for all Relay API endpoints. */
+    public static final String RELAY_API_PREFIX = "/api/v1/relay";
+
+    /** Maximum character length for a channel or DM message. */
+    public static final int RELAY_MAX_MESSAGE_LENGTH = 10_000;
+
+    /** Maximum character length for a channel name. */
+    public static final int RELAY_MAX_CHANNEL_NAME_LENGTH = 100;
+
+    /** Maximum character length for a channel topic. */
+    public static final int RELAY_MAX_TOPIC_LENGTH = 500;
+
+    /** Maximum character length for a user status message. */
+    public static final int RELAY_MAX_STATUS_MESSAGE_LENGTH = 200;
+
+    /** Maximum file upload size in bytes (25 MB). */
+    public static final int RELAY_MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+
+    /** Maximum number of pinned messages per channel. */
+    public static final int RELAY_MAX_PINS_PER_CHANNEL = 50;
+
+    /** Maximum number of reactions per message. */
+    public static final int RELAY_MAX_REACTIONS_PER_MESSAGE = 50;
+
+    /** Maximum number of participants in a group DM. */
+    public static final int RELAY_MAX_GROUP_DM_PARTICIPANTS = 10;
+
+    /** Heartbeat timeout in seconds before a user is considered offline. */
+    public static final int RELAY_PRESENCE_HEARTBEAT_TIMEOUT_SECONDS = 120;
+
+    /** Default page size for Relay paginated queries. */
+    public static final int RELAY_DEFAULT_PAGE_SIZE = 50;
+
+    /** Maximum page size for Relay paginated queries. */
+    public static final int RELAY_MAX_PAGE_SIZE = 100;
+
+    /** Slug of the default general channel auto-created for each team. */
+    public static final String RELAY_GENERAL_CHANNEL_SLUG = "general";
+
+    /** MIME types allowed for file uploads in Relay. */
+    public static final String[] RELAY_ALLOWED_FILE_TYPES = {
+            "image/png", "image/jpeg", "image/gif", "image/webp",
+            "application/pdf", "text/plain", "text/markdown",
+            "application/json", "application/zip"
+    };
 }
