@@ -1,5 +1,10 @@
 package com.codeops.config;
 
+import com.codeops.courier.entity.*;
+import com.codeops.courier.entity.Collection;
+import com.codeops.courier.entity.enums.AuthType;
+import com.codeops.courier.entity.enums.HttpMethod;
+import com.codeops.courier.repository.*;
 import com.codeops.entity.*;
 import com.codeops.entity.enums.*;
 import com.codeops.logger.entity.*;
@@ -88,6 +93,14 @@ public class DataSeeder implements CommandLineRunner {
     private final AnomalyBaselineRepository anomalyBaselineRepository;
     private final SavedQueryRepository savedQueryRepository;
 
+    // Courier repositories
+    private final CollectionRepository collectionRepository;
+    private final FolderRepository folderRepository;
+    private final RequestRepository requestRepository;
+    private final EnvironmentRepository courierEnvironmentRepository;
+    private final EnvironmentVariableRepository environmentVariableRepository;
+    private final GlobalVariableRepository globalVariableRepository;
+
     // Shared references across seed methods
     private User adam, sarah, mike;
     private Team team;
@@ -133,6 +146,7 @@ public class DataSeeder implements CommandLineRunner {
 
         seedRegistryData();
         seedLoggerData();
+        seedCourierData();
     }
 
     private void seedUsers() {
@@ -1546,5 +1560,129 @@ public class DataSeeder implements CommandLineRunner {
                         .durationMs(10L).status(SpanStatus.OK).teamId(teamId).build()
         ));
         log.info("Seeded 8 trace spans across 2 traces");
+    }
+
+    // ── Courier seed methods ──
+
+    private void seedCourierData() {
+        if (collectionRepository.countByTeamId(team.getId()) > 0) {
+            log.info("Courier data already seeded — skipping");
+            return;
+        }
+        log.info("Seeding Courier data...");
+
+        UUID teamId = team.getId();
+        UUID userId = adam.getId();
+
+        Collection collection = seedCourierCollection(teamId, userId);
+        int folderCount = 0;
+        int requestCount = 0;
+
+        Folder authFolder = seedCourierFolder(collection, null, "Authentication", "Auth endpoints", 0);
+        folderCount++;
+        seedCourierRequest(authFolder, "Login", HttpMethod.POST, "{{baseUrl}}/api/v1/auth/login", 0);
+        seedCourierRequest(authFolder, "Register", HttpMethod.POST, "{{baseUrl}}/api/v1/auth/register", 1);
+        seedCourierRequest(authFolder, "Refresh Token", HttpMethod.POST, "{{baseUrl}}/api/v1/auth/refresh", 2);
+        requestCount += 3;
+
+        Folder teamsFolder = seedCourierFolder(collection, null, "Teams", "Team management endpoints", 1);
+        folderCount++;
+        seedCourierRequest(teamsFolder, "List Teams", HttpMethod.GET, "{{baseUrl}}/api/v1/teams", 0);
+        seedCourierRequest(teamsFolder, "Create Team", HttpMethod.POST, "{{baseUrl}}/api/v1/teams", 1);
+        seedCourierRequest(teamsFolder, "Get Team", HttpMethod.GET, "{{baseUrl}}/api/v1/teams/{{teamId}}", 2);
+        requestCount += 3;
+
+        Folder healthFolder = seedCourierFolder(collection, null, "Health Checks", "Service health endpoints", 2);
+        folderCount++;
+        seedCourierRequest(healthFolder, "Courier Health", HttpMethod.GET, "{{baseUrl}}/api/v1/courier/health", 0);
+        seedCourierRequest(healthFolder, "Registry Health", HttpMethod.GET, "{{baseUrl}}/api/v1/registry/health", 1);
+        requestCount += 2;
+
+        seedCourierEnvironment(teamId, userId);
+        seedCourierGlobalVariables(teamId);
+
+        log.info("Courier development data seeded: 1 collection, {} folders, {} requests, 1 environment", folderCount, requestCount);
+    }
+
+    private Collection seedCourierCollection(UUID teamId, UUID userId) {
+        Collection collection = Collection.builder()
+                .teamId(teamId)
+                .name("CodeOps API")
+                .description("Sample API collection for CodeOps platform testing")
+                .authType(AuthType.NO_AUTH)
+                .isShared(false)
+                .createdBy(userId)
+                .build();
+        return collectionRepository.save(collection);
+    }
+
+    private Folder seedCourierFolder(Collection collection, Folder parent, String name, String description, int sortOrder) {
+        Folder folder = Folder.builder()
+                .collection(collection)
+                .parentFolder(parent)
+                .name(name)
+                .description(description)
+                .sortOrder(sortOrder)
+                .authType(AuthType.INHERIT_FROM_PARENT)
+                .build();
+        return folderRepository.save(folder);
+    }
+
+    private void seedCourierRequest(Folder folder, String name, HttpMethod method, String url, int sortOrder) {
+        Request request = Request.builder()
+                .folder(folder)
+                .name(name)
+                .method(method)
+                .url(url)
+                .sortOrder(sortOrder)
+                .build();
+        requestRepository.save(request);
+    }
+
+    private void seedCourierEnvironment(UUID teamId, UUID userId) {
+        Environment env = Environment.builder()
+                .teamId(teamId)
+                .name("Local Development")
+                .description("Local development environment")
+                .isActive(true)
+                .createdBy(userId)
+                .build();
+        env = courierEnvironmentRepository.save(env);
+
+        environmentVariableRepository.save(EnvironmentVariable.builder()
+                .environment(env)
+                .variableKey("baseUrl")
+                .variableValue("http://localhost:8090")
+                .isSecret(false)
+                .isEnabled(true)
+                .scope("ENVIRONMENT")
+                .build());
+
+        environmentVariableRepository.save(EnvironmentVariable.builder()
+                .environment(env)
+                .variableKey("token")
+                .variableValue("")
+                .isSecret(true)
+                .isEnabled(true)
+                .scope("ENVIRONMENT")
+                .build());
+    }
+
+    private void seedCourierGlobalVariables(UUID teamId) {
+        globalVariableRepository.save(GlobalVariable.builder()
+                .teamId(teamId)
+                .variableKey("baseUrl")
+                .variableValue("http://localhost:8090")
+                .isSecret(false)
+                .isEnabled(true)
+                .build());
+
+        globalVariableRepository.save(GlobalVariable.builder()
+                .teamId(teamId)
+                .variableKey("authToken")
+                .variableValue("")
+                .isSecret(false)
+                .isEnabled(true)
+                .build());
     }
 }

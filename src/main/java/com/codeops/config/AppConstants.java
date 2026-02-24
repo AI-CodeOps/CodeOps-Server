@@ -115,7 +115,9 @@ public final class AppConstants {
     // ── Logger Constants ──
 
     // Logger API prefix
-    public static final String API_PREFIX = "/api/v1/logger";
+    public static final String LOGGER_API_PREFIX = "/api/v1/logger";
+    /** @deprecated Use LOGGER_API_PREFIX — kept for backward compatibility */
+    public static final String API_PREFIX = LOGGER_API_PREFIX;
 
     // Log ingestion
     public static final int MAX_BATCH_SIZE = 1000;
@@ -161,4 +163,31 @@ public final class AppConstants {
 
     // Timeouts
     public static final int REQUEST_TIMEOUT_SECONDS = 30;
+
+    // ── Courier Constants ──
+
+    /** Base path prefix for all Courier API endpoints. */
+    public static final String COURIER_API_PREFIX = "/api/v1/courier";
+
+    /** Service name used in health checks and structured logging. */
+    public static final String COURIER_SERVICE_NAME = "codeops-courier";
+
+    // Courier rate limiting
+    public static final int COURIER_RATE_LIMIT_REQUESTS = 100;
+    public static final int COURIER_RATE_LIMIT_WINDOW_SECONDS = 60;
+
+    // Courier HTTP proxy
+    public static final int COURIER_DEFAULT_TIMEOUT_MS = 30000;
+    public static final int COURIER_MAX_TIMEOUT_MS = 300000;
+    public static final int COURIER_MIN_TIMEOUT_MS = 1000;
+    public static final int COURIER_MAX_REDIRECT_COUNT = 10;
+    public static final int COURIER_MAX_RESPONSE_BODY_SIZE = 10 * 1024 * 1024;
+    public static final int COURIER_HISTORY_BODY_TRUNCATE_SIZE = 1024 * 1024;
+    public static final String COURIER_USER_AGENT = "CodeOps-Courier/1.0";
+
+    // Courier script engine
+    public static final int COURIER_SCRIPT_TIMEOUT_SECONDS = 5;
+    public static final int COURIER_SCRIPT_MAX_STATEMENTS = 100000;
+    public static final int COURIER_SCRIPT_MAX_CONSOLE_LINES = 1000;
+    public static final int COURIER_SCRIPT_MAX_OUTPUT_SIZE = 1024 * 1024;
 }
