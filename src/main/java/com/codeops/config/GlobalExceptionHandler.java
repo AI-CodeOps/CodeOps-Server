@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -130,6 +131,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleCodeOpsAuth(AuthorizationException ex) {
         log.warn("Authorization denied: {}", ex.getMessage());
         return ResponseEntity.status(403).body(new ErrorResponse(403, ex.getMessage()));
+    }
+
+    /**
+     * Handles missing required query parameters by returning a 400 response with a descriptive
+     * message indicating which parameter is missing.
+     *
+     * @param ex the thrown missing servlet request parameter exception
+     * @return a 400 response with an {@link ErrorResponse} body
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParam(MissingServletRequestParameterException ex) {
+        log.warn("Missing request parameter: {}", ex.getParameterName());
+        return ResponseEntity.status(400).body(new ErrorResponse(400, "Missing required parameter: " + ex.getParameterName()));
     }
 
     /**

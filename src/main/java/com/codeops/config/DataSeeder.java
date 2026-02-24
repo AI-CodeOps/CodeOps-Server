@@ -2,7 +2,10 @@ package com.codeops.config;
 
 import com.codeops.entity.*;
 import com.codeops.entity.enums.*;
+import com.codeops.registry.entity.*;
+import com.codeops.registry.entity.enums.*;
 import com.codeops.repository.*;
+import com.codeops.registry.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +21,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Profile("dev")
 @Component
@@ -50,6 +55,18 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
 
+    // Registry repositories
+    private final ServiceRegistrationRepository serviceRegistrationRepository;
+    private final ServiceDependencyRepository serviceDependencyRepository;
+    private final SolutionRepository solutionRepository;
+    private final SolutionMemberRepository solutionMemberRepository;
+    private final PortAllocationRepository portAllocationRepository;
+    private final PortRangeRepository portRangeRepository;
+    private final ApiRouteRegistrationRepository apiRouteRegistrationRepository;
+    private final EnvironmentConfigRepository environmentConfigRepository;
+    private final WorkstationProfileRepository workstationProfileRepository;
+    private final InfraResourceRepository infraResourceRepository;
+
     // Shared references across seed methods
     private User adam, sarah, mike;
     private Team team;
@@ -64,33 +81,36 @@ public class DataSeeder implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (userRepository.count() > 0) {
-            log.info("Database already seeded — skipping");
-            return;
+            log.info("Core data already seeded — skipping core seed");
+            // Load references needed by Registry seeder
+            adam = userRepository.findByEmail("adam@allard.com").orElse(null);
+            team = teamRepository.findAll().stream().findFirst().orElse(null);
+        } else {
+            seedUsers();
+            seedTeam();
+            seedTeamMembers();
+            seedProjects();
+            seedPersonas();
+            seedDirectives();
+            seedProjectDirectives();
+            seedQaJobs();
+            seedBugInvestigation();
+            seedAgentRuns();
+            seedFindings();
+            seedRemediationTasks();
+            seedSpecifications();
+            seedComplianceItems();
+            seedTechDebtItems();
+            seedDependencyScans();
+            seedDependencyVulnerabilities();
+            seedHealthSchedules();
+            seedHealthSnapshots();
+            seedSystemSettings();
+            seedAuditLog();
+            log.info("Core development data seeded successfully");
         }
 
-        seedUsers();
-        seedTeam();
-        seedTeamMembers();
-        seedProjects();
-        seedPersonas();
-        seedDirectives();
-        seedProjectDirectives();
-        seedQaJobs();
-        seedBugInvestigation();
-        seedAgentRuns();
-        seedFindings();
-        seedRemediationTasks();
-        seedSpecifications();
-        seedComplianceItems();
-        seedTechDebtItems();
-        seedDependencyScans();
-        seedDependencyVulnerabilities();
-        seedHealthSchedules();
-        seedHealthSnapshots();
-        seedSystemSettings();
-        seedAuditLog();
-
-        log.info("Development data seeded successfully");
+        seedRegistryData();
     }
 
     private void seedUsers() {
@@ -856,5 +876,340 @@ public class DataSeeder implements CommandLineRunner {
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize JSON for seed data", e);
         }
+    }
+
+    // ── Registry Seed Data ──
+
+    private void seedRegistryData() {
+        if (serviceRegistrationRepository.count() > 0) {
+            log.info("Registry data already seeded — skipping");
+            return;
+        }
+        log.info("Seeding Registry data...");
+
+        UUID teamId = team.getId();
+        UUID userId = adam.getId();
+
+        Map<String, ServiceRegistration> services = seedRegistryServices(teamId, userId);
+        seedRegistryDependencies(services);
+        Map<String, Solution> solutions = seedRegistrySolutions(teamId, userId);
+        seedRegistrySolutionMembers(solutions, services);
+        seedRegistryPortRanges(teamId);
+        seedRegistryPortAllocations(services, userId);
+        seedRegistryApiRoutes(services);
+        seedRegistryEnvironmentConfigs(services);
+        seedRegistryWorkstationProfiles(services, teamId, userId);
+        seedRegistryInfraResources(services, teamId, userId);
+
+        log.info("Registry data seeded successfully");
+    }
+
+    private Map<String, ServiceRegistration> seedRegistryServices(UUID teamId, UUID userId) {
+        List<ServiceRegistration> services = List.of(
+                buildRegistryService(teamId, userId, "CodeOps Server", "codeops-server", ServiceType.SPRING_BOOT_API,
+                        "Core authentication and team management server",
+                        "https://github.com/aallard/CodeOps-Server", "aallard/CodeOps-Server",
+                        "Java, Spring Boot 3.3, PostgreSQL, Redis, Kafka", "http://localhost:8095/api/v1/health"),
+                buildRegistryService(teamId, userId, "CodeOps Registry", "codeops-registry", ServiceType.SPRING_BOOT_API,
+                        "Service registry and development control plane",
+                        "https://github.com/aallard/CodeOps-Registry", "aallard/CodeOps-Registry",
+                        "Java, Spring Boot 3.3, PostgreSQL", "http://localhost:8096/api/v1/health"),
+                buildRegistryService(teamId, userId, "CodeOps Vault", "codeops-vault", ServiceType.SPRING_BOOT_API,
+                        "Secrets and credential management service",
+                        "https://github.com/aallard/CodeOps-Vault", "aallard/CodeOps-Vault",
+                        "Java, Spring Boot 3.3, PostgreSQL", "http://localhost:8097/api/v1/health"),
+                buildRegistryService(teamId, userId, "CodeOps Logger", "codeops-logger", ServiceType.SPRING_BOOT_API,
+                        "Centralized logging and audit trail service",
+                        "https://github.com/aallard/CodeOps-Logger", "aallard/CodeOps-Logger",
+                        "Java, Spring Boot 3.3, PostgreSQL", "http://localhost:8098/api/v1/health"),
+                buildRegistryService(teamId, userId, "CodeOps Courier", "codeops-courier", ServiceType.SPRING_BOOT_API,
+                        "Notification and messaging delivery service",
+                        "https://github.com/aallard/CodeOps-Courier", "aallard/CodeOps-Courier",
+                        "Java, Spring Boot 3.3, PostgreSQL", "http://localhost:8099/api/v1/health"),
+                buildRegistryService(teamId, userId, "CodeOps DataLens", "codeops-datalens", ServiceType.SPRING_BOOT_API,
+                        "Analytics and data visualization service",
+                        "https://github.com/aallard/CodeOps-DataLens", "aallard/CodeOps-DataLens",
+                        "Java, Spring Boot 3.3, PostgreSQL", "http://localhost:8100/api/v1/health"),
+                buildRegistryService(teamId, userId, "CodeOps Client", "codeops-client", ServiceType.REACT_SPA,
+                        "Primary web application for the CodeOps platform",
+                        "https://github.com/aallard/CodeOps-Client", "aallard/CodeOps-Client",
+                        "React, TypeScript, Vite", "http://localhost:5173"),
+                buildRegistryService(teamId, userId, "CodeOps Scribe", "codeops-scribe", ServiceType.REACT_SPA,
+                        "Documentation and knowledge base module",
+                        "https://github.com/aallard/CodeOps-Scribe", "aallard/CodeOps-Scribe",
+                        "React, TypeScript", null),
+                buildRegistryService(teamId, userId, "CodeOps Gateway", "codeops-gateway", ServiceType.GATEWAY,
+                        "API gateway for routing and load balancing",
+                        "https://github.com/aallard/CodeOps-Gateway", "aallard/CodeOps-Gateway",
+                        "Spring Cloud Gateway", "http://localhost:8080/actuator/health")
+        );
+
+        List<ServiceRegistration> saved = serviceRegistrationRepository.saveAll(services);
+        log.info("Seeded {} registry services", saved.size());
+        return saved.stream().collect(Collectors.toMap(ServiceRegistration::getSlug, s -> s));
+    }
+
+    private void seedRegistryDependencies(Map<String, ServiceRegistration> services) {
+        ServiceRegistration server = services.get("codeops-server");
+        ServiceRegistration registry = services.get("codeops-registry");
+        ServiceRegistration vault = services.get("codeops-vault");
+        ServiceRegistration logger = services.get("codeops-logger");
+        ServiceRegistration courier = services.get("codeops-courier");
+        ServiceRegistration datalens = services.get("codeops-datalens");
+        ServiceRegistration client = services.get("codeops-client");
+        ServiceRegistration gateway = services.get("codeops-gateway");
+
+        List<ServiceDependency> deps = List.of(
+                buildRegistryDep(client, server, DependencyType.HTTP_REST, "/api/v1/auth"),
+                buildRegistryDep(client, registry, DependencyType.HTTP_REST, "/api/v1/registry"),
+                buildRegistryDep(client, vault, DependencyType.HTTP_REST, "/api/v1/vault"),
+                buildRegistryDep(client, logger, DependencyType.HTTP_REST, "/api/v1/logs"),
+                buildRegistryDep(client, courier, DependencyType.HTTP_REST, "/api/v1/courier"),
+                buildRegistryDep(client, datalens, DependencyType.HTTP_REST, "/api/v1/datalens"),
+                buildRegistryDep(registry, server, DependencyType.HTTP_REST, "/api/v1/auth"),
+                buildRegistryDep(vault, server, DependencyType.HTTP_REST, "/api/v1/auth"),
+                buildRegistryDep(logger, server, DependencyType.HTTP_REST, "/api/v1/auth"),
+                buildRegistryDep(courier, server, DependencyType.HTTP_REST, "/api/v1/auth"),
+                buildRegistryDep(datalens, server, DependencyType.HTTP_REST, "/api/v1/auth"),
+                buildRegistryDep(gateway, server, DependencyType.HTTP_REST, "/api/v1/auth"),
+                buildRegistryDep(gateway, registry, DependencyType.HTTP_REST, "/api/v1/registry")
+        );
+
+        serviceDependencyRepository.saveAll(deps);
+        log.info("Seeded {} registry dependencies", deps.size());
+    }
+
+    private Map<String, Solution> seedRegistrySolutions(UUID teamId, UUID userId) {
+        List<Solution> solutions = List.of(
+                Solution.builder()
+                        .teamId(teamId).name("CodeOps Control Plane").slug("codeops-control-plane")
+                        .description("Core platform services powering the CodeOps ecosystem")
+                        .category(SolutionCategory.PLATFORM).status(SolutionStatus.ACTIVE)
+                        .iconName("dashboard").colorHex("#2196F3")
+                        .ownerUserId(userId).createdByUserId(userId).build(),
+                Solution.builder()
+                        .teamId(teamId).name("CodeOps Infrastructure").slug("codeops-infrastructure")
+                        .description("Infrastructure and routing layer for the platform")
+                        .category(SolutionCategory.INFRASTRUCTURE).status(SolutionStatus.ACTIVE)
+                        .iconName("cloud").colorHex("#FF9800")
+                        .ownerUserId(userId).createdByUserId(userId).build(),
+                Solution.builder()
+                        .teamId(teamId).name("CodeOps Developer Tools").slug("codeops-developer-tools")
+                        .description("Developer productivity and communication tools")
+                        .category(SolutionCategory.TOOLING).status(SolutionStatus.ACTIVE)
+                        .iconName("build").colorHex("#4CAF50")
+                        .ownerUserId(userId).createdByUserId(userId).build()
+        );
+
+        List<Solution> saved = solutionRepository.saveAll(solutions);
+        log.info("Seeded {} registry solutions", saved.size());
+        return saved.stream().collect(Collectors.toMap(Solution::getSlug, s -> s));
+    }
+
+    private void seedRegistrySolutionMembers(Map<String, Solution> solutions,
+                                              Map<String, ServiceRegistration> services) {
+        Solution controlPlane = solutions.get("codeops-control-plane");
+        Solution infra = solutions.get("codeops-infrastructure");
+        Solution devTools = solutions.get("codeops-developer-tools");
+
+        List<SolutionMember> members = List.of(
+                buildRegistryMember(controlPlane, services.get("codeops-server"), SolutionMemberRole.CORE, 0),
+                buildRegistryMember(controlPlane, services.get("codeops-registry"), SolutionMemberRole.CORE, 1),
+                buildRegistryMember(controlPlane, services.get("codeops-vault"), SolutionMemberRole.CORE, 2),
+                buildRegistryMember(controlPlane, services.get("codeops-logger"), SolutionMemberRole.SUPPORTING, 3),
+                buildRegistryMember(controlPlane, services.get("codeops-courier"), SolutionMemberRole.SUPPORTING, 4),
+                buildRegistryMember(controlPlane, services.get("codeops-datalens"), SolutionMemberRole.SUPPORTING, 5),
+                buildRegistryMember(controlPlane, services.get("codeops-client"), SolutionMemberRole.CORE, 6),
+                buildRegistryMember(infra, services.get("codeops-server"), SolutionMemberRole.CORE, 0),
+                buildRegistryMember(infra, services.get("codeops-gateway"), SolutionMemberRole.CORE, 1),
+                buildRegistryMember(devTools, services.get("codeops-courier"), SolutionMemberRole.CORE, 0),
+                buildRegistryMember(devTools, services.get("codeops-datalens"), SolutionMemberRole.CORE, 1),
+                buildRegistryMember(devTools, services.get("codeops-scribe"), SolutionMemberRole.CORE, 2)
+        );
+
+        solutionMemberRepository.saveAll(members);
+        log.info("Seeded {} registry solution members", members.size());
+    }
+
+    private void seedRegistryPortRanges(UUID teamId) {
+        List<PortRange> ranges = List.of(
+                PortRange.builder().teamId(teamId).portType(PortType.HTTP_API)
+                        .rangeStart(8080).rangeEnd(8199).environment("local")
+                        .description("HTTP API ports for backend services").build(),
+                PortRange.builder().teamId(teamId).portType(PortType.FRONTEND_DEV)
+                        .rangeStart(5170).rangeEnd(5199).environment("local")
+                        .description("Frontend development server ports").build(),
+                PortRange.builder().teamId(teamId).portType(PortType.DATABASE)
+                        .rangeStart(5430).rangeEnd(5499).environment("local")
+                        .description("Database ports for PostgreSQL instances").build()
+        );
+
+        portRangeRepository.saveAll(ranges);
+        log.info("Seeded {} registry port ranges", ranges.size());
+    }
+
+    private void seedRegistryPortAllocations(Map<String, ServiceRegistration> services, UUID userId) {
+        List<PortAllocation> allocations = new ArrayList<>();
+        allocations.addAll(buildRegistryPorts(services.get("codeops-server"), 8095, 5432, null, userId));
+        allocations.addAll(buildRegistryPorts(services.get("codeops-registry"), 8096, 5435, null, userId));
+        allocations.addAll(buildRegistryPorts(services.get("codeops-vault"), 8097, 5436, null, userId));
+        allocations.addAll(buildRegistryPorts(services.get("codeops-logger"), 8098, 5437, null, userId));
+        allocations.addAll(buildRegistryPorts(services.get("codeops-courier"), 8099, 5438, null, userId));
+        allocations.addAll(buildRegistryPorts(services.get("codeops-datalens"), 8100, 5439, null, userId));
+        allocations.addAll(buildRegistryPorts(services.get("codeops-client"), null, null, 5173, userId));
+        allocations.addAll(buildRegistryPorts(services.get("codeops-scribe"), null, null, 5173, userId));
+        allocations.addAll(buildRegistryPorts(services.get("codeops-gateway"), 8080, null, null, userId));
+
+        portAllocationRepository.saveAll(allocations);
+        log.info("Seeded {} registry port allocations", allocations.size());
+    }
+
+    private void seedRegistryApiRoutes(Map<String, ServiceRegistration> services) {
+        List<ApiRouteRegistration> routes = List.of(
+                buildRegistryRoute(services.get("codeops-server"), "/api/v1/auth", "Authentication and team management"),
+                buildRegistryRoute(services.get("codeops-registry"), "/api/v1/registry", "Service registry CRUD"),
+                buildRegistryRoute(services.get("codeops-vault"), "/api/v1/vault", "Secrets management"),
+                buildRegistryRoute(services.get("codeops-logger"), "/api/v1/logs", "Logging and audit trail"),
+                buildRegistryRoute(services.get("codeops-courier"), "/api/v1/courier", "Notification delivery"),
+                buildRegistryRoute(services.get("codeops-datalens"), "/api/v1/datalens", "Analytics and reporting")
+        );
+
+        apiRouteRegistrationRepository.saveAll(routes);
+        log.info("Seeded {} registry API routes", routes.size());
+    }
+
+    private void seedRegistryEnvironmentConfigs(Map<String, ServiceRegistration> services) {
+        ServiceRegistration registry = services.get("codeops-registry");
+
+        List<EnvironmentConfig> configs = List.of(
+                buildRegistryConfig(registry, "spring.datasource.url",
+                        "jdbc:postgresql://localhost:5435/codeops_registry", "JDBC connection URL"),
+                buildRegistryConfig(registry, "spring.datasource.username", "postgres", "Database username"),
+                buildRegistryConfig(registry, "spring.datasource.password", "postgres", "Database password"),
+                buildRegistryConfig(registry, "spring.jpa.hibernate.ddl-auto", "update", "Hibernate schema strategy"),
+                buildRegistryConfig(registry, "codeops.jwt.secret",
+                        "dev-secret-key-minimum-32-characters-long-for-hs256", "JWT shared secret (dev default)")
+        );
+
+        environmentConfigRepository.saveAll(configs);
+        log.info("Seeded {} registry environment configs", configs.size());
+    }
+
+    private void seedRegistryWorkstationProfiles(Map<String, ServiceRegistration> services,
+                                                  UUID teamId, UUID userId) {
+        List<UUID> allIds = List.of(
+                services.get("codeops-server").getId(), services.get("codeops-gateway").getId(),
+                services.get("codeops-registry").getId(), services.get("codeops-vault").getId(),
+                services.get("codeops-logger").getId(), services.get("codeops-courier").getId(),
+                services.get("codeops-datalens").getId(), services.get("codeops-scribe").getId(),
+                services.get("codeops-client").getId());
+        List<UUID> backendIds = List.of(
+                services.get("codeops-server").getId(), services.get("codeops-registry").getId(),
+                services.get("codeops-vault").getId(), services.get("codeops-logger").getId(),
+                services.get("codeops-courier").getId(), services.get("codeops-datalens").getId());
+        List<UUID> registryDevIds = List.of(
+                services.get("codeops-server").getId(), services.get("codeops-registry").getId(),
+                services.get("codeops-client").getId());
+
+        List<WorkstationProfile> profiles = List.of(
+                WorkstationProfile.builder().teamId(teamId).name("Full Platform")
+                        .description("All 9 services for full platform development")
+                        .servicesJson(toJson(allIds)).startupOrder(toJson(allIds))
+                        .createdByUserId(userId).isDefault(true).build(),
+                WorkstationProfile.builder().teamId(teamId).name("Backend Only")
+                        .description("Backend services without frontend")
+                        .servicesJson(toJson(backendIds)).startupOrder(toJson(backendIds))
+                        .createdByUserId(userId).isDefault(false).build(),
+                WorkstationProfile.builder().teamId(teamId).name("Registry Dev")
+                        .description("Minimal setup for Registry development")
+                        .servicesJson(toJson(registryDevIds)).startupOrder(toJson(registryDevIds))
+                        .createdByUserId(userId).isDefault(false).build()
+        );
+
+        workstationProfileRepository.saveAll(profiles);
+        log.info("Seeded {} registry workstation profiles", profiles.size());
+    }
+
+    private void seedRegistryInfraResources(Map<String, ServiceRegistration> services,
+                                             UUID teamId, UUID userId) {
+        List<InfraResource> resources = List.of(
+                InfraResource.builder().teamId(teamId).resourceType(InfraResourceType.DOCKER_NETWORK)
+                        .resourceName("codeops-network").environment("local")
+                        .description("Shared Docker network for inter-service communication")
+                        .createdByUserId(userId).build(),
+                InfraResource.builder().teamId(teamId).service(services.get("codeops-server"))
+                        .resourceType(InfraResourceType.DOCKER_VOLUME)
+                        .resourceName("codeops-pg-data").environment("local")
+                        .description("Persistent volume for PostgreSQL data")
+                        .createdByUserId(userId).build()
+        );
+
+        infraResourceRepository.saveAll(resources);
+        log.info("Seeded {} registry infra resources", resources.size());
+    }
+
+    // ── Registry Builder Helpers ──
+
+    private ServiceRegistration buildRegistryService(UUID teamId, UUID userId, String name, String slug,
+                                                      ServiceType type, String description, String repoUrl,
+                                                      String repoFullName, String techStack, String healthCheckUrl) {
+        return ServiceRegistration.builder()
+                .teamId(teamId).name(name).slug(slug).serviceType(type)
+                .description(description).repoUrl(repoUrl).repoFullName(repoFullName)
+                .techStack(techStack).status(ServiceStatus.ACTIVE)
+                .healthCheckUrl(healthCheckUrl).createdByUserId(userId).build();
+    }
+
+    private ServiceDependency buildRegistryDep(ServiceRegistration source, ServiceRegistration target,
+                                                DependencyType type, String endpoint) {
+        return ServiceDependency.builder()
+                .sourceService(source).targetService(target)
+                .dependencyType(type).isRequired(true)
+                .description(source.getName() + " depends on " + target.getName())
+                .targetEndpoint(endpoint).build();
+    }
+
+    private SolutionMember buildRegistryMember(Solution solution, ServiceRegistration service,
+                                                SolutionMemberRole role, int order) {
+        return SolutionMember.builder()
+                .solution(solution).service(service)
+                .role(role).displayOrder(order).build();
+    }
+
+    private List<PortAllocation> buildRegistryPorts(ServiceRegistration service, Integer httpPort,
+                                                     Integer dbPort, Integer frontendPort, UUID userId) {
+        List<PortAllocation> ports = new ArrayList<>();
+        if (httpPort != null) {
+            ports.add(PortAllocation.builder().service(service).environment("local")
+                    .portType(PortType.HTTP_API).portNumber(httpPort).protocol("TCP")
+                    .isAutoAllocated(false).allocatedByUserId(userId).build());
+        }
+        if (dbPort != null) {
+            ports.add(PortAllocation.builder().service(service).environment("local")
+                    .portType(PortType.DATABASE).portNumber(dbPort).protocol("TCP")
+                    .isAutoAllocated(false).allocatedByUserId(userId).build());
+        }
+        if (frontendPort != null) {
+            ports.add(PortAllocation.builder().service(service).environment("local")
+                    .portType(PortType.FRONTEND_DEV).portNumber(frontendPort).protocol("TCP")
+                    .isAutoAllocated(false).allocatedByUserId(userId).build());
+        }
+        return ports;
+    }
+
+    private ApiRouteRegistration buildRegistryRoute(ServiceRegistration service, String prefix,
+                                                     String description) {
+        return ApiRouteRegistration.builder()
+                .service(service).routePrefix(prefix)
+                .httpMethods("GET,POST,PUT,DELETE,PATCH").environment("local")
+                .description(description).build();
+    }
+
+    private EnvironmentConfig buildRegistryConfig(ServiceRegistration service, String key,
+                                                   String value, String description) {
+        return EnvironmentConfig.builder()
+                .service(service).environment("local").configKey(key)
+                .configValue(value).configSource(ConfigSource.MANUAL)
+                .description(description).build();
     }
 }
