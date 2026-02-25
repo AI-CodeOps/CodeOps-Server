@@ -1,210 +1,158 @@
-# CodeOps Server -- Quality Scorecard
+# CodeOps-Server — Quality Scorecard
 
-**Project:** CodeOps Server
+**Audit Date:** 2026-02-25T13:00:00Z
 **Branch:** main
-**Commit:** f27f566acf8b53d9ee7a15081fea752f7ee3484a
-**Scorecard Date:** 2026-02-24T20:09:01Z
+**Commit:** f6de00aa5cd46eaa09904c5ad16def6784c11f21
 **Auditor:** Claude Code (Automated)
 
-> This scorecard is a retrospective quality assessment. It is NOT loaded into coding sessions.
-> It accompanies the audit (`CodeOps-Server-Audit.md`) and OpenAPI spec (`CodeOps-Server-OpenAPI.yaml`).
-
----
-
-## Scoring Key
-
-Each check is scored:
-- **0** -- Not present
-- **1** -- Partial implementation
-- **2** -- Fully implemented
-
----
-
-## Security (10 checks, max 20)
-
-| ID | Check | Score | Evidence |
-|----|-------|-------|----------|
-| SEC-01 | Auth on all mutation endpoints | 2 | Class-level `@PreAuthorize("isAuthenticated()")` on all core controllers. `@PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")` on Courier/Logger/Registry controllers. All 380+ endpoints covered via class-level annotations. Method-level grep returns 0/220 (false negative -- class-level auth is not captured by method-level grep). |
-| SEC-02 | SSRF protection on outbound URLs | 2 | 9 occurrences of URL validation across `AlertChannelService.validateWebhookUrl` and `TeamsWebhookService`. Blocks localhost, 127.0.0.1, ::1, 0.0.0.0, and all RFC1918 prefixes. HTTPS required for webhooks. |
-| SEC-03 | Token revocation / logout | 2 | 34 references to blacklist. `TokenBlacklistService` uses in-memory `ConcurrentHashMap`. JTI checked on every JWT validation. Logout invalidates tokens immediately. |
-| SEC-04 | Rate limiting present | 1 | `RateLimitFilter` applied to `/api/v1/auth/**` paths only. 10 requests per 60 seconds per IP. In-memory `ConcurrentHashMap` storage. **Gap:** Rate limiting does not cover non-auth endpoints (API abuse, data exfiltration). |
-| SEC-05 | Input validation on all request DTOs | 2 | Jakarta Validation on all request DTOs. `@NotBlank`, `@NotNull`, `@Size`, `@Min`, `@Max`, `@Valid` for nested objects. All controllers use `@Valid`. |
-| SEC-06 | Encryption at rest | 2 | AES-256-GCM for GitHub PAT and Jira API token via `EncryptionService`. Key sourced from config (`@Value`). Encrypted values never returned in API responses. |
-| SEC-07 | Password hashing | 2 | BCrypt with strength 12 configured in `SecurityConfig`. |
-| SEC-08 | Security headers configured | 2 | CSP (`default-src 'self'; frame-ancestors 'none'`), X-Frame-Options DENY, X-Content-Type-Options nosniff, HSTS 1 year. |
-| SEC-09 | CORS configuration | 2 | Configurable allowed origins (default `localhost:3000`). Credentials allowed. 1-hour preflight cache. No wildcard origins. |
-| SEC-10 | Audit logging | 2 | `AuditLogService` (`@Async`) tracks entity CRUD operations. 84 audit logging references across controllers. |
-
-**Security Score: 19 / 20 (95%)**
-
----
-
-## Data Integrity (8 checks, max 16)
-
-| ID | Check | Score | Evidence |
-|----|-------|-------|----------|
-| DAT-01 | All enum fields use `@Enumerated(STRING)` | 2 | 68 `@Enumerated(EnumType.STRING)` annotations. Zero `ORDINAL` usage anywhere in the codebase. |
-| DAT-02 | Database indexes on FK columns | 2 | 116 `@Index` annotations across entities. Foreign key columns are indexed. |
-| DAT-03 | Nullable constraints on required fields | 2 | 324 `nullable=false` column definitions across entity classes. |
-| DAT-04 | Optimistic locking (`@Version`) | 1 | 5 entities with `@Version` (`QaJob`, `Finding`, `TechDebtItem`, `RemediationTask`, `AgentRun`). **Gap:** Remaining 18 entities lack optimistic locking -- concurrent updates could produce lost-update anomalies on high-contention entities. |
-| DAT-05 | Cascade delete handled | 2 | `ProjectService.deleteProject()` handles FK-safe order deletion of all child records. Connections use soft delete (`isActive=false`). |
-| DAT-06 | Pagination on list queries | 2 | 42 references to `Pageable`/`PageResponse`. All list endpoints support pagination. Default page size 20, max 100. |
-| DAT-07 | Proper relationship mapping | 2 | JPA `@ManyToOne`/`@OneToMany` relationships used throughout. No comma-separated ID strings. |
-| DAT-08 | Audit timestamps on entities | 2 | 23 entities extend `BaseEntity` (id, createdAt, updatedAt). 4 exceptions: `SystemSetting`, `AuditLog`, `MfaEmailCode`, `ProjectDirective` -- all have documented reasons for deviation. |
-
-**Data Integrity Score: 15 / 16 (94%)**
-
----
-
-## API Quality (8 checks, max 16)
-
-| ID | Check | Score | Evidence |
-|----|-------|-------|----------|
-| API-01 | Consistent error responses (`GlobalExceptionHandler`) | 2 | 1 centralized handler covering 15 exception types. Consistent `ErrorResponse(status, message)` format. |
-| API-02 | Audit logging on mutations | 2 | 84 audit logging references in controllers. Mutations tracked via `AuditLogService`. |
-| API-03 | Pagination on list endpoints | 2 | 42 references to `Pageable`/`PageResponse`. Default page size 20, max 100. |
-| API-04 | Correct HTTP status codes | 2 | 321 status code references. Proper use of 200 (OK), 201 (Created), 204 (No Content), 400 (Bad Request), 401 (Unauthorized), 403 (Forbidden), 404 (Not Found), 405 (Method Not Allowed), 429 (Too Many Requests), 500 (Internal Server Error). |
-| API-05 | Input validation | 2 | All request DTOs use Jakarta Validation annotations. `@Valid` on all controller method parameters. |
-| API-06 | Correlation ID / request tracing | 2 | `RequestCorrelationFilter` generates/propagates `X-Correlation-ID` header. MDC integration for log correlation. |
-| API-07 | Consistent error response format | 2 | `ErrorResponse` record used across all modules. Consistent shape regardless of exception type. |
-| API-08 | OpenAPI / Swagger documentation | 2 | `springdoc-openapi-starter-webmvc-ui 2.5.0` configured. Swagger UI available at `/swagger-ui/index.html`. |
-
-**API Quality Score: 16 / 16 (100%)**
-
----
-
-## Code Quality (10 checks, max 20)
-
-| ID | Check | Score | Evidence |
-|----|-------|-------|----------|
-| CQ-01 | No `getReferenceById` usage | 2 | 0 usages. All repository calls use `findById` with proper `orElseThrow` error handling. |
-| CQ-02 | Consistent exception hierarchy | 2 | 4 custom exceptions: `CodeOpsException` (base), `AuthorizationException`, `ValidationException`, `NotFoundException`. Logger module has its own `ValidationException`. Clean hierarchy. |
-| CQ-03 | No TODO/FIXME/HACK in source | 1 | 2 found: 1 in seed data markdown (not production code), 1 in `EncryptionService` comment about key rotation. **Minor:** The `EncryptionService` TODO should be tracked as a backlog item. |
-| CQ-04 | Logging present in services/security | 2 | 176+ log statements across services. SLF4J/Logback with `@Slf4j` annotation. Structured logging (Logstash Logback Encoder) in prod profile. |
-| CQ-05 | MapStruct configuration | 2 | All mappers use `componentModel="spring"` with builder disabled. Boolean `is*` field mappings explicitly handled with `@Mapping` annotations. |
-| CQ-06 | Lazy loading on relationships | 2 | All `@ManyToOne` relationships use `FetchType.LAZY`. No eager fetching detected. |
-| CQ-07 | Lombok usage | 2 | `@Data`/`@Getter`/`@Setter`/`@Builder`/`@RequiredArgsConstructor` on all entities/services. Version 1.18.42 for Java 25 compatibility. |
-| CQ-08 | Transactional annotations | 2 | `@Transactional` on write operations. `@Transactional(readOnly = true)` on read operations where appropriate. |
-| CQ-09 | Doc comments on classes | 1 | Class-level documentation on approximately 40% of classes. **Gap:** Majority of classes lack Javadoc. Controllers, services, and security classes should all have class-level documentation per CONVENTIONS.md. |
-| CQ-10 | Package organization | 2 | Clean 4-module architecture. Each module follows `entity/enum/repository/service/controller/dto/mapper` pattern consistently. |
-
-**Code Quality Score: 18 / 20 (90%)**
-
----
-
-## Test Quality (10 checks, max 20)
-
-| ID | Check | Score | Evidence |
-|----|-------|-------|----------|
-| TST-01 | Unit test files | 2 | 146 unit test files. |
-| TST-02 | Integration test files | 2 | 16 integration test files with 121 `@Test` methods. |
-| TST-03 | Real database in integration tests | 2 | Testcontainers PostgreSQL and Kafka (3 references). H2 for unit tests. |
-| TST-04 | Source-to-test ratio | 2 | 146 unit test files covering services, controllers, and security. Strong coverage. |
-| TST-05 | Code coverage (JaCoCo) | 2 | JaCoCo 0.8.14 configured for coverage reports. |
-| TST-06 | Test configuration | 2 | `application-test.yml` (H2, Kafka disabled) and `application-integration.yml` (Testcontainers PostgreSQL). |
-| TST-07 | Security tests | 2 | 185 references to security testing (`@WithMockUser`, `authentication()`, `SecurityContext`). |
-| TST-08 | Test framework compatibility | 2 | Mockito 5.21.0 and ByteBuddy 1.18.4 for Java 25 compatibility. `--add-opens` args in Surefire. |
-| TST-09 | WebMvcTest pattern | 2 | `@WebMvcTest` + `@Import(TestSecurityConfig)` + `@EnableMethodSecurity`. Proper filter chain handling with `FilterRegistrationBean` disablement. |
-| TST-10 | Total test methods | 2 | 2431 unit + 121 integration = **2552 total `@Test` methods**. |
-
-**Test Quality Score: 20 / 20 (100%)**
-
----
-
-## Infrastructure (6 checks, max 12)
-
-| ID | Check | Score | Evidence |
-|----|-------|-------|----------|
-| INF-01 | Non-root Dockerfile | 2 | Dockerfile uses `appuser`/`appgroup`. Application runs as non-root. |
-| INF-02 | DB ports localhost only | 2 | PostgreSQL bound to `127.0.0.1:5432` in `docker-compose.yml`. Not exposed to external interfaces. |
-| INF-03 | Environment variables for prod secrets | 2 | 9+ environment variables: `DATABASE_URL`, `JWT_SECRET`, `ENCRYPTION_KEY`, S3 config, MAIL config. Secrets not hardcoded. |
-| INF-04 | Structured logging | 2 | Logstash Logback Encoder in prod profile. JSON format for log aggregation. |
-| INF-05 | Health check endpoint | 2 | `/api/v1/health` (public) and `/api/v1/courier/health` (public). |
-| INF-06 | CI/CD pipeline | 0 | **No pipeline files detected.** No GitHub Actions, Jenkins, GitLab CI, or any CI/CD configuration. |
-
-**Infrastructure Score: 10 / 12 (83%)**
+> Scoring: 0 = not present | 1 = partial | 2 = fully implemented
+> Grade: A (85-100%) | B (70-84%) | C (55-69%) | D (40-54%) | F (<40%)
 
 ---
 
 ## Scorecard Summary
 
-```
-Category             | Score | Max |    %
----------------------+-------+-----+------
-Security             |    19 |  20 |  95%
-Data Integrity       |    15 |  16 |  94%
-API Quality          |    16 |  16 | 100%
-Code Quality         |    18 |  20 |  90%
-Test Quality         |    20 |  20 | 100%
-Infrastructure       |    10 |  12 |  83%
----------------------+-------+-----+------
-OVERALL              |    98 | 104 |  94%
+| Category         | Score | Max | %    |
+|------------------|-------|-----|------|
+| Security         | 18    | 20  | 90%  |
+| Data Integrity   | 13    | 16  | 81%  |
+| API Quality      | 15    | 16  | 94%  |
+| Code Quality     | 18    | 20  | 90%  |
+| Test Quality     | 19    | 20  | 95%  |
+| Infrastructure   | 10    | 12  | 83%  |
+| **OVERALL**      | **93**| **104** | **89%** |
 
-Grade: A
-```
+**Grade: A**
 
 ---
 
-## Blocking Issues (Score 0)
+## Security (18 / 20)
 
-| ID | Check | Impact | Recommendation |
-|----|-------|--------|----------------|
-| INF-06 | CI/CD pipeline | No automated build, test, or deployment pipeline. Manual processes are error-prone and do not scale. | Create a GitHub Actions workflow with build, test (unit + integration), JaCoCo coverage gate, and Docker image publish stages. |
+| Check | Description | Raw Data | Score |
+|-------|-------------|----------|-------|
+| SEC-01 | Auth on all mutation endpoints | 244 @PreAuthorize / 252 total mutations (96.8%) | 2 |
+| SEC-02 | No hardcoded secrets in source | 7 matches (dev defaults: DB password, JWT fallback secret) | 1 |
+| SEC-03 | Input validation on request DTOs | 450 validation annotations across 151 request DTO files | 2 |
+| SEC-04 | CORS not using wildcards | 0 wildcard origins found | 2 |
+| SEC-05 | Encryption key not hardcoded | 0 hardcoded keys (all from @Value env vars) | 2 |
+| SEC-06 | Security headers configured | 3 refs (contentSecurityPolicy, frameOptions, contentTypeOptions) — missing HSTS | 1 |
+| SEC-07 | Rate limiting present | RateLimitFilter.java (10 req/60s on /auth/**) | 2 |
+| SEC-08 | SSRF protection on outbound URLs | 9 refs (isLoopbackAddress, isSiteLocalAddress, validateWebhookUrl) | 2 |
+| SEC-09 | Token revocation / logout | 34 refs (TokenBlacklistService, in-memory ConcurrentHashMap) | 2 |
+| SEC-10 | Password complexity enforcement | 6 refs (PasswordValidator, min length check) — dev-minimal by design | 2 |
 
----
-
-## Improvement Recommendations
-
-### Priority 1 -- Blocking
-
-1. **INF-06: Add CI/CD pipeline.** No GitHub Actions, Jenkins, or any pipeline configuration exists. This is the single largest operational gap. A minimal pipeline should: compile, run all 2552 tests, enforce JaCoCo coverage thresholds, build the Docker image, and push to a container registry. Estimated effort: single pass.
-
-### Priority 2 -- High Value
-
-2. **SEC-04: Extend rate limiting beyond auth endpoints.** Currently only `/api/v1/auth/**` is rate-limited (10 req/60s/IP). All mutation endpoints and data-intensive GET endpoints should have rate limits to prevent API abuse and data exfiltration. Consider a tiered approach: stricter limits on auth, moderate on mutations, lighter on reads.
-
-3. **CQ-09: Increase Javadoc coverage to 100%.** Class-level documentation is at approximately 40%. CONVENTIONS.md mandates documentation on every class and public method (excluding DTOs, entities, and generated code). A single documentation pass across all services, controllers, security classes, mappers, and configuration classes would close this gap.
-
-4. **DAT-04: Expand optimistic locking.** Only 5 of 23 entities have `@Version`. Consider adding `@Version` to entities with high concurrent-write potential: `Project`, `Team`, `TeamMember`, `Connection`, `AlertChannel`, `Persona`, `Directive`. Low-contention entities (audit logs, system settings) can remain without.
-
-### Priority 3 -- Incremental
-
-5. **CQ-03: Resolve remaining TODOs.** The `EncryptionService` TODO about key rotation should be tracked and resolved. Key rotation is a production security requirement.
-
-6. **SEC-04 (supplement): Move rate limiting storage to Redis.** The current in-memory `ConcurrentHashMap` does not survive restarts and does not work in multi-instance deployments. Redis (already in the Docker Compose stack) is the natural choice.
-
-7. **SEC-03 (supplement): Move token blacklist to Redis.** Same reasoning as rate limiting -- the in-memory `ConcurrentHashMap` blacklist is lost on restart, meaning revoked tokens become valid again after a server restart. Redis provides persistence and multi-instance consistency.
+**Notes:**
+- SEC-02: Hardcoded values are dev defaults in `application-dev.yml` (DB password `codeops`, JWT fallback). Production uses env vars via `application-prod.yml`. Low risk but should use env vars everywhere.
+- SEC-06: Missing HSTS header configuration. ContentSecurityPolicy, frameOptions, and contentTypeOptions are present.
 
 ---
 
-## Category Deep Dive
+## Data Integrity (13 / 16)
 
-### Security -- 19/20
+| Check | Description | Raw Data | Score |
+|-------|-------------|----------|-------|
+| DAT-01 | All enum fields use @Enumerated(STRING) | 77/77 (100%) | 2 |
+| DAT-02 | Database indexes on FK columns | 149 @Index annotations | 2 |
+| DAT-03 | Nullable constraints on required fields | 379 nullable=false constraints | 2 |
+| DAT-04 | Optimistic locking (@Version) | 5 entities (QaJob, Finding, TechDebtItem, RemediationTask, AgentRun) | 2 |
+| DAT-05 | No unbounded queries | 168 List<> return methods without Pageable | 1 |
+| DAT-06 | No in-memory filtering of DB results | 3 stream().filter() calls in services | 1 |
+| DAT-07 | Proper relationship mapping | 8 split(",") calls — participantIds and mentionedUserIds stored as comma-separated strings | 1 |
+| DAT-08 | Audit timestamps on entities | 81 refs — BaseEntity pattern with @PrePersist/@PreUpdate | 2 |
 
-The security posture is strong. Authentication is enforced at the class level on all controllers, eliminating the risk of unprotected endpoints slipping through. SSRF protection is thorough with RFC1918 blocking and HTTPS enforcement. AES-256-GCM encryption protects sensitive credentials. The only gap is rate limiting scope -- auth endpoints are protected, but the rest of the API surface is unguarded.
-
-**In-memory concerns:** Both rate limiting (SEC-04) and token blacklisting (SEC-03) use `ConcurrentHashMap`. This works for single-instance development but will not survive restarts or scale to multiple instances. Both should migrate to Redis before production.
-
-### Data Integrity -- 15/16
-
-All enums use `STRING` storage (zero ORDINAL usage). 116 indexes and 324 not-null constraints demonstrate disciplined schema design. Pagination is enforced on all list endpoints. The only gap is partial optimistic locking -- 5 of 23 entities have `@Version`. The 5 that do (`QaJob`, `Finding`, `TechDebtItem`, `RemediationTask`, `AgentRun`) are the entities most likely to see concurrent writes from background jobs, which is a good prioritization.
-
-### API Quality -- 16/16
-
-Full marks. Centralized error handling with 15 exception types, consistent `ErrorResponse` format, correlation IDs via `X-Correlation-ID`, proper HTTP status codes, Jakarta Validation on all inputs, and Swagger/OpenAPI documentation. This is a model API layer.
-
-### Code Quality -- 18/20
-
-Clean architecture with a consistent 4-module pattern. Zero `getReferenceById` calls, all `LAZY` fetch types, proper `@Transactional` usage, and a well-structured exception hierarchy. The two gaps are Javadoc coverage (40%) and 2 residual TODOs. Neither is a functional issue, but both violate CONVENTIONS.md mandates.
-
-### Test Quality -- 20/20
-
-Full marks. 2552 test methods across 162 files. Strong security test coverage (185 references). Proper test infrastructure with Testcontainers for integration tests, H2 for unit tests, and dedicated test configuration profiles. Mockito and ByteBuddy versions are updated for Java 25 compatibility.
-
-### Infrastructure -- 10/12
-
-Non-root Docker, localhost-only DB ports, structured JSON logging in production, health endpoints, and environment variable-driven secrets. The single zero-score is the absence of any CI/CD pipeline -- no GitHub Actions, no Jenkins, no GitLab CI. This is the most impactful gap in the entire scorecard.
+**Notes:**
+- DAT-05: 168 repository methods return unbounded List<>. Most are scoped by parent FK (e.g., findByProjectId, findByTeamId) limiting result sets. 44 have Pageable alternatives. Low risk for current data volumes.
+- DAT-06: 3 stream().filter() calls in service layer. Minimal impact.
+- DAT-07: DirectConversation.participantIds and Message.mentionedUserIds use comma-separated UUID strings instead of join tables. Functional but limits querying.
 
 ---
 
-*Generated by Claude Code (Automated) -- 2026-02-24T20:09:01Z*
+## API Quality (15 / 16)
+
+| Check | Description | Raw Data | Score |
+|-------|-------------|----------|-------|
+| API-01 | Global exception handler | GlobalExceptionHandler.java with 12+ exception mappings | 2 |
+| API-02 | Error messages sanitized | Controlled getMessage() for known exceptions; catch-all returns "An unexpected error occurred" | 2 |
+| API-03 | Audit logging on mutations | AuditLogService called from service layer (@Async), not directly in controllers | 1 |
+| API-04 | Pagination on list endpoints | 119 Pageable/Page refs in controllers | 2 |
+| API-05 | Correct HTTP status codes | 374 explicit HTTP status refs (201 Created, 204 No Content, etc.) | 2 |
+| API-06 | OpenAPI / Swagger documented | springdoc-openapi 2.5.0 configured with @Tag annotations on all controllers | 2 |
+| API-07 | Consistent DTO naming | 293 *Request.java / *Response.java files | 2 |
+| API-08 | File upload validation | 55 refs (getContentType, getSize, validateFile) | 2 |
+
+**Notes:**
+- API-03: Audit logging happens in the service layer (AuditLogService.log() is @Async fire-and-forget). This is architecturally sound but the scorecard check looks for controller-level refs. All mutations are audit-logged via service methods.
+
+---
+
+## Code Quality (18 / 20)
+
+| Check | Description | Raw Data | Score |
+|-------|-------------|----------|-------|
+| CQ-01 | No getReferenceById | 0 occurrences — all use findById with proper Optional handling | 2 |
+| CQ-02 | Consistent exception hierarchy | 4 classes: CodeOpsException (base), AuthorizationException, NotFoundException, ValidationException | 2 |
+| CQ-03 | No TODO/FIXME/HACK | 2 total (1 EncryptionService TODO, 1 in seed data content) | 2 |
+| CQ-04 | Constants centralized | AppConstants.java with all API prefixes, defaults, and limits | 2 |
+| CQ-05 | Async exception handling | AsyncConfigurer + AsyncUncaughtExceptionHandler configured | 2 |
+| CQ-06 | RestTemplate injected (not new'd) | 0 `new RestTemplate()` — all injected via @Bean | 2 |
+| CQ-07 | Logging in services/security | 198 @Slf4j annotations across all services and controllers | 2 |
+| CQ-08 | No raw exception messages to clients | 0 ex.getMessage() in controllers — all handled by GlobalExceptionHandler | 2 |
+| CQ-09 | Doc comments on classes | 103 / 267 classes (38.6%) — controllers and services documented, configs/utils partial | 1 |
+| CQ-10 | Doc comments on public methods | 309 / 760 public methods (40.7%) — Courier and Relay modules well-documented, Core partial | 1 |
+
+**Notes:**
+- CQ-09/CQ-10: Documentation coverage improved significantly with Logger, Courier, and Relay modules (all new code is fully documented). Core module classes predate the documentation standard. Excludes DTOs, entities, and enums per convention.
+
+---
+
+## Test Quality (19 / 20)
+
+| Check | Description | Raw Data | Score |
+|-------|-------------|----------|-------|
+| TST-01 | Unit test files | 179 files | 2 |
+| TST-02 | Integration test files | 16 files | 2 |
+| TST-03 | Real database in integration tests | Testcontainers PostgreSQL + H2 for unit | 2 |
+| TST-04 | Source-to-test ratio | 180 test files / 149 source files = 1.2:1 | 2 |
+| TST-05 | Code coverage >= 80% | JaCoCo configured (0.8.14) — not verified in this audit | 1 |
+| TST-06 | Test config exists | application-test.yml, application-integration.yml | 2 |
+| TST-07 | Security tests | 203 security-related test assertions (@WithMockUser, auth headers) | 2 |
+| TST-08 | Auth flow e2e tests | 175 refs in integration tests (register, login, /auth/) | 2 |
+| TST-09 | DB state verification in ITs | 22 repository/query assertions in integration tests | 2 |
+| TST-10 | Total @Test methods | 2941 unit + 121 integration = 3,062 total | 2 |
+
+**Notes:**
+- TST-05: JaCoCo Maven plugin 0.8.14 is configured. Coverage report not generated during this audit run. Scored 1 (present but not verified).
+
+---
+
+## Infrastructure (10 / 12)
+
+| Check | Description | Raw Data | Score |
+|-------|-------------|----------|-------|
+| INF-01 | Non-root Dockerfile | USER directive present in Dockerfile | 2 |
+| INF-02 | DB ports localhost only | `127.0.0.1:5432:5432` in docker-compose.yml | 2 |
+| INF-03 | Env vars for prod secrets | 9 `${...}` references in application-prod.yml | 2 |
+| INF-04 | Health check endpoint | 327 refs — /health endpoints on all modules + custom HealthMonitorService | 2 |
+| INF-05 | Structured logging | LogstashEncoder configured in logback-spring.xml for prod profile | 2 |
+| INF-06 | CI/CD configuration | 0 pipeline files found | **0** |
+
+**BLOCKING ISSUE:**
+- **INF-06: No CI/CD pipeline.** No `.github/workflows`, `Jenkinsfile`, or `.gitlab-ci.yml` detected. Automated build, test, and deployment pipelines should be configured before production deployment.
+
+---
+
+## Recommendations
+
+### Priority 1 — Blocking
+1. **INF-06**: Add CI/CD pipeline (GitHub Actions recommended) for automated build, test, and deployment
+
+### Priority 2 — Improvements
+2. **SEC-02**: Move all dev defaults to environment variables; remove hardcoded DB password from `application-dev.yml`
+3. **SEC-06**: Add HSTS header configuration (`httpStrictTransportSecurity`)
+4. **DAT-05**: Add pagination alternatives for the most frequently called unbounded list queries
+5. **DAT-07**: Consider join tables for `participantIds` and `mentionedUserIds` in Relay module
+
+### Priority 3 — Nice to Have
+6. **CQ-09/CQ-10**: Improve Javadoc coverage on Core module classes and methods
+7. **TST-05**: Run JaCoCo and verify 80%+ line coverage
+8. **DAT-06**: Replace stream().filter() calls with database-level filtering where practical

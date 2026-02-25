@@ -151,7 +151,7 @@ public class RelayDataSeeder implements CommandLineRunner {
 
         // DM conversation between adam and sarah
         DirectConversationResponse dmConvo = directMessageService.getOrCreateConversation(
-                new CreateDirectConversationRequest(List.of(adam.getId(), sarah.getId()), null),
+                new CreateDirectConversationRequest(List.of(sarah.getId()), null),
                 teamId, adam.getId());
 
         directMessageService.sendDirectMessage(dmConvo.id(),

@@ -282,6 +282,281 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/TaskResponse"
+  /api/v1/relay/presence:
+    get:
+      tags:
+      - presence-controller
+      operationId: getPresence
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserPresenceResponse"
+    put:
+      tags:
+      - presence-controller
+      operationId: updatePresence
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePresenceRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserPresenceResponse"
+  /api/v1/relay/dm/messages/{messageId}:
+    put:
+      tags:
+      - direct-message-controller
+      operationId: editDirectMessage
+      parameters:
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDirectMessageRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DirectMessageResponse"
+    delete:
+      tags:
+      - direct-message-controller
+      operationId: deleteDirectMessage
+      parameters:
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/channels/{channelId}:
+    get:
+      tags:
+      - channel-controller
+      operationId: getChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+    put:
+      tags:
+      - channel-controller
+      operationId: updateChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateChannelRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+    delete:
+      tags:
+      - channel-controller
+      operationId: deleteChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/channels/{channelId}/messages/{messageId}:
+    get:
+      tags:
+      - message-controller
+      operationId: getMessage
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    put:
+      tags:
+      - message-controller
+      operationId: editMessage
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMessageRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    delete:
+      tags:
+      - message-controller
+      operationId: deleteMessage
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/channels/{channelId}/members/{targetUserId}/role:
+    put:
+      tags:
+      - channel-controller
+      operationId: updateMemberRole_1
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: targetUserId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMemberRoleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelMemberResponse"
   /api/v1/registry/workstations/{profileId}:
     get:
       tags:
@@ -1424,7 +1699,7 @@ paths:
       tags:
       - Alerts
       summary: Get an alert channel by ID
-      operationId: getChannel
+      operationId: getChannel_1
       parameters:
       - name: channelId
         in: path
@@ -1443,7 +1718,7 @@ paths:
       tags:
       - Alerts
       summary: Update an alert channel
-      operationId: updateChannel
+      operationId: updateChannel_1
       parameters:
       - name: channelId
         in: path
@@ -1468,7 +1743,7 @@ paths:
       tags:
       - Alerts
       summary: Delete an alert channel
-      operationId: deleteChannel
+      operationId: deleteChannel_1
       parameters:
       - name: channelId
         in: path
@@ -2859,6 +3134,611 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
+  /api/v1/relay/reactions/messages/{messageId}/toggle:
+    post:
+      tags:
+      - reaction-controller
+      operationId: toggleReaction
+      parameters:
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddReactionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReactionResponse"
+  /api/v1/relay/presence/offline:
+    post:
+      tags:
+      - presence-controller
+      operationId: goOffline
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/presence/dnd:
+    post:
+      tags:
+      - presence-controller
+      operationId: setDoNotDisturb
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: statusMessage
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserPresenceResponse"
+    delete:
+      tags:
+      - presence-controller
+      operationId: clearDoNotDisturb
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserPresenceResponse"
+  /api/v1/relay/files/upload:
+    post:
+      tags:
+      - file-controller
+      operationId: uploadFile
+      parameters:
+      - name: messageId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+              - file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/FileAttachmentResponse"
+  /api/v1/relay/events/{eventId}/retry:
+    post:
+      tags:
+      - platform-event-controller
+      operationId: retryDelivery
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PlatformEventResponse"
+  /api/v1/relay/events/retry-all:
+    post:
+      tags:
+      - platform-event-controller
+      operationId: retryAllUndelivered
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  format: int32
+  /api/v1/relay/dm/conversations:
+    get:
+      tags:
+      - direct-message-controller
+      operationId: getConversations
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DirectConversationSummaryResponse"
+    post:
+      tags:
+      - direct-message-controller
+      operationId: getOrCreateConversation
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDirectConversationRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DirectConversationResponse"
+  /api/v1/relay/dm/conversations/{conversationId}/read:
+    post:
+      tags:
+      - direct-message-controller
+      operationId: markConversationRead
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/dm/conversations/{conversationId}/messages:
+    get:
+      tags:
+      - direct-message-controller
+      operationId: getMessages
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseDirectMessageResponse"
+    post:
+      tags:
+      - direct-message-controller
+      operationId: sendDirectMessage
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendDirectMessageRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DirectMessageResponse"
+  /api/v1/relay/channels:
+    get:
+      tags:
+      - channel-controller
+      operationId: getChannels
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseChannelSummaryResponse"
+    post:
+      tags:
+      - channel-controller
+      operationId: createChannel
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChannelRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+  /api/v1/relay/channels/{channelId}/unarchive:
+    post:
+      tags:
+      - channel-controller
+      operationId: unarchiveChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
+  /api/v1/relay/channels/{channelId}/pins:
+    get:
+      tags:
+      - channel-controller
+      operationId: getPinnedMessages
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PinnedMessageResponse"
+    post:
+      tags:
+      - channel-controller
+      operationId: pinMessage
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PinMessageRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PinnedMessageResponse"
+  /api/v1/relay/channels/{channelId}/messages:
+    get:
+      tags:
+      - message-controller
+      operationId: getChannelMessages
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseMessageResponse"
+    post:
+      tags:
+      - message-controller
+      operationId: sendMessage
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/v1/relay/channels/{channelId}/messages/read:
+    post:
+      tags:
+      - message-controller
+      operationId: markRead
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkReadRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReadReceiptResponse"
+  /api/v1/relay/channels/{channelId}/members/invite:
+    post:
+      tags:
+      - channel-controller
+      operationId: inviteMember_1
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteMemberRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelMemberResponse"
+  /api/v1/relay/channels/{channelId}/leave:
+    post:
+      tags:
+      - channel-controller
+      operationId: leaveChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/channels/{channelId}/join:
+    post:
+      tags:
+      - channel-controller
+      operationId: joinChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelMemberResponse"
+  /api/v1/relay/channels/{channelId}/archive:
+    post:
+      tags:
+      - channel-controller
+      operationId: archiveChannel
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
   /api/v1/registry/workstations/{profileId}/refresh-startup-order:
     post:
       tags:
@@ -4211,7 +5091,7 @@ paths:
       tags:
       - Alerts
       summary: List alert channels for the team
-      operationId: getChannels
+      operationId: getChannels_1
       responses:
         "200":
           description: OK
@@ -4225,7 +5105,7 @@ paths:
       tags:
       - Alerts
       summary: Create an alert channel
-      operationId: createChannel
+      operationId: createChannel_1
       requestBody:
         content:
           application/json:
@@ -5692,6 +6572,37 @@ paths:
                 type: object
                 additionalProperties:
                   type: object
+  /api/v1/relay/channels/{channelId}/topic:
+    patch:
+      tags:
+      - channel-controller
+      operationId: updateTopic
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateChannelTopicRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChannelResponse"
   /api/v1/registry/workstations/{profileId}/set-default:
     patch:
       tags:
@@ -6108,6 +7019,545 @@ paths:
             '*/*':
               schema:
                 type: string
+  /api/v1/relay/reactions/messages/{messageId}:
+    get:
+      tags:
+      - reaction-controller
+      operationId: getReactionsForMessage
+      parameters:
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReactionSummaryResponse"
+  /api/v1/relay/reactions/messages/{messageId}/mine:
+    get:
+      tags:
+      - reaction-controller
+      operationId: getReactionsForMessageWithUser
+      parameters:
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReactionSummaryResponse"
+  /api/v1/relay/presence/team:
+    get:
+      tags:
+      - presence-controller
+      operationId: getTeamPresence
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserPresenceResponse"
+  /api/v1/relay/presence/online:
+    get:
+      tags:
+      - presence-controller
+      operationId: getOnlineUsers
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserPresenceResponse"
+  /api/v1/relay/presence/count:
+    get:
+      tags:
+      - presence-controller
+      operationId: getPresenceCount
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  format: int64
+  /api/v1/relay/messages/unread-counts:
+    get:
+      tags:
+      - message-controller
+      operationId: getUnreadCounts
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnreadCountResponse"
+  /api/v1/relay/messages/search-all:
+    get:
+      tags:
+      - message-controller
+      operationId: searchMessagesAcrossChannels
+      parameters:
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseChannelSearchResultResponse"
+  /api/v1/relay/health:
+    get:
+      tags:
+      - relay-health-controller
+      operationId: health
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/relay/files/{attachmentId}/download:
+    get:
+      tags:
+      - file-controller
+      operationId: downloadFile
+      parameters:
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: byte
+  /api/v1/relay/files/messages/{messageId}:
+    get:
+      tags:
+      - file-controller
+      operationId: getAttachmentsForMessage
+      parameters:
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FileAttachmentResponse"
+  /api/v1/relay/events:
+    get:
+      tags:
+      - platform-event-controller
+      operationId: getEventsForTeam
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponsePlatformEventResponse"
+  /api/v1/relay/events/{eventId}:
+    get:
+      tags:
+      - platform-event-controller
+      operationId: getEvent
+      parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PlatformEventResponse"
+  /api/v1/relay/events/undelivered:
+    get:
+      tags:
+      - platform-event-controller
+      operationId: getUndeliveredEvents
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformEventResponse"
+  /api/v1/relay/events/type/{eventType}:
+    get:
+      tags:
+      - platform-event-controller
+      operationId: getEventsForTeamByType
+      parameters:
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: eventType
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - AUDIT_COMPLETED
+          - ALERT_FIRED
+          - SESSION_COMPLETED
+          - SECRET_ROTATED
+          - CONTAINER_CRASHED
+          - SERVICE_REGISTERED
+          - DEPLOYMENT_COMPLETED
+          - BUILD_COMPLETED
+          - FINDING_CRITICAL
+          - MERGE_REQUEST_CREATED
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponsePlatformEventResponse"
+  /api/v1/relay/events/entity/{sourceEntityId}:
+    get:
+      tags:
+      - platform-event-controller
+      operationId: getEventsForEntity
+      parameters:
+      - name: sourceEntityId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformEventResponse"
+  /api/v1/relay/dm/conversations/{conversationId}:
+    get:
+      tags:
+      - direct-message-controller
+      operationId: getConversation
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DirectConversationResponse"
+    delete:
+      tags:
+      - direct-message-controller
+      operationId: deleteConversation
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/dm/conversations/{conversationId}/unread:
+    get:
+      tags:
+      - direct-message-controller
+      operationId: getUnreadCount
+      parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  format: int64
+  /api/v1/relay/channels/{channelId}/threads/active:
+    get:
+      tags:
+      - message-controller
+      operationId: getActiveThreads
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageThreadResponse"
+  /api/v1/relay/channels/{channelId}/messages/{parentMessageId}/thread:
+    get:
+      tags:
+      - message-controller
+      operationId: getThreadReplies
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: parentMessageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageResponse"
+  /api/v1/relay/channels/{channelId}/messages/search:
+    get:
+      tags:
+      - message-controller
+      operationId: searchMessages
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseMessageResponse"
+  /api/v1/relay/channels/{channelId}/members:
+    get:
+      tags:
+      - channel-controller
+      operationId: getMembers
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChannelMemberResponse"
   /api/v1/registry/teams/{teamId}/workstations/default:
     get:
       tags:
@@ -8056,7 +9506,7 @@ paths:
     get:
       tags:
       - Health
-      operationId: health
+      operationId: health_1
       responses:
         "200":
           description: OK
@@ -9000,7 +10450,7 @@ paths:
     get:
       tags:
       - Health
-      operationId: health_1
+      operationId: health_2
       responses:
         "200":
           description: OK
@@ -9549,6 +10999,75 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/relay/files/{attachmentId}:
+    delete:
+      tags:
+      - file-controller
+      operationId: deleteAttachment
+      parameters:
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/channels/{channelId}/pins/{messageId}:
+    delete:
+      tags:
+      - channel-controller
+      operationId: unpinMessage
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
+  /api/v1/relay/channels/{channelId}/members/{targetUserId}:
+    delete:
+      tags:
+      - channel-controller
+      operationId: removeMember_1
+      parameters:
+      - name: channelId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: targetUserId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: teamId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: No Content
   /api/v1/registry/routes/{routeId}:
     delete:
       tags:
@@ -9903,6 +11422,300 @@ components:
         jiraKey:
           type: string
         createdAt:
+          type: string
+          format: date-time
+    UpdatePresenceRequest:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - ONLINE
+          - AWAY
+          - DND
+          - OFFLINE
+        statusMessage:
+          maxLength: 200
+          minLength: 0
+          type: string
+    UserPresenceResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        userDisplayName:
+          type: string
+        teamId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - ONLINE
+          - AWAY
+          - DND
+          - OFFLINE
+        statusMessage:
+          type: string
+        lastSeenAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateDirectMessageRequest:
+      required:
+      - content
+      type: object
+      properties:
+        content:
+          maxLength: 10000
+          minLength: 0
+          type: string
+    DirectMessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        senderId:
+          type: string
+          format: uuid
+        senderDisplayName:
+          type: string
+        content:
+          type: string
+        messageType:
+          type: string
+          enum:
+          - TEXT
+          - SYSTEM
+          - PLATFORM_EVENT
+          - FILE
+        isEdited:
+          type: boolean
+        editedAt:
+          type: string
+          format: date-time
+        isDeleted:
+          type: boolean
+        reactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReactionSummaryResponse"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileAttachmentResponse"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    FileAttachmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        contentType:
+          type: string
+        fileSizeBytes:
+          type: integer
+          format: int64
+        downloadUrl:
+          type: string
+        thumbnailUrl:
+          type: string
+        status:
+          type: string
+          enum:
+          - UPLOADING
+          - COMPLETE
+          - FAILED
+        uploadedBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    ReactionSummaryResponse:
+      type: object
+      properties:
+        emoji:
+          type: string
+        count:
+          type: integer
+          format: int64
+        currentUserReacted:
+          type: boolean
+        userIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    UpdateChannelRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 0
+          type: string
+        description:
+          type: string
+        isArchived:
+          type: boolean
+    ChannelResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        topic:
+          type: string
+        channelType:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+          - PROJECT
+          - SERVICE
+        teamId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        serviceId:
+          type: string
+          format: uuid
+        isArchived:
+          type: boolean
+        createdBy:
+          type: string
+          format: uuid
+        memberCount:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateMessageRequest:
+      required:
+      - content
+      type: object
+      properties:
+        content:
+          maxLength: 10000
+          minLength: 0
+          type: string
+    MessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        senderId:
+          type: string
+          format: uuid
+        senderDisplayName:
+          type: string
+        content:
+          type: string
+        messageType:
+          type: string
+          enum:
+          - TEXT
+          - SYSTEM
+          - PLATFORM_EVENT
+          - FILE
+        parentId:
+          type: string
+          format: uuid
+        isEdited:
+          type: boolean
+        editedAt:
+          type: string
+          format: date-time
+        isDeleted:
+          type: boolean
+        mentionsEveryone:
+          type: boolean
+        mentionedUserIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        platformEventId:
+          type: string
+          format: uuid
+        reactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReactionSummaryResponse"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileAttachmentResponse"
+        replyCount:
+          type: integer
+          format: int32
+        lastReplyAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ChannelMemberResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        userDisplayName:
+          type: string
+        role:
+          type: string
+          enum:
+          - OWNER
+          - ADMIN
+          - MEMBER
+        isMuted:
+          type: boolean
+        lastReadAt:
+          type: string
+          format: date-time
+        joinedAt:
           type: string
           format: date-time
     UpdateWorkstationProfileRequest:
@@ -12722,6 +14535,225 @@ components:
           - P1
           - P2
           - P3
+    AddReactionRequest:
+      required:
+      - emoji
+      type: object
+      properties:
+        emoji:
+          maxLength: 50
+          minLength: 0
+          type: string
+    ReactionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        userDisplayName:
+          type: string
+        emoji:
+          type: string
+        reactionType:
+          type: string
+          enum:
+          - EMOJI
+        createdAt:
+          type: string
+          format: date-time
+    PlatformEventResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          enum:
+          - AUDIT_COMPLETED
+          - ALERT_FIRED
+          - SESSION_COMPLETED
+          - SECRET_ROTATED
+          - CONTAINER_CRASHED
+          - SERVICE_REGISTERED
+          - DEPLOYMENT_COMPLETED
+          - BUILD_COMPLETED
+          - FINDING_CRITICAL
+          - MERGE_REQUEST_CREATED
+        teamId:
+          type: string
+          format: uuid
+        sourceModule:
+          type: string
+        sourceEntityId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        detail:
+          type: string
+        targetChannelId:
+          type: string
+          format: uuid
+        targetChannelSlug:
+          type: string
+        isDelivered:
+          type: boolean
+        deliveredAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    CreateDirectConversationRequest:
+      required:
+      - participantIds
+      type: object
+      properties:
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        name:
+          type: string
+    DirectConversationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        conversationType:
+          type: string
+          enum:
+          - ONE_ON_ONE
+          - GROUP
+        name:
+          type: string
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        lastMessageAt:
+          type: string
+          format: date-time
+        lastMessagePreview:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    SendDirectMessageRequest:
+      required:
+      - content
+      type: object
+      properties:
+        content:
+          maxLength: 10000
+          minLength: 0
+          type: string
+    CreateChannelRequest:
+      required:
+      - channelType
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 0
+          type: string
+        description:
+          type: string
+        channelType:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+          - PROJECT
+          - SERVICE
+        topic:
+          maxLength: 500
+          minLength: 0
+          type: string
+    PinMessageRequest:
+      required:
+      - messageId
+      type: object
+      properties:
+        messageId:
+          type: string
+          format: uuid
+    PinnedMessageResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        messageId:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        message:
+          $ref: "#/components/schemas/MessageResponse"
+        pinnedBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    SendMessageRequest:
+      required:
+      - content
+      type: object
+      properties:
+        content:
+          maxLength: 10000
+          minLength: 0
+          type: string
+        parentId:
+          type: string
+          format: uuid
+        mentionedUserIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        mentionsEveryone:
+          type: boolean
+    MarkReadRequest:
+      required:
+      - lastReadMessageId
+      type: object
+      properties:
+        lastReadMessageId:
+          type: string
+          format: uuid
+    ReadReceiptResponse:
+      type: object
+      properties:
+        channelId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        lastReadMessageId:
+          type: string
+          format: uuid
+        lastReadAt:
+          type: string
+          format: date-time
     CreateWorkstationProfileRequest:
       required:
       - name
@@ -15373,6 +17405,13 @@ components:
           maxLength: 2147483647
           minLength: 8
           type: string
+    UpdateChannelTopicRequest:
+      type: object
+      properties:
+        topic:
+          maxLength: 500
+          minLength: 0
+          type: string
     UpdateServiceStatusRequest:
       required:
       - status
@@ -15413,6 +17452,235 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TaskResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    UnreadCountResponse:
+      type: object
+      properties:
+        channelId:
+          type: string
+          format: uuid
+        channelName:
+          type: string
+        channelSlug:
+          type: string
+        unreadCount:
+          type: integer
+          format: int64
+        lastReadAt:
+          type: string
+          format: date-time
+    ChannelSearchResultResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        channelName:
+          type: string
+        senderId:
+          type: string
+          format: uuid
+        senderDisplayName:
+          type: string
+        contentSnippet:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    PageResponseChannelSearchResultResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChannelSearchResultResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    PageResponsePlatformEventResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlatformEventResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    DirectConversationSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversationType:
+          type: string
+          enum:
+          - ONE_ON_ONE
+          - GROUP
+        name:
+          type: string
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        participantDisplayNames:
+          type: array
+          items:
+            type: string
+        lastMessagePreview:
+          type: string
+        lastMessageAt:
+          type: string
+          format: date-time
+        unreadCount:
+          type: integer
+          format: int64
+    PageResponseDirectMessageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/DirectMessageResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    ChannelSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        channelType:
+          type: string
+          enum:
+          - PUBLIC
+          - PRIVATE
+          - PROJECT
+          - SERVICE
+        topic:
+          type: string
+        isArchived:
+          type: boolean
+        memberCount:
+          type: integer
+          format: int32
+        unreadCount:
+          type: integer
+          format: int64
+        lastMessageAt:
+          type: string
+          format: date-time
+    PageResponseChannelSummaryResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChannelSummaryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        isLast:
+          type: boolean
+    MessageThreadResponse:
+      type: object
+      properties:
+        rootMessageId:
+          type: string
+          format: uuid
+        channelId:
+          type: string
+          format: uuid
+        replyCount:
+          type: integer
+          format: int32
+        lastReplyAt:
+          type: string
+          format: date-time
+        lastReplyBy:
+          type: string
+          format: uuid
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageResponse"
+    PageResponseMessageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/MessageResponse"
         page:
           type: integer
           format: int32
@@ -17065,19 +19333,19 @@ components:
         totalPages:
           type: integer
           format: int32
-        pageable:
-          $ref: "#/components/schemas/PageableObject"
-        sort:
-          type: array
-          items:
-            $ref: "#/components/schemas/SortObject"
-        numberOfElements:
-          type: integer
-          format: int32
         first:
           type: boolean
         last:
           type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        sort:
+          type: array
+          items:
+            $ref: "#/components/schemas/SortObject"
+        pageable:
+          $ref: "#/components/schemas/PageableObject"
         size:
           type: integer
           format: int32
@@ -17093,6 +19361,10 @@ components:
     PageableObject:
       type: object
       properties:
+        sort:
+          type: array
+          items:
+            $ref: "#/components/schemas/SortObject"
         paged:
           type: boolean
         pageNumber:
@@ -17103,10 +19375,6 @@ components:
           format: int32
         unpaged:
           type: boolean
-        sort:
-          type: array
-          items:
-            $ref: "#/components/schemas/SortObject"
         offset:
           type: integer
           format: int64
@@ -17160,19 +19428,19 @@ components:
         totalPages:
           type: integer
           format: int32
-        pageable:
-          $ref: "#/components/schemas/PageableObject"
-        sort:
-          type: array
-          items:
-            $ref: "#/components/schemas/SortObject"
-        numberOfElements:
-          type: integer
-          format: int32
         first:
           type: boolean
         last:
           type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        sort:
+          type: array
+          items:
+            $ref: "#/components/schemas/SortObject"
+        pageable:
+          $ref: "#/components/schemas/PageableObject"
         size:
           type: integer
           format: int32
