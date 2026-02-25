@@ -39,6 +39,31 @@ public interface DirectMessageRepository extends JpaRepository<DirectMessage, UU
             UUID conversationId, Instant after);
 
     /**
+     * Counts non-deleted messages from other users in a conversation after a given timestamp.
+     *
+     * <p>Used for unread message counting — excludes the requesting user's own messages.</p>
+     *
+     * @param conversationId the conversation ID
+     * @param senderId       the user ID to exclude (the requesting user)
+     * @param after          the timestamp threshold
+     * @return unread message count
+     */
+    long countByConversationIdAndSenderIdNotAndCreatedAtAfterAndIsDeletedFalse(
+            UUID conversationId, UUID senderId, Instant after);
+
+    /**
+     * Counts all non-deleted messages from other users in a conversation.
+     *
+     * <p>Used when no read receipt exists (user has never read the conversation).</p>
+     *
+     * @param conversationId the conversation ID
+     * @param senderId       the user ID to exclude
+     * @return total message count from other participants
+     */
+    long countByConversationIdAndSenderIdNotAndIsDeletedFalse(
+            UUID conversationId, UUID senderId);
+
+    /**
      * Deletes all messages in a conversation (used during conversation removal).
      *
      * @param conversationId the conversation ID
