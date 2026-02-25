@@ -39,6 +39,33 @@ public interface PlatformEventRepository extends JpaRepository<PlatformEvent, UU
     List<PlatformEvent> findByTeamIdAndEventType(UUID teamId, PlatformEventType eventType);
 
     /**
+     * Finds platform events for a team filtered by event type with pagination.
+     *
+     * @param teamId    the team ID
+     * @param eventType the event type to match
+     * @param pageable  pagination parameters
+     * @return a page of matching events
+     */
+    Page<PlatformEvent> findByTeamIdAndEventTypeOrderByCreatedAtDesc(
+            UUID teamId, PlatformEventType eventType, Pageable pageable);
+
+    /**
+     * Finds all platform events for a source entity, ordered by most recent first.
+     *
+     * @param sourceEntityId the source entity ID
+     * @return list of events for that entity
+     */
+    List<PlatformEvent> findBySourceEntityIdOrderByCreatedAtDesc(UUID sourceEntityId);
+
+    /**
+     * Finds undelivered platform events for a team, ordered by creation time.
+     *
+     * @param teamId the team ID
+     * @return list of undelivered events in chronological order
+     */
+    List<PlatformEvent> findByTeamIdAndIsDeliveredFalseOrderByCreatedAtAsc(UUID teamId);
+
+    /**
      * Finds platform events for a team filtered by source module.
      *
      * @param teamId       the team ID
