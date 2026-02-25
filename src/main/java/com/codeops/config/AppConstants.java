@@ -212,6 +212,9 @@ public final class AppConstants {
     /** Maximum number of pinned messages per channel. */
     public static final int RELAY_MAX_PINS_PER_CHANNEL = 50;
 
+    /** Maximum number of file attachments per message. */
+    public static final int RELAY_MAX_ATTACHMENTS_PER_MESSAGE = 10;
+
     /** Maximum number of reactions per message. */
     public static final int RELAY_MAX_REACTIONS_PER_MESSAGE = 50;
 

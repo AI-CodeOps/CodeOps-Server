@@ -80,6 +80,17 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
     void deleteByDirectMessageId(UUID directMessageId);
 
     /**
+     * Finds all reactions by a user on messages in a specific channel.
+     *
+     * @param userId    the user ID
+     * @param channelId the channel ID (traverses via message relationship)
+     * @return list of reactions
+     */
+    @Query("SELECT r FROM Reaction r JOIN r.message m WHERE r.userId = :userId AND m.channelId = :channelId")
+    List<Reaction> findByUserIdAndMessageChannelId(@Param("userId") UUID userId,
+                                                    @Param("channelId") UUID channelId);
+
+    /**
      * Counts reactions grouped by emoji for a channel message, ordered by popularity.
      *
      * @param messageId the channel message ID

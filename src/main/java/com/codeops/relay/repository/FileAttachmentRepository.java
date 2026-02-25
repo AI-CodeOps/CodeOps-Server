@@ -29,6 +29,22 @@ public interface FileAttachmentRepository extends JpaRepository<FileAttachment, 
     List<FileAttachment> findByMessageId(UUID messageId);
 
     /**
+     * Finds all attachments on a channel message ordered by creation time.
+     *
+     * @param messageId the channel message ID
+     * @return list of file attachments ordered by createdAt ASC
+     */
+    List<FileAttachment> findByMessageIdOrderByCreatedAtAsc(UUID messageId);
+
+    /**
+     * Counts attachments on a channel message.
+     *
+     * @param messageId the channel message ID
+     * @return attachment count
+     */
+    long countByMessageId(UUID messageId);
+
+    /**
      * Finds all attachments on a direct message.
      *
      * @param directMessageId the direct message ID
