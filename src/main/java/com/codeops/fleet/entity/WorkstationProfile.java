@@ -17,7 +17,7 @@ import java.util.List;
  * a team, allowing per-user customization within the team context. Each user may have
  * at most one default workstation profile per name.</p>
  */
-@Entity
+@Entity(name = "FleetWorkstationProfile")
 @Table(name = "fleet_workstation_profiles",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_fwp_user_name",

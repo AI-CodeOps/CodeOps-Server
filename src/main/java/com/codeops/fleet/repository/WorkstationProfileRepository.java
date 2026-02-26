@@ -14,7 +14,7 @@ import java.util.UUID;
  * <p>Provides CRUD operations plus user- and team-scoped queries for listing,
  * counting, finding by name, and locating the default workstation profile.</p>
  */
-@Repository
+@Repository("fleetWorkstationProfileRepository")
 public interface WorkstationProfileRepository extends JpaRepository<WorkstationProfile, UUID> {
 
     /**

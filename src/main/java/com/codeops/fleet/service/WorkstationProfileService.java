@@ -43,7 +43,7 @@ import java.util.UUID;
  * @see WorkstationSolution
  * @see SolutionProfileService
  */
-@Service
+@Service("fleetWorkstationProfileService")
 @Slf4j
 @RequiredArgsConstructor
 public class WorkstationProfileService {
