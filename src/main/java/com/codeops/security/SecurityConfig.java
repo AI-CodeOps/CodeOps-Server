@@ -66,6 +66,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/health").permitAll()
                         .requestMatchers("/api/v1/courier/health").permitAll()
+                        .requestMatchers("/api/v1/fleet/health").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
                         .requestMatchers("/ws/relay/**").permitAll()
                         .requestMatchers("/api/**").authenticated()

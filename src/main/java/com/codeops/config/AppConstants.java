@@ -242,6 +242,9 @@ public final class AppConstants {
 
     // ── Fleet Constants ──
 
+    /** Base path prefix for all Fleet API endpoints. */
+    public static final String FLEET_API_PREFIX = "/api/v1/fleet";
+
     /** Maximum number of container instances per team. */
     public static final int FLEET_MAX_CONTAINERS_PER_TEAM = 100;
 
