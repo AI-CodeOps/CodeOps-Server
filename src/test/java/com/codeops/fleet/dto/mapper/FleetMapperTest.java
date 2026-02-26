@@ -1,6 +1,7 @@
 package com.codeops.fleet.dto.mapper;
 
 import com.codeops.entity.Team;
+import com.codeops.entity.User;
 import com.codeops.fleet.dto.request.CreateServiceProfileRequest;
 import com.codeops.fleet.dto.response.*;
 import com.codeops.fleet.entity.*;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +35,8 @@ class FleetMapperTest {
     private static final UUID CONTAINER_ID = UUID.randomUUID();
     private static final UUID SERVICE_PROFILE_ID = UUID.randomUUID();
     private static final UUID SERVICE_REGISTRATION_ID = UUID.randomUUID();
+    private static final UUID SOLUTION_PROFILE_ID = UUID.randomUUID();
+    private static final UUID USER_ID = UUID.randomUUID();
     private static final Instant NOW = Instant.now();
 
     // ── ContainerInstanceMapper ─────────────────────────────────────────
@@ -599,6 +603,375 @@ class FleetMapperTest {
             assertThat(list).hasSize(2);
             assertThat(list.get(0).networkName()).isEqualTo("net1");
             assertThat(list.get(1).networkName()).isEqualTo("net2");
+        }
+    }
+
+    // ── SolutionProfileMapper ───────────────────────────────────────────
+
+    @Nested
+    class SolutionProfileMapperTests {
+
+        private final SolutionProfileMapper mapper = Mappers.getMapper(SolutionProfileMapper.class);
+
+        @Test
+        void toResponse_mapsFieldsIncludingBooleanIsDefault() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+
+            ServiceProfile sp = ServiceProfile.builder().serviceName("svc1").imageName("img1").build();
+            sp.setId(UUID.randomUUID());
+
+            SolutionService svc = SolutionService.builder()
+                    .startOrder(1).serviceProfile(sp).build();
+            List<SolutionService> services = new ArrayList<>();
+            services.add(svc);
+
+            SolutionProfile entity = SolutionProfile.builder()
+                    .name("Backend Stack")
+                    .description("API + DB")
+                    .isDefault(true)
+                    .team(team)
+                    .services(services)
+                    .build();
+            entity.setId(ID);
+            entity.setCreatedAt(NOW);
+
+            SolutionProfileResponse resp = mapper.toResponse(entity);
+
+            assertThat(resp.id()).isEqualTo(ID);
+            assertThat(resp.name()).isEqualTo("Backend Stack");
+            assertThat(resp.description()).isEqualTo("API + DB");
+            assertThat(resp.isDefault()).isTrue();
+            assertThat(resp.serviceCount()).isEqualTo(1);
+            assertThat(resp.teamId()).isEqualTo(TEAM_ID);
+            assertThat(resp.createdAt()).isEqualTo(NOW);
+        }
+
+        @Test
+        void toResponse_defaultFalse_andEmptyServices_mapsCorrectly() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+
+            SolutionProfile entity = SolutionProfile.builder()
+                    .name("Empty Solution")
+                    .team(team)
+                    .build();
+
+            SolutionProfileResponse resp = mapper.toResponse(entity);
+
+            assertThat(resp.isDefault()).isFalse();
+            assertThat(resp.serviceCount()).isZero();
+        }
+
+        @Test
+        void toDetailResponse_mapsAllFieldsWithServices() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+
+            SolutionProfile entity = SolutionProfile.builder()
+                    .name("Full Detail")
+                    .description("With services")
+                    .isDefault(true)
+                    .team(team)
+                    .build();
+            entity.setId(ID);
+            entity.setCreatedAt(NOW);
+            entity.setUpdatedAt(NOW);
+
+            List<SolutionServiceResponse> services = List.of(
+                    new SolutionServiceResponse(UUID.randomUUID(), 1,
+                            SERVICE_PROFILE_ID, "postgres", "postgres", true));
+
+            SolutionProfileDetailResponse resp = mapper.toDetailResponse(entity, services);
+
+            assertThat(resp.id()).isEqualTo(ID);
+            assertThat(resp.name()).isEqualTo("Full Detail");
+            assertThat(resp.description()).isEqualTo("With services");
+            assertThat(resp.isDefault()).isTrue();
+            assertThat(resp.teamId()).isEqualTo(TEAM_ID);
+            assertThat(resp.services()).hasSize(1);
+            assertThat(resp.createdAt()).isEqualTo(NOW);
+            assertThat(resp.updatedAt()).isEqualTo(NOW);
+        }
+
+        @Test
+        void toResponseList_mapsAllElements() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+
+            SolutionProfile e1 = SolutionProfile.builder().name("sol1").team(team).build();
+            SolutionProfile e2 = SolutionProfile.builder().name("sol2").team(team).build();
+
+            List<SolutionProfileResponse> list = mapper.toResponseList(List.of(e1, e2));
+
+            assertThat(list).hasSize(2);
+            assertThat(list.get(0).name()).isEqualTo("sol1");
+            assertThat(list.get(1).name()).isEqualTo("sol2");
+        }
+    }
+
+    // ── SolutionServiceMapper ───────────────────────────────────────────
+
+    @Nested
+    class SolutionServiceMapperTests {
+
+        private final SolutionServiceMapper mapper = Mappers.getMapper(SolutionServiceMapper.class);
+
+        @Test
+        void toResponse_mapsFieldsFromNestedServiceProfile() {
+            ServiceProfile sp = ServiceProfile.builder()
+                    .serviceName("postgres")
+                    .imageName("postgres")
+                    .isEnabled(true)
+                    .build();
+            sp.setId(SERVICE_PROFILE_ID);
+
+            SolutionService entity = SolutionService.builder()
+                    .startOrder(2)
+                    .serviceProfile(sp)
+                    .build();
+            entity.setId(ID);
+
+            SolutionServiceResponse resp = mapper.toResponse(entity);
+
+            assertThat(resp.id()).isEqualTo(ID);
+            assertThat(resp.startOrder()).isEqualTo(2);
+            assertThat(resp.serviceProfileId()).isEqualTo(SERVICE_PROFILE_ID);
+            assertThat(resp.serviceProfileName()).isEqualTo("postgres");
+            assertThat(resp.imageName()).isEqualTo("postgres");
+            assertThat(resp.isEnabled()).isTrue();
+        }
+
+        @Test
+        void toResponse_disabledServiceProfile_mapsEnabledFalse() {
+            ServiceProfile sp = ServiceProfile.builder()
+                    .serviceName("disabled-svc")
+                    .imageName("alpine")
+                    .isEnabled(false)
+                    .build();
+            sp.setId(SERVICE_PROFILE_ID);
+
+            SolutionService entity = SolutionService.builder()
+                    .serviceProfile(sp)
+                    .build();
+
+            SolutionServiceResponse resp = mapper.toResponse(entity);
+
+            assertThat(resp.isEnabled()).isFalse();
+        }
+
+        @Test
+        void toResponseList_mapsAllElements() {
+            ServiceProfile sp1 = ServiceProfile.builder().serviceName("svc1").imageName("img1").build();
+            sp1.setId(UUID.randomUUID());
+            ServiceProfile sp2 = ServiceProfile.builder().serviceName("svc2").imageName("img2").build();
+            sp2.setId(UUID.randomUUID());
+
+            SolutionService s1 = SolutionService.builder().startOrder(1).serviceProfile(sp1).build();
+            SolutionService s2 = SolutionService.builder().startOrder(2).serviceProfile(sp2).build();
+
+            List<SolutionServiceResponse> list = mapper.toResponseList(List.of(s1, s2));
+
+            assertThat(list).hasSize(2);
+            assertThat(list.get(0).serviceProfileName()).isEqualTo("svc1");
+            assertThat(list.get(1).serviceProfileName()).isEqualTo("svc2");
+        }
+    }
+
+    // ── WorkstationProfileMapper ────────────────────────────────────────
+
+    @Nested
+    class WorkstationProfileMapperTests {
+
+        private final WorkstationProfileMapper mapper = Mappers.getMapper(WorkstationProfileMapper.class);
+
+        @Test
+        void toResponse_mapsFieldsIncludingBooleanIsDefault() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+
+            User user = User.builder()
+                    .email("test@test.com").passwordHash("h").displayName("Test").build();
+            user.setId(USER_ID);
+
+            SolutionProfile sol = SolutionProfile.builder().name("sol1").team(team).build();
+            sol.setId(UUID.randomUUID());
+            WorkstationSolution ws = WorkstationSolution.builder()
+                    .startOrder(1).solutionProfile(sol).build();
+            List<WorkstationSolution> solutions = new ArrayList<>();
+            solutions.add(ws);
+
+            WorkstationProfile entity = WorkstationProfile.builder()
+                    .name("My Workstation")
+                    .description("Dev env")
+                    .isDefault(true)
+                    .user(user)
+                    .team(team)
+                    .solutions(solutions)
+                    .build();
+            entity.setId(ID);
+            entity.setCreatedAt(NOW);
+
+            WorkstationProfileResponse resp = mapper.toResponse(entity);
+
+            assertThat(resp.id()).isEqualTo(ID);
+            assertThat(resp.name()).isEqualTo("My Workstation");
+            assertThat(resp.description()).isEqualTo("Dev env");
+            assertThat(resp.isDefault()).isTrue();
+            assertThat(resp.solutionCount()).isEqualTo(1);
+            assertThat(resp.userId()).isEqualTo(USER_ID);
+            assertThat(resp.teamId()).isEqualTo(TEAM_ID);
+            assertThat(resp.createdAt()).isEqualTo(NOW);
+        }
+
+        @Test
+        void toResponse_defaultFalse_andEmptySolutions_mapsCorrectly() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+            User user = User.builder()
+                    .email("t@t.com").passwordHash("h").displayName("T").build();
+            user.setId(USER_ID);
+
+            WorkstationProfile entity = WorkstationProfile.builder()
+                    .name("Empty WS")
+                    .user(user)
+                    .team(team)
+                    .build();
+
+            WorkstationProfileResponse resp = mapper.toResponse(entity);
+
+            assertThat(resp.isDefault()).isFalse();
+            assertThat(resp.solutionCount()).isZero();
+        }
+
+        @Test
+        void toDetailResponse_mapsAllFieldsWithSolutions() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+            User user = User.builder()
+                    .email("d@t.com").passwordHash("h").displayName("D").build();
+            user.setId(USER_ID);
+
+            WorkstationProfile entity = WorkstationProfile.builder()
+                    .name("Detail WS")
+                    .description("Full detail")
+                    .isDefault(true)
+                    .user(user)
+                    .team(team)
+                    .build();
+            entity.setId(ID);
+            entity.setCreatedAt(NOW);
+            entity.setUpdatedAt(NOW);
+
+            List<WorkstationSolutionResponse> solutions = List.of(
+                    new WorkstationSolutionResponse(UUID.randomUUID(), 1, null,
+                            SOLUTION_PROFILE_ID, "Backend Stack"));
+
+            WorkstationProfileDetailResponse resp = mapper.toDetailResponse(entity, solutions);
+
+            assertThat(resp.id()).isEqualTo(ID);
+            assertThat(resp.name()).isEqualTo("Detail WS");
+            assertThat(resp.description()).isEqualTo("Full detail");
+            assertThat(resp.isDefault()).isTrue();
+            assertThat(resp.userId()).isEqualTo(USER_ID);
+            assertThat(resp.teamId()).isEqualTo(TEAM_ID);
+            assertThat(resp.solutions()).hasSize(1);
+            assertThat(resp.createdAt()).isEqualTo(NOW);
+            assertThat(resp.updatedAt()).isEqualTo(NOW);
+        }
+
+        @Test
+        void toResponseList_mapsAllElements() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+            User user = User.builder()
+                    .email("l@t.com").passwordHash("h").displayName("L").build();
+            user.setId(USER_ID);
+
+            WorkstationProfile e1 = WorkstationProfile.builder()
+                    .name("ws1").user(user).team(team).build();
+            WorkstationProfile e2 = WorkstationProfile.builder()
+                    .name("ws2").user(user).team(team).build();
+
+            List<WorkstationProfileResponse> list = mapper.toResponseList(List.of(e1, e2));
+
+            assertThat(list).hasSize(2);
+            assertThat(list.get(0).name()).isEqualTo("ws1");
+            assertThat(list.get(1).name()).isEqualTo("ws2");
+        }
+    }
+
+    // ── WorkstationSolutionMapper ───────────────────────────────────────
+
+    @Nested
+    class WorkstationSolutionMapperTests {
+
+        private final WorkstationSolutionMapper mapper = Mappers.getMapper(WorkstationSolutionMapper.class);
+
+        @Test
+        void toResponse_mapsFieldsFromNestedSolutionProfile() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+
+            SolutionProfile sol = SolutionProfile.builder()
+                    .name("Backend Stack")
+                    .team(team)
+                    .build();
+            sol.setId(SOLUTION_PROFILE_ID);
+
+            WorkstationSolution entity = WorkstationSolution.builder()
+                    .startOrder(1)
+                    .overrideEnvVarsJson("{\"DB_HOST\": \"localhost\"}")
+                    .solutionProfile(sol)
+                    .build();
+            entity.setId(ID);
+
+            WorkstationSolutionResponse resp = mapper.toResponse(entity);
+
+            assertThat(resp.id()).isEqualTo(ID);
+            assertThat(resp.startOrder()).isEqualTo(1);
+            assertThat(resp.overrideEnvVarsJson()).isEqualTo("{\"DB_HOST\": \"localhost\"}");
+            assertThat(resp.solutionProfileId()).isEqualTo(SOLUTION_PROFILE_ID);
+            assertThat(resp.solutionProfileName()).isEqualTo("Backend Stack");
+        }
+
+        @Test
+        void toResponse_nullOverrideEnvVarsJson_mapsNull() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+
+            SolutionProfile sol = SolutionProfile.builder().name("sol").team(team).build();
+            sol.setId(SOLUTION_PROFILE_ID);
+
+            WorkstationSolution entity = WorkstationSolution.builder()
+                    .solutionProfile(sol)
+                    .build();
+
+            WorkstationSolutionResponse resp = mapper.toResponse(entity);
+
+            assertThat(resp.overrideEnvVarsJson()).isNull();
+        }
+
+        @Test
+        void toResponseList_mapsAllElements() {
+            Team team = Team.builder().build();
+            team.setId(TEAM_ID);
+
+            SolutionProfile sol1 = SolutionProfile.builder().name("sol1").team(team).build();
+            sol1.setId(UUID.randomUUID());
+            SolutionProfile sol2 = SolutionProfile.builder().name("sol2").team(team).build();
+            sol2.setId(UUID.randomUUID());
+
+            WorkstationSolution ws1 = WorkstationSolution.builder()
+                    .startOrder(1).solutionProfile(sol1).build();
+            WorkstationSolution ws2 = WorkstationSolution.builder()
+                    .startOrder(2).solutionProfile(sol2).build();
+
+            List<WorkstationSolutionResponse> list = mapper.toResponseList(List.of(ws1, ws2));
+
+            assertThat(list).hasSize(2);
+            assertThat(list.get(0).solutionProfileName()).isEqualTo("sol1");
+            assertThat(list.get(1).solutionProfileName()).isEqualTo("sol2");
         }
     }
 }

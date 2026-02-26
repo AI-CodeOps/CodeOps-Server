@@ -280,4 +280,16 @@ public final class AppConstants {
 
     /** Maximum number of volume mounts per service profile. */
     public static final int FLEET_MAX_VOLUMES_PER_PROFILE = 25;
+
+    /** Maximum number of solution profiles per team. */
+    public static final int FLEET_MAX_SOLUTIONS = 50;
+
+    /** Maximum number of workstation profiles per user per team. */
+    public static final int FLEET_MAX_WORKSTATIONS = 20;
+
+    /** Maximum number of service profiles per solution. */
+    public static final int FLEET_MAX_SERVICES_PER_SOLUTION = 25;
+
+    /** Maximum number of solution profiles per workstation. */
+    public static final int FLEET_MAX_SOLUTIONS_PER_WORKSTATION = 10;
 }
