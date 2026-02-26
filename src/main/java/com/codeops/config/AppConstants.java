@@ -239,4 +239,45 @@ public final class AppConstants {
             "application/pdf", "text/plain", "text/markdown",
             "application/json", "application/zip"
     };
+
+    // ── Fleet Constants ──
+
+    /** Maximum number of container instances per team. */
+    public static final int FLEET_MAX_CONTAINERS_PER_TEAM = 100;
+
+    /** Maximum number of service profiles per team. */
+    public static final int FLEET_MAX_SERVICE_PROFILES = 200;
+
+    /** Default interval in seconds between container health checks. */
+    public static final int FLEET_HEALTH_CHECK_DEFAULT_INTERVAL = 30;
+
+    /** Default timeout in seconds for each health check execution. */
+    public static final int FLEET_HEALTH_CHECK_DEFAULT_TIMEOUT = 10;
+
+    /** Default number of consecutive health check failures before marking unhealthy. */
+    public static final int FLEET_HEALTH_CHECK_DEFAULT_RETRIES = 3;
+
+    /** Number of restarts within the crash loop window that triggers crash loop detection. */
+    public static final int FLEET_CRASH_LOOP_THRESHOLD = 3;
+
+    /** Time window in minutes for crash loop detection. */
+    public static final int FLEET_CRASH_LOOP_WINDOW_MINUTES = 5;
+
+    /** Maximum number of days to retain container logs. */
+    public static final long FLEET_MAX_LOG_RETENTION_DAYS = 7;
+
+    /** Polling interval in seconds for container resource stats collection. */
+    public static final int FLEET_CONTAINER_STATS_POLL_SECONDS = 5;
+
+    /** Default Docker network name for Fleet-managed containers. */
+    public static final String FLEET_DEFAULT_NETWORK = "codeops-network";
+
+    /** Maximum number of environment variables per service profile. */
+    public static final int FLEET_MAX_ENV_VARS_PER_PROFILE = 100;
+
+    /** Maximum number of port mappings per service profile. */
+    public static final int FLEET_MAX_PORTS_PER_PROFILE = 50;
+
+    /** Maximum number of volume mounts per service profile. */
+    public static final int FLEET_MAX_VOLUMES_PER_PROFILE = 25;
 }
