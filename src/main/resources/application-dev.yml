@@ -53,6 +53,13 @@ codeops:
   local-storage:
     path: ${user.home}/.codeops/storage
 
+  fleet:
+    docker:
+      host: tcp://localhost:2375
+      api-version: v1.43
+      connect-timeout-seconds: 5
+      read-timeout-seconds: 30
+
 logging:
   level:
     com.codeops: DEBUG

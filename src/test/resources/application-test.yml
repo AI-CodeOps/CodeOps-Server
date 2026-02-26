@@ -50,6 +50,10 @@ codeops:
   local-storage:
     path: ${java.io.tmpdir}/codeops-test-storage
 
+  fleet:
+    docker:
+      host: tcp://localhost:2375
+
 logging:
   level:
     com.codeops: WARN
