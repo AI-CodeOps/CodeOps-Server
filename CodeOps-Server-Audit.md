@@ -1,15 +1,15 @@
-# CodeOps-Server — Codebase Audit
+# CodeOps Server — Codebase Audit
 
-**Audit Date:** 2026-02-26T02:33:34Z
+**Audit Date:** 2026-02-27T21:40:31Z
 **Branch:** main
-**Commit:** ceebd53022b7fbf6e4160d868de4716aa116ed37 OpenAPI spec — 2026-02-25
+**Commit:** 68f626f887f60b7cc0353b2d694698a528161bda CO-AUDIT: Add comprehensive Courier module audit
 **Auditor:** Claude Code (Automated)
 **Purpose:** Zero-context reference for AI-assisted development
 **Audit File:** CodeOps-Server-Audit.md
 **Scorecard:** CodeOps-Server-Scorecard.md
 **OpenAPI Spec:** CodeOps-Server-OpenAPI.yaml (generated separately)
 
-> This audit is the source of truth for the CodeOps-Server codebase structure, entities, services, and configuration.
+> This audit is the source of truth for the CodeOps Server codebase structure, entities, services, and configuration.
 > The OpenAPI spec (CodeOps-Server-OpenAPI.yaml) is the source of truth for all endpoints, DTOs, and API contracts.
 > An AI reading this audit + the OpenAPI spec should be able to generate accurate code
 > changes, new features, tests, and fixes without filesystem access.
@@ -19,96 +19,33 @@
 ## 1. Project Identity
 
 ```
-Project Name: CodeOps-Server
+Project Name: CodeOps Server
 Repository URL: https://github.com/AI-CodeOps/CodeOps-Server.git
 Primary Language / Framework: Java / Spring Boot 3.3.0
-Java Version: 21 (runtime: OpenJDK 25)
-Build Tool: Maven 3.9.x (via mvnw wrapper)
+Java Version: 21 (runtime: Java 25 OpenJDK)
+Build Tool + Version: Maven (Spring Boot parent 3.3.0)
 Current Branch: main
-Latest Commit Hash: ceebd53022b7fbf6e4160d868de4716aa116ed37
-Latest Commit Message: OpenAPI spec — 2026-02-25
-Audit Timestamp: 2026-02-26T02:33:34Z
+Latest Commit Hash: 68f626f887f60b7cc0353b2d694698a528161bda
+Latest Commit Message: CO-AUDIT: Add comprehensive Courier module audit
+Audit Timestamp: 2026-02-27T21:40:31Z
 ```
 
 ---
 
 ## 2. Directory Structure
 
-960 project files across a single-module Spring Boot application with 5 logical domains organized by package:
+Single-module Spring Boot monolith with 6 logical modules under `com.codeops`:
+- **core** (`com.codeops.*`) — Auth, teams, projects, QA jobs, findings, compliance, health monitoring, MFA, integrations
+- **courier** (`com.codeops.courier.*`) — API client/testing tool (collections, requests, environments, runners, scripts)
+- **fleet** (`com.codeops.fleet.*`) — Docker container management (service profiles, workstations, deployments)
+- **logger** (`com.codeops.logger.*`) — Centralized logging, metrics, alerts, anomaly detection, tracing, dashboards
+- **registry** (`com.codeops.registry.*`) — Service registry, port allocation, dependencies, topology, infrastructure
+- **relay** (`com.codeops.relay.*`) — Team messaging (channels, DMs, threads, reactions, presence, WebSocket)
 
-```
-CodeOps-Server/
-├── pom.xml                              ← Maven build manifest
-├── Dockerfile                           ← Production container image
-├── docker-compose.yml                   ← Dev infrastructure (Postgres, Redis, Kafka)
-├── start-codeops.sh                     ← Dev startup script
-├── scripts/seed-codeops.sh              ← Database seeding script
-├── src/main/java/com/codeops/
-│   ├── CodeOpsApplication.java          ← Entry point
-│   ├── config/                          ← App config, security, async, CORS, Jackson, Kafka
-│   ├── controller/                      ← 17 Core REST controllers
-│   ├── dto/request/                     ← Core request DTOs (Java records)
-│   ├── dto/response/                    ← Core response DTOs (Java records)
-│   ├── entity/                          ← 28 Core JPA entities
-│   ├── entity/enums/                    ← 25 Core enums
-│   ├── exception/                       ← Custom exceptions (CodeOpsException hierarchy)
-│   ├── notification/                    ← Email (SES), Teams webhook, dispatcher
-│   ├── repository/                      ← 26 Core Spring Data JPA repositories
-│   ├── security/                        ← JWT auth, rate limiting, SecurityConfig
-│   ├── service/                         ← 26 Core services
-│   ├── courier/                         ← API client module (Postman-like)
-│   │   ├── config/                      ← HttpClientConfig
-│   │   ├── controller/                  ← 13 Courier controllers
-│   │   ├── dto/mapper/                  ← 13 MapStruct mappers
-│   │   ├── dto/request/                 ← Courier request DTOs
-│   │   ├── dto/response/               ← Courier response DTOs
-│   │   ├── entity/                      ← 18 Courier entities
-│   │   ├── entity/enums/               ← 7 Courier enums
-│   │   ├── repository/                  ← 18 Courier repositories
-│   │   └── service/                     ← 22 Courier services
-│   ├── logger/                          ← Log management module
-│   │   ├── controller/                  ← 11 Logger controllers
-│   │   ├── dto/mapper/                  ← 13 Logger MapStruct mappers
-│   │   ├── dto/request/                 ← Logger request DTOs
-│   │   ├── dto/response/               ← Logger response DTOs
-│   │   ├── entity/                      ← 16 Logger entities
-│   │   ├── entity/enums/               ← 10 Logger enums
-│   │   ├── event/                       ← Spring event publishing
-│   │   ├── repository/                  ← 16 Logger repositories
-│   │   └── service/                     ← 18 Logger services
-│   ├── registry/                        ← Service registry module
-│   │   ├── controller/                  ← 10 Registry controllers
-│   │   ├── dto/request/                 ← Registry request DTOs
-│   │   ├── dto/response/               ← Registry response DTOs
-│   │   ├── entity/                      ← 11 Registry entities
-│   │   ├── entity/enums/               ← 11 Registry enums
-│   │   ├── repository/                  ← 11 Registry repositories
-│   │   ├── service/                     ← 10 Registry services
-│   │   └── util/                        ← SlugUtils
-│   └── relay/                           ← Team messaging module (WebSocket)
-│       ├── config/                      ← RelayDataSeeder
-│       ├── controller/                  ← 8 Relay controllers
-│       ├── dto/mapper/                  ← 11 Relay MapStruct mappers
-│       ├── dto/request/                 ← Relay request DTOs
-│       ├── dto/response/               ← Relay response DTOs
-│       ├── entity/                      ← 12 Relay entities
-│       ├── entity/enums/               ← 8 Relay enums
-│       ├── repository/                  ← 12 Relay repositories
-│       ├── service/                     ← 8 Relay services
-│       └── websocket/                   ← STOMP-over-WebSocket (7 files)
-├── src/main/resources/
-│   ├── application.yml                  ← Base config
-│   ├── application-dev.yml              ← Dev profile
-│   ├── application-prod.yml             ← Prod profile (env vars)
-│   └── logback-spring.xml               ← Logging config
-└── src/test/
-    ├── java/com/codeops/               ← 195 test files (3,062 @Test methods)
-    └── resources/
-        ├── application-test.yml         ← Unit test config (H2)
-        └── application-integration.yml  ← Integration test config (Testcontainers)
-```
+**Source counts (src/main):** 96 entities, 67 enums, 97 repositories, 85 services, ~55 controllers, ~40 mappers
+**Test counts (src/test):** ~205 unit test files, 16 integration test files
 
-Single-module monolith with 5 logical domains (Core, Courier, Logger, Registry, Relay) sharing the same Spring context and database.
+**Key config files:** `pom.xml`, `docker-compose.yml`, `Dockerfile`, `src/main/resources/application.yml`, `application-dev.yml`, `application-prod.yml`, `logback-spring.xml`
 
 ---
 
@@ -116,46 +53,41 @@ Single-module monolith with 5 logical domains (Core, Courier, Logger, Registry, 
 
 **Build file:** `pom.xml`
 
-### Key Dependencies
-
 | Dependency | Version | Purpose |
 |---|---|---|
-| spring-boot-starter-web | 3.3.0 | REST API framework |
+| spring-boot-starter-web | 3.3.0 (parent) | REST controllers, embedded Tomcat |
 | spring-boot-starter-data-jpa | 3.3.0 | JPA/Hibernate ORM |
 | spring-boot-starter-security | 3.3.0 | Authentication/authorization |
 | spring-boot-starter-validation | 3.3.0 | Jakarta Bean Validation |
-| spring-boot-starter-websocket | 3.3.0 | STOMP-over-WebSocket |
-| spring-boot-starter-mail | 3.3.0 | Email via SMTP/SES |
-| spring-kafka | 3.3.0 | Kafka consumer/producer |
-| postgresql | (managed) | PostgreSQL JDBC driver |
-| h2 | (managed) | In-memory test database |
-| jjwt-api/impl/jackson | 0.12.6 | JWT token creation/validation |
-| mapstruct | 1.5.5.Final | DTO mapping code generation |
+| spring-boot-starter-websocket | 3.3.0 | STOMP WebSocket (Relay module) |
+| spring-boot-starter-mail | 3.3.0 | SMTP email (MFA, notifications) |
+| postgresql | runtime | PostgreSQL JDBC driver |
+| jjwt-api / jjwt-impl / jjwt-jackson | 0.12.6 | JWT token creation/validation |
+| aws-sdk-s3 | 2.25.0 | S3 storage (prod) / local filesystem (dev) |
+| totp | 1.7.1 | TOTP-based MFA |
 | lombok | 1.18.42 | Boilerplate reduction |
-| aws-java-sdk-s3 | 2.25.0 | S3 file storage |
-| aws-java-sdk-ses | 2.25.0 | SES email sending |
-| springdoc-openapi | 2.5.0 | Swagger UI / OpenAPI |
-| graalvm-polyglot-js | 24.1.1 | JavaScript script execution (Courier) |
-| dev.samstevens.totp | 1.7.1 | TOTP MFA support |
-| testcontainers-postgresql | 1.19.8 | Integration test database |
-| mockito | 5.21.0 | Test mocking (Java 25 compatible) |
-| byte-buddy | 1.18.4 | Mockito runtime (Java 25 compatible) |
-| jacoco | 0.8.14 | Code coverage |
+| mapstruct | 1.5.5.Final | Entity↔DTO mapping |
+| jackson-datatype-jsr310 | (managed) | Java 8+ date/time serialization |
+| jackson-dataformat-yaml | (managed) | YAML parsing (OpenAPI import) |
+| springdoc-openapi-starter-webmvc-ui | 2.5.0 | Swagger UI / OpenAPI generation |
+| logstash-logback-encoder | 7.4 | Structured JSON logging |
+| spring-kafka | (managed) | Kafka consumer (Logger module) |
+| graalvm-polyglot / js | 24.1.1 | JavaScript script engine (Courier) |
+| spring-boot-starter-test | 3.3.0 | JUnit 5, Mockito, MockMvc |
+| spring-security-test | (managed) | Security test utilities |
+| testcontainers-postgresql | 1.19.8 | Integration test PostgreSQL |
+| testcontainers-kafka | 1.19.8 | Integration test Kafka |
+| h2 | (managed) | In-memory DB for unit tests |
+| mockito | 5.21.0 | Mocking (Java 25 compat override) |
+| byte-buddy | 1.18.4 | Bytecode gen (Java 25 compat override) |
 
-### Build Plugins
+**Build plugins:** maven-compiler-plugin (Java 21, Lombok+MapStruct annotation processors), maven-surefire-plugin (--add-opens for Java 25, includes *Test.java + *IT.java), jacoco-maven-plugin 0.8.14 (coverage reports)
 
-| Plugin | Configuration |
-|---|---|
-| spring-boot-maven-plugin | Excludes lombok from final JAR |
-| maven-compiler-plugin | Java 21 source/target, explicit Lombok + MapStruct annotation processor paths |
-| maven-surefire-plugin | --add-opens for Java 25 compatibility, argLine for JaCoCo |
-| jacoco-maven-plugin | Prepare-agent + report-aggregate goals |
-
-### Build Commands
+**Build commands:**
 ```
 Build: mvn clean package -DskipTests
 Test: mvn test
-Run: mvn spring-boot:run
+Run: mvn spring-boot:run (or ./start-codeops.sh)
 Package: mvn clean package
 ```
 
@@ -163,23 +95,20 @@ Package: mvn clean package
 
 ## 4. Configuration & Infrastructure Summary
 
-- **`application.yml`** — Base profile. Server port 8090, active profile `dev`, app name `codeops-server`.
-- **`application-dev.yml`** — PostgreSQL `localhost:5432/codeops` (user/pass: `codeops`), Hibernate ddl-auto `update`, show-sql on, Kafka `localhost:9094`, S3 disabled, mail disabled, local storage at `~/.codeops/storage`, CORS origins `localhost:3000,5173`, debug logging.
-- **`application-prod.yml`** — All secrets from env vars (`${DATABASE_URL}`, `${JWT_SECRET}`, `${ENCRYPTION_KEY}`, etc.), Hibernate ddl-auto `validate`, S3 enabled, mail enabled, INFO logging.
-- **`application-test.yml`** — H2 in-memory database, Hibernate `create-drop`, Kafka listeners disabled, Flyway disabled, test JWT secret, WARN logging.
-- **`application-integration.yml`** — PostgreSQL via Testcontainers (@DynamicPropertySource), Hibernate `create-drop`, WARN logging.
-- **`logback-spring.xml`** — DEV: human-readable console with MDC (correlationId, userId). PROD: JSON via LogstashEncoder. TEST: WARN-level minimal.
-- **`docker-compose.yml`** — PostgreSQL 16 (codeops-db, 127.0.0.1:5432), Redis 7 (codeops-redis, 6379), Zookeeper (2181), Kafka 7.5.0 (9092/29092), Kafka-init creates 5 topics.
-- **`Dockerfile`** — eclipse-temurin:21-jre-alpine, non-root user `appuser`, exposes 8090.
-- **`.env`** — Not present; `.env.example` not detected. All dev config is in application-dev.yml.
+- **`application.yml`** — Default profile. Server port 8090, context-path `/`. JPA ddl-auto: update, open-in-view: false. JWT secret, encryption key, CORS origins from env vars. Kafka bootstrap-servers: localhost:9094.
+- **`application-dev.yml`** — PostgreSQL localhost:5432/codeops (user: codeops, pass: codeops). S3 disabled (local filesystem at ~/.codeops/storage/). Email logging to console. Hibernate show-sql: true.
+- **`application-prod.yml`** — All secrets from env vars: `${DATABASE_URL}`, `${DATABASE_USERNAME}`, `${DATABASE_PASSWORD}`, `${JWT_SECRET}`, `${ENCRYPTION_KEY}`, `${CORS_ALLOWED_ORIGINS}`, `${AWS_REGION}`, `${MAIL_FROM_EMAIL}`.
+- **`logback-spring.xml`** — Dev profile: console pattern with colors. Prod profile: JSON via LogstashEncoder.
+- **`docker-compose.yml`** — PostgreSQL 16 (5432, container `codeops-db`), Redis 7 (6379, `codeops-redis`), Zookeeper (2181), Kafka (9094, `codeops-kafka`).
+- **`Dockerfile`** — Multi-stage: Maven build → Eclipse Temurin 21-jre, non-root user `codeops`, exposes 8090.
 
-### Connection Map
+**Connection map:**
 ```
-Database: PostgreSQL, localhost, 5432, codeops
-Cache: Redis, localhost, 6379
-Message Broker: Kafka, localhost, 9092 (external) / 29092 (internal)
-External APIs: GitHub API (via PAT/OAuth), Jira API (via API token), Microsoft Teams (webhooks)
-Cloud Services: AWS S3 (file storage), AWS SES (email) — both disabled in dev
+Database: PostgreSQL, localhost:5432, database: codeops
+Cache: Redis configured in docker-compose but NOT used by application code
+Message Broker: Kafka, localhost:9094 (Logger module consumes log entries)
+External APIs: None (GitHub/Jira connections store credentials but proxy calls are client-initiated)
+Cloud Services: AWS S3 (prod only, disabled in dev → local filesystem)
 ```
 
 **CI/CD:** None detected.
@@ -188,822 +117,1109 @@ Cloud Services: AWS S3 (file storage), AWS SES (email) — both disabled in dev
 
 ## 5. Startup & Runtime Behavior
 
-- **Entry point:** `com.codeops.CodeOpsApplication` — `@SpringBootApplication`, `@EnableConfigurationProperties({JwtProperties.class, MailProperties.class})`, `@EnableScheduling`
-- **Initialization:**
-  - `DataSeeder.java` (@PostConstruct, dev profile only) — seeds users, teams, projects, jobs, findings, connections, personas, directives, compliance, dependencies, tech debt, health data, Courier collections, Logger sources, Registry services, Relay channels
-  - `RelayDataSeeder.java` — seeds Relay-specific data (channels, messages, reactions, DMs, presence, platform events)
-  - Hibernate ddl-auto creates/updates all 84 tables
-  - JwtTokenProvider validates secret key length (min 32 chars)
-  - Kafka consumer config logs bootstrap servers at startup
+- **Entry point:** `CodeOpsApplication.java` — `@SpringBootApplication`, `@EnableConfigurationProperties({JwtProperties.class, MailProperties.class})`, `@EnableScheduling`
+- **Startup initialization:** `DataSeeder` (dev profile) seeds 22 entity types via `@PostConstruct`. `FleetDataSeeder` seeds fleet service profiles. `RelayDataSeeder` seeds relay channels and platform events.
 - **Scheduled tasks:**
-  - `RetentionExecutor` — daily at 2:00 AM, executes log retention policies (purge/archive by age and level)
-  - Stale presence cleanup — timeout-based offline detection
-- **Health check:** `GET /api/v1/health` — returns `{"status":"UP","service":"codeops-server","timestamp":"<ISO-8601>"}` (public, no auth)
+  - `MfaService.cleanupExpiredCodes()` — every 15 minutes, deletes expired MFA email codes
+  - `RetentionExecutor.executeRetentionPolicies()` — daily at 2:00 AM, applies log retention policies
+  - `AnomalyDetectionService.runScheduledDetection()` — daily at 3:00 AM, checks metric baselines for anomalies
+- **Health check:** `GET /api/v1/health` → `{ "status": "UP", ... }` (public, no auth)
 
 ---
 
 ## 6. Entity / Data Model Layer
 
-### Core Module (28 entities)
+All entities extend `BaseEntity` unless noted. BaseEntity provides: `UUID id` (@GeneratedValue UUID), `Instant createdAt` (@CreatedDate), `Instant updatedAt` (@LastModifiedDate). All use Lombok `@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder`.
 
-#### BaseEntity.java (abstract superclass)
-Table: (inherited) | PK: `id` UUID (GenerationType.UUID)
-Fields: `id: UUID`, `createdAt: Instant` (@CreatedDate), `updatedAt: Instant` (@LastModifiedDate)
-Extended by all core entities except AuditLog (Long PK), SystemSetting (String PK), MfaEmailCode (UUID, no BaseEntity)
+### 6.1 Core Module Entities
 
-#### User.java
-Table: `users` | PK: inherited UUID
-Fields: `email: String` (unique, 255), `passwordHash: String` (255), `displayName: String` (100), `avatarUrl: String` (500), `isActive: Boolean` (default true), `lastLoginAt: Instant`, `mfaEnabled: Boolean` (default false), `mfaMethod: MfaMethod`, `mfaSecret: String` (encrypted), `recoveryCodes: String` (encrypted JSON)
-Relationships: None outbound
-Audit: createdAt, updatedAt (via BaseEntity)
+#### User
+- **Table:** `users`
+- **Fields:** `email` (String, unique, 255), `password` (String, 255), `firstName` (String, 100), `lastName` (String, 100), `avatarUrl` (String, 500), `isActive` (boolean, default true), `mfaEnabled` (boolean, default false), `mfaSecret` (String, 500, nullable), `mfaMethod` (MfaMethod enum, nullable), `mfaRecoveryCodes` (String, TEXT, nullable), `lastLoginAt` (Instant, nullable)
+- **Relationships:** None (referenced by UUID in other entities)
 
-#### Team.java
-Table: `teams` | PK: inherited UUID
-Fields: `name: String` (100, unique), `description: String` (TEXT), `avatarUrl: String` (500), `teamsWebhookUrl: String` (1000)
-Relationships: `@ManyToOne → User` (owner), `@OneToMany → TeamMember` (mappedBy team)
+#### Team
+- **Table:** `teams`
+- **Unique:** `(name)`
+- **Fields:** `name` (String, 100), `description` (String, 500), `logoUrl` (String, 500, nullable)
+- **Relationships:** `@OneToMany → TeamMember (mappedBy="team", cascade=ALL, orphanRemoval=true)`
 
-#### TeamMember.java
-Table: `team_members` | PK: inherited UUID
-Fields: `role: TeamRole` (enum STRING)
-Relationships: `@ManyToOne → Team`, `@ManyToOne → User`
-Unique: (team_id, user_id)
+#### TeamMember
+- **Table:** `team_members`
+- **Unique:** `(team_id, user_id)`
+- **Fields:** `role` (TeamRole enum)
+- **Relationships:** `@ManyToOne → Team`, `@ManyToOne → User`
 
-#### Project.java
-Table: `projects` | PK: inherited UUID
-Fields: `name: String` (200), `description: String` (TEXT), `repoUrl: String` (500), `defaultBranch: String` (100, default "main"), `language: String` (50), `healthScore: Integer`, `isArchived: Boolean` (default false)
-Relationships: `@ManyToOne → Team`, `@ManyToOne → GitHubConnection`, `@ManyToOne → JiraConnection`
-@Version: yes
+#### Project
+- **Table:** `projects`
+- **Unique:** `(team_id, name)`
+- **Fields:** `name` (String, 200), `description` (String, 2000, nullable), `repositoryUrl` (String, 500, nullable), `techStack` (String, 500, nullable), `isArchived` (boolean, default false)
+- **Relationships:** `@ManyToOne → Team`, `@ManyToOne → User (createdBy)`, `@ManyToOne → GitHubConnection (nullable)`, `@ManyToOne → JiraConnection (nullable)`
 
-#### QaJob.java
-Table: `qa_jobs` | PK: inherited UUID | Indexes: project_id, started_by
-Fields: `mode: JobMode`, `status: JobStatus`, `name: String` (200), `branch: String` (100), `configJson: String` (TEXT), `summaryMd: String` (TEXT), `overallResult: JobResult`, `healthScore: Integer`, `totalFindings/critical/high/medium/lowCount: Integer`, `jiraTicketKey: String` (50), `startedAt/completedAt: Instant`
-Relationships: `@ManyToOne → Project`, `@ManyToOne → User` (startedBy)
-@Version: yes
+#### QaJob
+- **Table:** `qa_jobs`
+- **Fields:** `status` (JobStatus enum), `result` (JobResult enum, nullable), `mode` (JobMode enum), `targetBranch` (String, 200, nullable), `pullRequestUrl` (String, 500, nullable), `commitSha` (String, 100, nullable), `configJson` (String, TEXT, nullable), `startedAt`/`completedAt` (Instant, nullable), `errorMessage` (String, TEXT, nullable)
+- **Relationships:** `@ManyToOne → Project`, `@ManyToOne → User (startedBy)`, `@ManyToOne → Persona (nullable)`, `@OneToMany → AgentRun`, `@OneToMany → Finding`
 
-#### Finding.java
-Table: `findings` | PK: inherited UUID | Indexes: job_id
-Fields: `agentType: AgentType`, `severity: Severity`, `title: String` (500), `description/recommendation/filePath/lineRange/codeSnippet/evidenceUrl: String`, `status: FindingStatus` (default OPEN), `statusChangedAt: Instant`
-Relationships: `@ManyToOne → QaJob`, `@ManyToOne → User` (statusChangedBy)
-@Version: yes
+#### AgentRun
+- **Table:** `agent_runs`
+- **Fields:** `agentType` (AgentType enum), `status` (AgentStatus enum), `result` (AgentResult enum, nullable), `outputMarkdown` (String, TEXT, nullable), `s3ReportKey` (String, 500, nullable), `startedAt`/`completedAt` (Instant, nullable), `errorMessage` (String, TEXT, nullable)
+- **Relationships:** `@ManyToOne → QaJob`
 
-#### AgentRun.java
-Table: `agent_runs` | PK: inherited UUID | Index: job_id
-Fields: `agentType: AgentType`, `status: AgentStatus`, `result: AgentResult`, `reportS3Key: String`, `score: Integer`, `findingsCount/criticalCount/highCount: Integer`, `startedAt/completedAt: Instant`
-Relationships: `@ManyToOne → QaJob`
-@Version: yes
+#### Finding
+- **Table:** `findings`
+- **Fields:** `severity` (Severity enum), `agentType` (AgentType enum), `status` (FindingStatus enum), `title` (String, 500), `description` (String, TEXT), `filePath` (String, 500, nullable), `lineNumber` (Integer, nullable), `suggestion` (String, TEXT, nullable), `category` (String, 200, nullable)
+- **Relationships:** `@ManyToOne → QaJob`, `@ManyToOne → User (assignedTo, nullable)`
 
-#### AuditLog.java
-Table: `audit_log` | PK: `id: Long` (IDENTITY) | Indexes: user_id, team_id
-Fields: `action: String` (50), `entityType: String` (30), `entityId: UUID`, `details: String` (TEXT), `ipAddress: String` (45), `createdAt: Instant`
-Relationships: `@ManyToOne → User`, `@ManyToOne → Team`
-Note: Does NOT extend BaseEntity
+#### BugInvestigation
+- **Table:** `bug_investigations`
+- **Fields:** `jiraKey` (String, 50, nullable), `jiraUrl` (String, 500, nullable), `bugDescription` (String, TEXT), `rootCauseAnalysis` (String, TEXT, nullable), `s3RcaKey` (String, 500, nullable), `suggestedFix` (String, TEXT, nullable), `affectedFiles` (String, TEXT, nullable), `severity` (Severity enum), `status` (FindingStatus enum)
+- **Relationships:** `@ManyToOne → QaJob`
 
-#### Persona.java
-Table: `personas` | PK: inherited UUID
-Fields: `name: String` (100), `agentType: AgentType`, `scope: Scope`, `systemPrompt: String` (TEXT), `isDefault: Boolean`
-Relationships: `@ManyToOne → Team`, `@ManyToOne → User`
+#### ComplianceItem
+- **Table:** `compliance_items`
+- **Fields:** `specificationName` (String, 500), `requirementId` (String, 100, nullable), `requirement` (String, TEXT), `status` (ComplianceStatus enum), `evidence` (String, TEXT, nullable), `notes` (String, TEXT, nullable)
+- **Relationships:** `@ManyToOne → QaJob`, `@ManyToOne → Specification (nullable)`
 
-#### Directive.java
-Table: `directives` | PK: inherited UUID
-Fields: `name: String` (100), `content: String` (TEXT), `scope: DirectiveScope`, `category: DirectiveCategory`, `version: Integer`
-Relationships: `@ManyToOne → Team`, `@ManyToOne → User`
+#### Specification
+- **Table:** `specifications`
+- **Fields:** `name` (String, 500), `version` (String, 50, nullable), `specType` (SpecType enum), `s3Key` (String, 500, nullable), `contentMd` (String, TEXT, nullable)
+- **Relationships:** `@ManyToOne → QaJob`
 
-#### ProjectDirective.java
-Table: `project_directives` | PK: `@EmbeddedId ProjectDirectiveId` (projectId + directiveId)
-Fields: `isEnabled: Boolean` (default true)
-Relationships: `@ManyToOne → Project`, `@ManyToOne → Directive`
+#### RemediationTask
+- **Table:** `remediation_tasks`
+- **Fields:** `taskNumber` (int), `title` (String, 500), `description` (String, TEXT), `filePath` (String, 500, nullable), `priority` (Priority enum), `effort` (Effort enum), `status` (TaskStatus enum), `s3PromptKey` (String, 500, nullable)
+- **Relationships:** `@ManyToOne → QaJob`, `@ManyToOne → Finding (nullable)`, `@ManyToOne → User (assignedTo, nullable)`
 
-#### Additional Core Entities (listed with table names):
-- `BugInvestigation` (bug_investigations) — RCA linked to QaJob with Jira integration
-- `ComplianceItem` (compliance_items) — Compliance requirements with status tracking
-- `DependencyScan` (dependency_scans) — Vulnerability scan results per project
-- `DependencyVulnerability` (dependency_vulnerabilities) — Individual CVEs
-- `GitHubConnection` (github_connections) — Encrypted PAT/OAuth/SSH credentials
-- `HealthSchedule` (health_schedules) — Automated check schedules (DAILY/WEEKLY/ON_COMMIT)
-- `HealthSnapshot` (health_snapshots) — Point-in-time health measurements
-- `Invitation` (invitations) — Team invitations with unique token and expiry
-- `JiraConnection` (jira_connections) — Encrypted Jira API tokens
-- `MfaEmailCode` (mfa_email_codes) — BCrypt-hashed email MFA codes (10-min TTL)
-- `NotificationPreference` (notification_preferences) — Per-user event notification settings
-- `RemediationTask` (remediation_tasks) — Fix tasks linked to findings (@Version)
-- `Specification` (specifications) — Design/API spec documents (OpenAPI, Markdown, Screenshot, Figma)
-- `SystemSetting` (system_settings) — Global key-value settings (String PK)
-- `TechDebtItem` (tech_debt_items) — Technical debt tracking with impact/effort (@Version)
+#### TechDebtItem
+- **Table:** `tech_debt_items`
+- **Fields:** `title` (String, 500), `description` (String, TEXT), `filePath` (String, 500, nullable), `lineNumber` (Integer, nullable), `category` (DebtCategory enum), `status` (DebtStatus enum), `severity` (Severity enum), `effort` (Effort enum), `businessImpact` (BusinessImpact enum, nullable), `suggestion` (String, TEXT, nullable)
+- **Relationships:** `@ManyToOne → Project`, `@ManyToOne → QaJob (nullable)`
 
-### Courier Module (18 entities)
+#### DependencyScan
+- **Table:** `dependency_scans`
+- **Fields:** `scanDate` (Instant), `totalDependencies` (int), `vulnerableCount` (int), `outdatedCount` (int), `packageManager` (String, 50, nullable), `manifestFile` (String, 200, nullable)
+- **Relationships:** `@ManyToOne → Project`, `@ManyToOne → QaJob (nullable)`, `@OneToMany → DependencyVulnerability`
 
-- `Collection` (courier_collections) — Team-scoped API collections with auth, variables, scripts
-- `CollectionShare` (courier_collection_shares) — Permission-based sharing (VIEWER/EDITOR/ADMIN)
-- `CodeSnippetTemplate` (courier_code_snippet_templates) — Custom code generation templates
-- `Environment` (courier_environments) — Named environment configurations
-- `EnvironmentVariable` (courier_environment_variables) — Scoped to environment or collection
-- `Folder` (courier_folders) — Nested folder structure with auth inheritance
-- `Fork` (courier_forks) — Collection branching for parallel work
-- `GlobalVariable` (courier_global_variables) — Team-wide variables
-- `MergeRequest` (courier_merge_requests) — Fork-to-source merge with conflict tracking
-- `Request` (courier_requests) — HTTP request with method, URL, headers, params, body, auth, scripts
-- `RequestAuth` (courier_request_auths) — Auth config (Bearer, Basic, OAuth2, JWT, API Key)
-- `RequestBody` (courier_request_bodies) — Body types (JSON, XML, form-data, GraphQL, binary)
-- `RequestHeader` (courier_request_headers) — Key-value headers with enabled flag
-- `RequestHistory` (courier_request_histories) — Executed request audit trail
-- `RequestParam` (courier_request_params) — Query parameters with enabled flag
-- `RequestScript` (courier_request_scripts) — Pre-request/post-response JavaScript
-- `RunIteration` (courier_run_iterations) — Single iteration of collection run
-- `RunResult` (courier_run_results) — Collection run execution results
+#### DependencyVulnerability
+- **Table:** `dependency_vulnerabilities`
+- **Fields:** `dependencyName` (String, 500), `currentVersion` (String, 100), `recommendedVersion` (String, 100, nullable), `severity` (Severity enum), `cveId` (String, 50, nullable), `description` (String, TEXT, nullable), `status` (VulnerabilityStatus enum)
+- **Relationships:** `@ManyToOne → DependencyScan`
 
-### Logger Module (16 entities)
+#### HealthSchedule
+- **Table:** `health_schedules`
+- **Fields:** `scheduleType` (ScheduleType enum), `cronExpression` (String, 100, nullable), `intervalMinutes` (Integer, nullable), `isActive` (boolean, default true), `lastRunAt` (Instant, nullable), `nextRunAt` (Instant, nullable)
+- **Relationships:** `@ManyToOne → Project`, `@ManyToOne → User (createdBy)`
 
-- `LogEntry` (log_entries) — Individual log records with team scoping, correlation/trace IDs
-- `LogSource` (log_sources) — Registered services/applications sending logs
-- `LogTrap` (log_traps) — Pattern-based alerting triggers (PATTERN/FREQUENCY/ABSENCE)
-- `TrapCondition` (trap_conditions) — Individual trap evaluation rules
-- `AlertRule` (alert_rules) — Connects traps to notification channels with throttling
-- `AlertChannel` (alert_channels) — Notification targets (EMAIL/WEBHOOK/TEAMS/SLACK)
-- `AlertHistory` (alert_histories) — Alert lifecycle (FIRED → ACKNOWLEDGED → RESOLVED)
-- `Dashboard` (logger_dashboards) — Configurable widget grids
-- `DashboardWidget` (logger_dashboard_widgets) — Widget definitions with query bindings
-- `AnomalyBaseline` (anomaly_baselines) — Learned patterns for z-score anomaly detection
-- `Metric` (logger_metrics) — Metric definitions (COUNTER/GAUGE/HISTOGRAM/TIMER)
-- `MetricSeries` (metric_series) — Time-series data points
-- `QueryHistory` (query_histories) — Query execution audit trail
-- `RetentionPolicy` (retention_policies) — Log lifecycle management (PURGE/ARCHIVE)
-- `SavedQuery` (saved_queries) — Reusable query definitions
-- `TraceSpan` (trace_spans) — Distributed trace spans with parent-child hierarchy
+#### HealthSnapshot
+- **Table:** `health_snapshots`
+- **Fields:** `overallScore` (int), `testCoverage` (Double, nullable), `codeQuality` (Double, nullable), `securityScore` (Double, nullable), `performanceScore` (Double, nullable), `documentationScore` (Double, nullable), `dependencyHealth` (Double, nullable), `summaryJson` (String, TEXT, nullable)
+- **Relationships:** `@ManyToOne → Project`, `@ManyToOne → QaJob (nullable)`
 
-### Registry Module (11 entities)
+#### Persona
+- **Table:** `personas`
+- **Fields:** `name` (String, 200), `description` (String, 2000, nullable), `agentType` (AgentType enum), `scope` (Scope enum), `systemPrompt` (String, TEXT), `isDefault` (boolean, default false)
+- **Relationships:** `@ManyToOne → Team (nullable)`, `@ManyToOne → User (createdBy, nullable)`
 
-- `ServiceRegistration` (service_registrations) — Core entity with full relationships
-- `Solution` (solutions) — Logical grouping of services into products
-- `SolutionMember` (solution_members) — Join entity with role (CORE/SUPPORTING/INFRASTRUCTURE/EXTERNAL)
-- `PortAllocation` (port_allocations) — Allocated ports with auto-allocation flag
-- `PortRange` (port_ranges) — Configurable port ranges per team/type/environment
-- `ServiceDependency` (service_dependencies) — Directed dependency edges
-- `ApiRouteRegistration` (api_route_registrations) — Claimed API route prefixes
-- `EnvironmentConfig` (registry_environment_configs) — Non-secret key-value configs
-- `ConfigTemplate` (config_templates) — Generated configuration templates
-- `InfraResource` (infra_resources) — Cloud/infrastructure resource tracking
-- `WorkstationProfile` (workstation_profiles) — Local dev profiles
+#### Directive
+- **Table:** `directives`
+- **Fields:** `name` (String, 200), `description` (String, 2000, nullable), `category` (DirectiveCategory enum), `scope` (DirectiveScope enum), `contentMd` (String, TEXT), `isShared` (boolean, default false)
+- **Relationships:** `@ManyToOne → Team`, `@ManyToOne → User (createdBy)`
 
-### Relay Module (12 entities)
+#### ProjectDirective (composite PK)
+- **Table:** `project_directives`
+- **PK:** `ProjectDirectiveId` (projectId + directiveId) — `@IdClass`
+- **Fields:** `isEnabled` (boolean, default true)
+- **Relationships:** `@ManyToOne → Project (@Id)`, `@ManyToOne → Directive (@Id)`
 
-- `Channel` (relay_channels) — PUBLIC/PRIVATE/PROJECT/SERVICE channels with slug
-- `ChannelMember` (relay_channel_members) — Membership with role, lastReadAt, isMuted
-- `Message` (relay_messages) — Channel messages with threads (parentId), mentions, soft delete
-- `MessageThread` (relay_message_threads) — Thread metadata (reply count, participants)
-- `DirectConversation` (relay_direct_conversations) — 1:1 or group DMs
-- `DirectMessage` (relay_direct_messages) — Messages in direct conversations
-- `Reaction` (relay_reactions) — Emoji reactions on messages
-- `FileAttachment` (relay_file_attachments) — File metadata and storage paths
-- `PinnedMessage` (relay_pinned_messages) — Pinned message references
-- `ReadReceipt` (relay_read_receipts) — Last-read position tracking
-- `UserPresence` (relay_user_presences) — Online status per user per team
-- `PlatformEvent` (relay_platform_events) — Cross-module events with delivery tracking
+#### Invitation
+- **Table:** `invitations`
+- **Unique:** `(token)`
+- **Fields:** `email` (String, 255), `role` (TeamRole enum), `token` (String, 500), `status` (InvitationStatus enum), `expiresAt` (Instant)
+- **Relationships:** `@ManyToOne → Team`, `@ManyToOne → User (invitedBy)`
+
+#### GitHubConnection
+- **Table:** `github_connections`
+- **Fields:** `name` (String, 200), `authType` (GitHubAuthType enum), `encryptedCredentials` (String, 2000), `apiUrl` (String, 500, default "https://api.github.com"), `isActive` (boolean, default true)
+- **Relationships:** `@ManyToOne → Team`, `@ManyToOne → User (createdBy)`
+
+#### JiraConnection
+- **Table:** `jira_connections`
+- **Fields:** `name` (String, 200), `instanceUrl` (String, 500), `email` (String, 255), `encryptedApiToken` (String, 2000), `isActive` (boolean, default true)
+- **Relationships:** `@ManyToOne → Team`, `@ManyToOne → User (createdBy)`
+
+#### MfaEmailCode
+- **Table:** `mfa_email_codes`
+- **Fields:** `code` (String, 10), `expiresAt` (Instant), `used` (boolean, default false)
+- **Relationships:** `@ManyToOne → User`
+
+#### NotificationPreference
+- **Table:** `notification_preferences`
+- **Unique:** `(user_id, event_type, channel)`
+- **Fields:** `eventType` (String, 100), `channel` (String, 50), `isEnabled` (boolean, default true)
+- **Relationships:** `@ManyToOne → User`
+
+#### SystemSetting (non-BaseEntity)
+- **Table:** `system_settings`
+- **PK:** `String key` (not UUID)
+- **Fields:** `value` (String, TEXT), `description` (String, 500, nullable), `updatedBy` (UUID, nullable), `updatedAt` (Instant)
+
+#### AuditLog (non-BaseEntity)
+- **Table:** `audit_logs`
+- **PK:** `Long id` (@GeneratedValue IDENTITY)
+- **Fields:** `userId` (UUID), `teamId` (UUID, nullable), `action` (String, 100), `entityType` (String, 100), `entityId` (UUID, nullable), `details` (String, TEXT, nullable), `ipAddress` (String, 50, nullable), `timestamp` (Instant)
+
+### 6.2 Courier Module Entities
+
+**See detailed audit in `Courier-Audit.md`.** Summary of 18 entities:
+
+- **Collection** — `collections` table. Fields: teamId, name, description, preRequestScript, postResponseScript, authType (AuthType), authConfig, isShared, createdBy. Has `@OneToMany → Folder, EnvironmentVariable`.
+- **CollectionShare** — `collection_shares`. permission (SharePermission), sharedWithUserId, sharedByUserId. `@ManyToOne → Collection`.
+- **Environment** — `environments`. teamId, name, description, isActive, createdBy. `@OneToMany → EnvironmentVariable`.
+- **EnvironmentVariable** — `environment_variables`. variableKey, variableValue, isSecret, isEnabled, scope. `@ManyToOne → Environment (nullable), Collection (nullable)`.
+- **Folder** — `folders`. name, description, sortOrder. `@ManyToOne → Collection, Folder (parent, nullable)`. `@OneToMany → Request, Folder (children)`.
+- **Fork** — `forks`. sourceCollectionId, sourceCollectionName. `@ManyToOne → Collection (forked)`.
+- **GlobalVariable** — `global_variables`. teamId, variableKey, variableValue, isSecret, isEnabled.
+- **MergeRequest** — `merge_requests`. sourceCollectionId, targetCollectionId, title, description, status (RunStatus), resolvedBy, resolvedAt, conflictsJson.
+- **Request** — `requests`. name, httpMethod (HttpMethod), url, description, sortOrder. `@ManyToOne → Folder`. `@OneToMany → RequestHeader, RequestParam, RequestBody (one), RequestAuth (one), RequestScript`.
+- **RequestAuth** — `request_auths`. authType (AuthType), authConfig (JSON). `@ManyToOne → Request`.
+- **RequestBody** — `request_bodies`. bodyType (BodyType), rawContent, formData, graphqlQuery, graphqlVariables, binaryFileName, binaryContentType, binaryStoragePath. `@ManyToOne → Request`.
+- **RequestHeader** — `request_headers`. headerKey, headerValue, description, isEnabled. `@ManyToOne → Request`.
+- **RequestHistory** — `request_histories`. url, httpMethod, statusCode, requestHeaders/Body, responseHeaders/Body, responseSizeBytes, responseTimeMs, error, environmentId. `@ManyToOne → Request`.
+- **RequestParam** — `request_params`. paramKey, paramValue, description, isEnabled. `@ManyToOne → Request`.
+- **RequestScript** — `request_scripts`. scriptType (ScriptType), scriptContent. `@ManyToOne → Request`.
+- **RunIteration** — `run_iterations`. iterationNumber, status (RunStatus), startedAt, completedAt, totalRequests, passedRequests, failedRequests, dataRow. `@ManyToOne → RunResult`.
+- **RunResult** — `run_results`. status (RunStatus), totalRequests, passedRequests, failedRequests, totalDurationMs, startedAt, completedAt, dataFilePath, iterationCount. `@ManyToOne → Collection, Environment (nullable)`. `@OneToMany → RunIteration`.
+- **CodeSnippetTemplate** — `code_snippet_templates`. language (CodeLanguage), label, templateContent, sortOrder.
+
+### 6.3 Fleet Module Entities
+
+- **ServiceProfile** — `service_profiles`. teamId, name, imageName, imageTag, description, registryUrl, command, workingDir, cpuLimit, memoryLimitMb, restartPolicy (RestartPolicy), replicas, healthCheckCommand, healthCheckIntervalSeconds, healthCheckTimeoutSeconds, healthCheckRetries, createdByUserId. `@OneToMany → EnvironmentVariable, PortMapping, VolumeMount, NetworkConfig, ContainerHealthCheck`.
+- **SolutionProfile** — `solution_profiles`. Unique: `(team_id, name)`. teamId, name, description, createdByUserId. `@OneToMany → SolutionService`.
+- **SolutionService** — `solution_services`. Unique: `(solution_profile_id, service_profile_id)`. displayOrder, overrideEnvVars (TEXT). `@ManyToOne → SolutionProfile, ServiceProfile`.
+- **WorkstationProfile** — `fleet_workstation_profiles` (note: prefixed to avoid collision with registry module). teamId, name, description, createdByUserId, isDefault. `@OneToMany → WorkstationSolution`.
+- **WorkstationSolution** — `fleet_workstation_solutions`. Unique: `(workstation_profile_id, solution_profile_id)`. displayOrder. `@ManyToOne → WorkstationProfile, SolutionProfile`.
+- **ContainerInstance** — `container_instances`. teamId, containerId, containerName, serviceProfileId (UUID), status (ContainerStatus), hostPort, startedAt, stoppedAt, exitCode, lastHealthCheck, healthStatus (HealthStatus), createdByUserId.
+- **ContainerHealthCheck** — `container_health_checks`. command, intervalSeconds, timeoutSeconds, retries, startPeriodSeconds. `@ManyToOne → ServiceProfile`.
+- **ContainerLog** — `container_logs`. containerId, containerName, message, timestamp, stream.
+- **DeploymentRecord** — `deployment_records`. teamId, solutionProfileId, action (DeploymentAction), status (ContainerStatus), initiatedByUserId, startedAt, completedAt, errorMessage. `@OneToMany → DeploymentContainer`.
+- **DeploymentContainer** — `deployment_containers`. containerId, containerName, serviceProfileId, status (ContainerStatus), exitCode, errorMessage. `@ManyToOne → DeploymentRecord`.
+- **EnvironmentVariable** (fleet) — `fleet_environment_variables`. variableKey, variableValue, isSecret. `@ManyToOne → ServiceProfile`.
+- **NetworkConfig** — `network_configs`. networkName, driver, aliases (TEXT). `@ManyToOne → ServiceProfile`.
+- **PortMapping** — `port_mappings`. hostPort, containerPort, protocol. `@ManyToOne → ServiceProfile`.
+- **VolumeMount** — `volume_mounts`. hostPath, containerPath, readOnly. `@ManyToOne → ServiceProfile`.
+
+### 6.4 Logger Module Entities
+
+- **LogSource** — `log_sources`. teamId, name, sourceType (String), environment, host, description, isActive, apiKey, createdBy.
+- **LogEntry** — `log_entries`. Indexed: correlation_id, team_id, source_id, timestamp, level, service_name. teamId, sourceId (UUID), correlationId, timestamp, level (LogLevel), serviceName, message (TEXT), stackTrace (TEXT), metadata (TEXT JSON), host, environment, traceId, spanId.
+- **Dashboard** — `dashboards`. teamId, name, description, isDefault, layoutJson (TEXT), createdBy. `@OneToMany → DashboardWidget`.
+- **DashboardWidget** — `dashboard_widgets`. title, widgetType (WidgetType), configJson (TEXT), position, width, height. `@ManyToOne → Dashboard`.
+- **SavedQuery** — `saved_queries`. name, description, queryJson (TEXT), queryDsl (TEXT), teamId, createdBy, isShared, lastExecutedAt, executionCount.
+- **QueryHistory** — `query_history`. queryJson (TEXT), queryDsl (TEXT), resultCount, executionTimeMs, teamId, createdBy.
+- **Metric** — `metrics`. Unique: `(team_id, name)`. name, metricType (MetricType), description, unit, serviceName, tags (TEXT), teamId.
+- **MetricSeries** — `metric_series`. timestamp, value (Double), tags (TEXT), resolution (Integer). `@ManyToOne → Metric`.
+- **AlertRule** — `alert_rules`. teamId, name, description, metricName, condition (String), threshold (Double), windowMinutes, severity (AlertSeverity), isEnabled, lastTriggeredAt, createdBy. `@ManyToOne → AlertChannel (nullable)`.
+- **AlertChannel** — `alert_channels`. teamId, name, channelType (AlertChannelType), configJson (TEXT), isEnabled, createdBy.
+- **AlertHistory** — `alert_histories`. message (TEXT), severity (AlertSeverity), status (AlertStatus), metricValue (Double), acknowledgedBy, acknowledgedAt. `@ManyToOne → AlertRule`.
+- **AnomalyBaseline** — `anomaly_baselines`. Unique: `(metric_id)`. meanValue, stdDeviation, minValue, maxValue, sampleCount, periodHours, lastCalculatedAt. `@ManyToOne → Metric`.
+- **LogTrap** — `log_traps`. teamId, name, description, trapType (TrapType), isEnabled, triggerCount, lastTriggeredAt, createdBy. `@ManyToOne → AlertChannel (nullable)`. `@OneToMany → TrapCondition`.
+- **TrapCondition** — `trap_conditions`. conditionType (ConditionType), field, pattern (TEXT), threshold (Integer), windowSeconds, serviceName, logLevel (LogLevel). `@ManyToOne → LogTrap`.
+- **RetentionPolicy** — `retention_policies`. name, sourceName, logLevel (LogLevel, nullable), retentionDays, action (RetentionAction), archiveDestination, isActive, teamId, createdBy, lastExecutedAt.
+- **TraceSpan** — `trace_spans`. correlationId, traceId, spanId, parentSpanId, serviceName, operationName, startTime, endTime, durationMs, status (SpanStatus), statusMessage (TEXT), tags (TEXT), teamId.
+
+### 6.5 Registry Module Entities
+
+- **ServiceRegistration** — `service_registrations`. Unique: `(team_id, slug)`. teamId, name, slug, serviceType (ServiceType), description, repoUrl, repoFullName, defaultBranch, techStack, status (ServiceStatus), healthCheckUrl, healthCheckIntervalSeconds, lastHealthStatus (HealthStatus), lastHealthCheckAt, environmentsJson (TEXT), metadataJson (TEXT), createdByUserId.
+- **ServiceDependency** — `service_dependencies`. Unique: `(source_service_id, target_service_id)`. dependencyType (DependencyType), description, isRequired, targetEndpoint. `@ManyToOne → ServiceRegistration (source, target)`.
+- **PortAllocation** — `port_allocations`. Unique: `(service_id, environment, port_type)`. environment, portType (PortType), portNumber, protocol, description, isAutoAllocated, allocatedByUserId. `@ManyToOne → ServiceRegistration`.
+- **PortRange** — `port_ranges`. Unique: `(team_id, port_type, environment)`. teamId, portType (PortType), rangeStart, rangeEnd, environment, description.
+- **ApiRouteRegistration** — `api_route_registrations`. Unique: `(service_id, route_prefix, environment)`. routePrefix, httpMethods, environment, description. `@ManyToOne → ServiceRegistration (service, gatewayService nullable)`.
+- **ConfigTemplate** — `config_templates`. Unique: `(service_id, template_type, environment)`. templateType (ConfigTemplateType), environment, contentText (TEXT), isAutoGenerated, generatedFrom, version. `@ManyToOne → ServiceRegistration`.
+- **EnvironmentConfig** — `environment_configs`. Unique: `(service_id, environment, config_key)`. environment, configKey, configValue (TEXT), configSource (ConfigSource), description. `@ManyToOne → ServiceRegistration`.
+- **InfraResource** — `infra_resources`. teamId, resourceType (InfraResourceType), resourceName, environment, region, arnOrUrl, metadataJson (TEXT), description, createdByUserId. `@ManyToOne → ServiceRegistration (nullable)`.
+- **Solution** — `solutions`. Unique: `(team_id, slug)`. teamId, name, slug, description, category (SolutionCategory), status (SolutionStatus), iconName, colorHex, ownerUserId, repositoryUrl, documentationUrl, metadataJson (TEXT), createdByUserId. `@OneToMany → SolutionMember`.
+- **SolutionMember** — `solution_members`. Unique: `(solution_id, service_id)`. role (SolutionMemberRole), displayOrder, notes. `@ManyToOne → Solution, ServiceRegistration`.
+- **WorkstationProfile** (registry) — `workstation_profiles`. teamId, name, description, solutionId (UUID, nullable), servicesJson (TEXT), startupOrder (TEXT), createdByUserId, isDefault.
+
+### 6.6 Relay Module Entities
+
+- **Channel** — `channels`. Unique: `(team_id, slug)`. name, slug, description, topic, channelType (ChannelType), teamId, projectId (nullable), serviceId (nullable), isArchived, createdBy. `@OneToMany → ChannelMember, PinnedMessage`.
+- **ChannelMember** — `channel_members`. Unique: `(channel_id, user_id)`. channelId, userId, role (MemberRole), lastReadAt, isMuted, joinedAt. `@ManyToOne → Channel`.
+- **Message** — `messages`. channelId, senderId, content (TEXT), messageType (MessageType), parentId (nullable, for threads), isEdited, editedAt, isDeleted, mentionsEveryone, mentionedUserIds (TEXT), platformEventId (nullable). `@OneToMany → Reaction, FileAttachment`.
+- **MessageThread** — `message_threads`. rootMessageId, channelId, replyCount, lastReplyAt, lastReplyBy, participantIds (TEXT).
+- **DirectConversation** — `direct_conversations`. Unique: `(team_id, participant_ids)`. teamId, conversationType (ConversationType), name, participantIds (TEXT), lastMessageAt, lastMessagePreview.
+- **DirectMessage** — `direct_messages`. conversationId, senderId, content (TEXT), messageType (MessageType), isEdited, editedAt, isDeleted. `@ManyToOne → DirectConversation`. `@OneToMany → Reaction, FileAttachment`.
+- **Reaction** — `reactions`. Unique: `(user_id, message_id, emoji)` or `(user_id, direct_message_id, emoji)`. userId, emoji, reactionType (ReactionType), messageId (nullable), directMessageId (nullable). `@ManyToOne → Message, DirectMessage`.
+- **PinnedMessage** — `pinned_messages`. messageId, pinnedBy. `@ManyToOne → Channel`.
+- **FileAttachment** — `file_attachments`. fileName, contentType, fileSizeBytes, storagePath, thumbnailPath, status (FileUploadStatus), uploadedBy, teamId, messageId (nullable), directMessageId (nullable). `@ManyToOne → Message, DirectMessage`.
+- **PlatformEvent** — `platform_events`. eventType (PlatformEventType), teamId, sourceModule, sourceEntityId, title, detail (TEXT), targetChannelId, targetChannelSlug, postedMessageId, isDelivered, deliveredAt.
+- **ReadReceipt** — `read_receipts`. Unique: `(channel_id, user_id)`. channelId, userId, lastReadMessageId, lastReadAt.
+- **UserPresence** — `user_presences`. Unique: `(user_id, team_id)`. userId, teamId, status (PresenceStatus), lastSeenAt, lastHeartbeatAt, statusMessage.
 
 ---
 
 ## 7. Enum Inventory
 
-### Core Enums (25)
-| Enum | Values | Used In |
-|------|--------|---------|
-| AgentResult | PASS, WARN, FAIL | AgentRun |
-| AgentStatus | PENDING, RUNNING, COMPLETED, FAILED | AgentRun |
-| AgentType | SECURITY, CODE_QUALITY, BUILD_HEALTH, COMPLETENESS, API_CONTRACT, TEST_COVERAGE, UI_UX, DOCUMENTATION, DATABASE, PERFORMANCE, DEPENDENCY, ARCHITECTURE | AgentRun, Finding, Persona, ComplianceItem |
-| BusinessImpact | LOW, MEDIUM, HIGH, CRITICAL | TechDebtItem |
-| ComplianceStatus | MET, PARTIAL, MISSING, NOT_APPLICABLE | ComplianceItem |
-| DebtCategory | ARCHITECTURE, CODE, TEST, DEPENDENCY, DOCUMENTATION | TechDebtItem |
-| DebtStatus | IDENTIFIED, PLANNED, IN_PROGRESS, RESOLVED | TechDebtItem |
-| DirectiveCategory | ARCHITECTURE, STANDARDS, CONVENTIONS, CONTEXT, OTHER | Directive |
-| DirectiveScope | TEAM, PROJECT, USER | Directive |
-| Effort | S, M, L, XL | TechDebtItem |
-| FindingStatus | OPEN, ACKNOWLEDGED, FALSE_POSITIVE, FIXED, WONT_FIX | Finding |
-| GitHubAuthType | PAT, OAUTH, SSH | GitHubConnection |
-| InvitationStatus | PENDING, ACCEPTED, EXPIRED | Invitation |
-| JobMode | AUDIT, COMPLIANCE, BUG_INVESTIGATE, REMEDIATE, TECH_DEBT, DEPENDENCY, HEALTH_MONITOR | QaJob |
-| JobResult | PASS, WARN, FAIL | QaJob |
-| JobStatus | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED | QaJob |
-| MfaMethod | NONE, TOTP, EMAIL | User |
-| Priority | P0, P1, P2, P3 | RemediationTask |
-| ScheduleType | DAILY, WEEKLY, ON_COMMIT | HealthSchedule |
-| Scope | SYSTEM, TEAM, USER | Persona |
-| Severity | CRITICAL, HIGH, MEDIUM, LOW | Finding, DependencyVulnerability |
-| SpecType | OPENAPI, MARKDOWN, SCREENSHOT, FIGMA | Specification |
-| TaskStatus | PENDING, ASSIGNED, EXPORTED, JIRA_CREATED, COMPLETED | RemediationTask |
-| TeamRole | OWNER, ADMIN, MEMBER, VIEWER | TeamMember, Invitation |
-| VulnerabilityStatus | OPEN, UPDATING, SUPPRESSED, RESOLVED | DependencyVulnerability |
+### Core Enums
+- **AgentType** — CODE_REVIEW, SECURITY_AUDIT, PERFORMANCE, ACCESSIBILITY, DOCUMENTATION, TEST_COVERAGE, DEPENDENCY_CHECK, COMPLIANCE, BUG_INVESTIGATION, CODE_QUALITY, ARCHITECTURE, SUMMARY
+- **AgentStatus** — PENDING, RUNNING, COMPLETED, FAILED, CANCELLED
+- **AgentResult** — PASS, FAIL, WARNING, ERROR
+- **JobStatus** — PENDING, RUNNING, COMPLETED, FAILED, CANCELLED
+- **JobResult** — PASS, FAIL, WARNING
+- **JobMode** — FULL_SCAN, PULL_REQUEST, BRANCH_COMPARE, SELECTIVE, BUG_INVESTIGATION, HEALTH_CHECK, COMPLIANCE_AUDIT
+- **Severity** — CRITICAL, HIGH, MEDIUM, LOW, INFO
+- **FindingStatus** — OPEN, ACKNOWLEDGED, IN_PROGRESS, RESOLVED, FALSE_POSITIVE, WONT_FIX
+- **Priority** — CRITICAL, HIGH, MEDIUM, LOW
+- **Effort** — TRIVIAL, SMALL, MEDIUM, LARGE, EPIC
+- **TaskStatus** — PENDING, IN_PROGRESS, COMPLETED, BLOCKED, CANCELLED
+- **TeamRole** — OWNER, ADMIN, MEMBER, VIEWER
+- **Scope** — SYSTEM, TEAM, USER
+- **ComplianceStatus** — COMPLIANT, NON_COMPLIANT, PARTIAL, NOT_APPLICABLE
+- **SpecType** — REQUIREMENTS, API_CONTRACT, DESIGN, SECURITY, PERFORMANCE, ACCESSIBILITY
+- **DebtCategory** — CODE_SMELL, COMPLEXITY, DUPLICATION, OUTDATED_DEPENDENCY, MISSING_TEST, MISSING_DOCS, DESIGN_FLAW, SECURITY, PERFORMANCE, CONFIGURATION
+- **DebtStatus** — IDENTIFIED, ACCEPTED, IN_PROGRESS, RESOLVED, WONT_FIX
+- **BusinessImpact** — CRITICAL, HIGH, MEDIUM, LOW, NONE
+- **VulnerabilityStatus** — OPEN, PATCHED, IGNORED, FALSE_POSITIVE
+- **ScheduleType** — CRON, INTERVAL, MANUAL
+- **InvitationStatus** — PENDING, ACCEPTED, EXPIRED, CANCELLED
+- **GitHubAuthType** — PERSONAL_ACCESS_TOKEN, GITHUB_APP
+- **MfaMethod** — TOTP, EMAIL
+- **DirectiveCategory** — CODING_STANDARD, SECURITY, TESTING, DOCUMENTATION, ARCHITECTURE, PERFORMANCE, ACCESSIBILITY, COMPLIANCE, CUSTOM
+- **DirectiveScope** — TEAM, PROJECT
 
-### Courier Enums (7)
-| Enum | Values |
-|------|--------|
-| AuthType | NO_AUTH, API_KEY, BEARER_TOKEN, BASIC_AUTH, OAUTH2_AUTHORIZATION_CODE, OAUTH2_CLIENT_CREDENTIALS, OAUTH2_IMPLICIT, OAUTH2_PASSWORD, JWT_BEARER, INHERIT_FROM_PARENT |
-| BodyType | NONE, FORM_DATA, X_WWW_FORM_URLENCODED, RAW_JSON, RAW_XML, RAW_HTML, RAW_TEXT, RAW_YAML, BINARY, GRAPHQL |
-| CodeLanguage | CURL, PYTHON_REQUESTS, JAVASCRIPT_FETCH, JAVASCRIPT_AXIOS, JAVA_HTTP_CLIENT, JAVA_OKHTTP, CSHARP_HTTP_CLIENT, CSHARP_REST_SHARP, GO, RUBY, PHP, SWIFT, KOTLIN |
-| HttpMethod | GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS |
-| RunStatus | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED |
-| ScriptType | PRE_REQUEST, POST_RESPONSE |
-| SharePermission | VIEWER, EDITOR, ADMIN |
+### Courier Enums
+- **AuthType** — NO_AUTH, API_KEY, BEARER_TOKEN, BASIC_AUTH, OAUTH2_AUTHORIZATION_CODE, OAUTH2_CLIENT_CREDENTIALS, OAUTH2_IMPLICIT, OAUTH2_PASSWORD, JWT_BEARER, INHERIT_FROM_PARENT
+- **BodyType** — NONE, FORM_DATA, X_WWW_FORM_URLENCODED, RAW_JSON, RAW_XML, RAW_HTML, RAW_TEXT, RAW_YAML, BINARY, GRAPHQL
+- **HttpMethod** — GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
+- **ScriptType** — PRE_REQUEST, POST_RESPONSE
+- **RunStatus** — PENDING, RUNNING, COMPLETED, FAILED, CANCELLED
+- **SharePermission** — VIEW, EDIT
+- **CodeLanguage** — CURL, PYTHON_REQUESTS, PYTHON_HTTP, JAVASCRIPT_FETCH, JAVASCRIPT_AXIOS, JAVA_HTTP_CLIENT, JAVA_OK_HTTP, CSHARP_HTTP_CLIENT, GO_HTTP, RUBY_NET_HTTP, PHP_CURL, RUST_REQWEST
 
-### Logger Enums (10)
-| Enum | Values |
-|------|--------|
-| LogLevel | TRACE, DEBUG, INFO, WARN, ERROR, FATAL |
-| TrapType | PATTERN, FREQUENCY, ABSENCE |
-| ConditionType | REGEX, KEYWORD, FREQUENCY_THRESHOLD, ABSENCE |
-| AlertChannelType | EMAIL, WEBHOOK, TEAMS, SLACK |
-| AlertSeverity | INFO, WARNING, CRITICAL |
-| AlertStatus | FIRED, ACKNOWLEDGED, RESOLVED |
-| MetricType | COUNTER, GAUGE, HISTOGRAM, TIMER |
-| RetentionAction | PURGE, ARCHIVE |
-| SpanStatus | OK, ERROR |
-| WidgetType | LOG_STREAM, TIME_SERIES_CHART, COUNTER, GAUGE, TABLE, HEATMAP, PIE_CHART, BAR_CHART |
+### Fleet Enums
+- **ContainerStatus** — CREATED, RUNNING, PAUSED, RESTARTING, REMOVING, EXITED, DEAD, NOT_FOUND
+- **DeploymentAction** — DEPLOY, SCALE, RESTART, STOP, DESTROY
+- **HealthStatus** — HEALTHY, UNHEALTHY, STARTING, NONE
+- **RestartPolicy** — NO, ON_FAILURE, ALWAYS, UNLESS_STOPPED
 
-### Registry Enums (11)
-| Enum | Values |
-|------|--------|
-| ConfigSource | AUTO_GENERATED, MANUAL, INHERITED, REGISTRY_DERIVED |
-| ConfigTemplateType | DOCKER_COMPOSE, APPLICATION_YML, APPLICATION_PROPERTIES, ENV_FILE, TERRAFORM_MODULE, CLAUDE_CODE_HEADER, CONVENTIONS_MD, NGINX_CONF, GITHUB_ACTIONS, DOCKERFILE, MAKEFILE, README_SECTION |
-| DependencyType | HTTP_REST, GRPC, KAFKA_TOPIC, DATABASE_SHARED, REDIS_SHARED, LIBRARY, GATEWAY_ROUTE, WEBSOCKET, FILE_SYSTEM, OTHER |
-| HealthStatus | UP, DOWN, DEGRADED, UNKNOWN |
-| InfraResourceType | S3_BUCKET, SQS_QUEUE, SNS_TOPIC, CLOUDWATCH_LOG_GROUP, IAM_ROLE, SECRETS_MANAGER_PATH, SSM_PARAMETER, RDS_INSTANCE, ELASTICACHE_CLUSTER, ECR_REPOSITORY, CLOUD_MAP_NAMESPACE, ROUTE53_RECORD, ACM_CERTIFICATE, ALB_TARGET_GROUP, ECS_SERVICE, LAMBDA_FUNCTION, DYNAMODB_TABLE, DOCKER_NETWORK, DOCKER_VOLUME, OTHER |
-| PortType | HTTP_API, FRONTEND_DEV, DATABASE, REDIS, KAFKA, KAFKA_INTERNAL, ZOOKEEPER, GRPC, WEBSOCKET, DEBUG, ACTUATOR, CUSTOM |
-| ServiceStatus | ACTIVE, INACTIVE, DEPRECATED, ARCHIVED |
-| ServiceType | SPRING_BOOT_API, FLUTTER_WEB, FLUTTER_DESKTOP, FLUTTER_MOBILE, REACT_SPA, VUE_SPA, NEXT_JS, EXPRESS_API, FASTAPI, DOTNET_API, GO_API, LIBRARY, WORKER, GATEWAY, DATABASE_SERVICE, MESSAGE_BROKER, CACHE_SERVICE, MCP_SERVER, CLI_TOOL, OTHER |
-| SolutionCategory | PLATFORM, APPLICATION, LIBRARY_SUITE, INFRASTRUCTURE, TOOLING, OTHER |
-| SolutionMemberRole | CORE, SUPPORTING, INFRASTRUCTURE, EXTERNAL_DEPENDENCY |
-| SolutionStatus | ACTIVE, IN_DEVELOPMENT, DEPRECATED, ARCHIVED |
+### Logger Enums
+- **LogLevel** — TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+- **MetricType** — COUNTER, GAUGE, HISTOGRAM, SUMMARY
+- **AlertSeverity** — CRITICAL, HIGH, MEDIUM, LOW, INFO
+- **AlertStatus** — FIRING, ACKNOWLEDGED, RESOLVED, SILENCED
+- **AlertChannelType** — EMAIL, TEAMS_WEBHOOK, SLACK_WEBHOOK, PAGERDUTY
+- **ConditionType** — CONTAINS, NOT_CONTAINS, REGEX, EQUALS, LEVEL_THRESHOLD, RATE_THRESHOLD, FIELD_VALUE
+- **TrapType** — PATTERN, THRESHOLD, ANOMALY
+- **SpanStatus** — OK, ERROR
+- **RetentionAction** — DELETE, ARCHIVE, DOWNSAMPLE
+- **WidgetType** — LOG_STREAM, LOG_CHART, METRIC_LINE, METRIC_BAR, METRIC_GAUGE, METRIC_STAT, TRACE_LIST, ALERT_STATUS
 
-### Relay Enums (8)
-| Enum | Values |
-|------|--------|
-| ChannelType | PUBLIC, PRIVATE, PROJECT, SERVICE |
-| MessageType | TEXT, SYSTEM, PLATFORM_EVENT, FILE |
-| ReactionType | EMOJI |
-| PresenceStatus | ONLINE, AWAY, DND, OFFLINE |
-| PlatformEventType | AUDIT_COMPLETED, ALERT_FIRED, SESSION_COMPLETED, SECRET_ROTATED, CONTAINER_CRASHED, SERVICE_REGISTERED, DEPLOYMENT_COMPLETED, BUILD_COMPLETED, FINDING_CRITICAL, MERGE_REQUEST_CREATED |
-| FileUploadStatus | UPLOADING, COMPLETE, FAILED |
-| ConversationType | ONE_ON_ONE, GROUP |
-| MemberRole | OWNER, ADMIN, MEMBER |
+### Registry Enums
+- **ServiceType** — WEB_APP, API_SERVICE, MICROSERVICE, WORKER, SCHEDULER, DATABASE, CACHE, MESSAGE_BROKER, SEARCH_ENGINE, LOAD_BALANCER, REVERSE_PROXY, CDN, MONITORING, LOGGING, CI_CD, CONTAINER_REGISTRY, IDENTITY_PROVIDER, FILE_STORAGE, EMAIL_SERVICE, OTHER
+- **ServiceStatus** — ACTIVE, INACTIVE, DEPRECATED, DECOMMISSIONED
+- **HealthStatus** (registry) — HEALTHY, DEGRADED, UNHEALTHY, UNKNOWN
+- **DependencyType** — HTTP_REST, HTTP_GRAPHQL, GRPC, DATABASE, MESSAGE_QUEUE, FILE_SYSTEM, SHARED_LIBRARY, DNS, TCP_SOCKET, OTHER
+- **PortType** — HTTP, HTTPS, GRPC, DATABASE, CACHE, MESSAGE_BROKER, MONITORING, DEBUG, MANAGEMENT, WEBSOCKET, CUSTOM, OTHER
+- **ConfigTemplateType** — DOCKER_COMPOSE, DOCKERFILE, NGINX, ENVOY, KUBERNETES_DEPLOYMENT, KUBERNETES_SERVICE, KUBERNETES_INGRESS, KUBERNETES_CONFIGMAP, HELM_VALUES, TERRAFORM, GITHUB_ACTIONS, PROMETHEUS
+- **ConfigSource** — MANUAL, DISCOVERED, IMPORTED
+- **InfraResourceType** — EC2_INSTANCE, ECS_SERVICE, EKS_CLUSTER, LAMBDA_FUNCTION, RDS_INSTANCE, DYNAMODB_TABLE, S3_BUCKET, SQS_QUEUE, SNS_TOPIC, ELASTICACHE, CLOUDFRONT, ROUTE53, ALB, NLB, VPC, SECURITY_GROUP, IAM_ROLE, SECRETS_MANAGER, PARAMETER_STORE, CUSTOM
+- **SolutionCategory** — PLATFORM, APPLICATION, INFRASTRUCTURE, DATA_PIPELINE, MONITORING, CUSTOM
+- **SolutionStatus** — ACTIVE, DEPRECATED, ARCHIVED
+- **SolutionMemberRole** — PRIMARY, SUPPORTING, INFRASTRUCTURE, MONITORING
+
+### Relay Enums
+- **ChannelType** — PUBLIC, PRIVATE, ANNOUNCEMENT
+- **ConversationType** — DIRECT, GROUP
+- **MessageType** — TEXT, SYSTEM, CODE, FILE, PLATFORM_EVENT
+- **MemberRole** — OWNER, ADMIN, MEMBER
+- **FileUploadStatus** — UPLOADING, COMPLETED, FAILED
+- **PlatformEventType** — JOB_STARTED, JOB_COMPLETED, JOB_FAILED, FINDING_CRITICAL, DEPLOYMENT_STARTED, DEPLOYMENT_COMPLETED, DEPLOYMENT_FAILED, SERVICE_HEALTH_CHANGED, MEMBER_JOINED, MEMBER_LEFT
+- **PresenceStatus** — ONLINE, AWAY, DO_NOT_DISTURB, OFFLINE
+- **ReactionType** — EMOJI, CUSTOM
 
 ---
 
 ## 8. Repository Layer
 
-### Core Repositories (26)
+All repositories extend `JpaRepository<Entity, UUID>` unless noted. Listed with custom methods only.
 
-All extend `JpaRepository<Entity, UUID>` unless noted.
+### Core Repositories
+- **UserRepository** — `findByEmail(String)`, `existsByEmail(String)`, `findByEmailContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(...)` (search)
+- **TeamRepository** — `findByName(String)`, `existsByName(String)`
+- **TeamMemberRepository** — `findByTeamIdAndUserId(UUID, UUID)`, `findByTeamId(UUID)`, `findByUserId(UUID)`, `existsByTeamIdAndUserId(UUID, UUID)`, `findByTeamIdAndRole(UUID, TeamRole)`, `deleteByTeamIdAndUserId(UUID, UUID)`
+- **ProjectRepository** — `findByTeamIdAndName(UUID, String)`, `findByTeamId(UUID)`, `findByTeamIdAndIsArchived(UUID, boolean, Pageable)`, `countByTeamId(UUID)`
+- **QaJobRepository** — `findByProjectId(UUID, Pageable)`, `findByProjectIdAndStatus(UUID, JobStatus, Pageable)`, `findByStartedById(UUID, Pageable)`, `countByProjectId(UUID)`, `countByProjectIdAndResult(UUID, JobResult)`
+- **AgentRunRepository** — `findByJobId(UUID)`, `findByJobIdAndAgentType(UUID, AgentType)`
+- **FindingRepository** — `findByJobId(UUID, Pageable)`, `findByJobIdAndSeverity(UUID, Severity, Pageable)`, `findByJobIdAndAgentType(UUID, AgentType, Pageable)`, `findByJobIdAndStatus(UUID, FindingStatus, Pageable)`, `countByJobIdAndSeverity(UUID, Severity)`, `countByJobId(UUID)`
+- **BugInvestigationRepository** — `findByJobId(UUID)`, `findByJiraKey(String)`
+- **ComplianceItemRepository** — `findByJobId(UUID, Pageable)`, `findByJobIdAndStatus(UUID, ComplianceStatus, Pageable)`, `countByJobIdAndStatus(UUID, ComplianceStatus)`, `countByJobId(UUID)`, `deleteByJobId(UUID)`
+- **SpecificationRepository** — `findByJobId(UUID, Pageable)`, `deleteByJobId(UUID)`
+- **RemediationTaskRepository** — `findByJobId(UUID, Pageable)`, `findByAssignedToId(UUID, Pageable)`, `findByJobIdAndTaskNumber(UUID, int)`, `countByJobId(UUID)`, `deleteByJobId(UUID)`
+- **TechDebtItemRepository** — `findByProjectId(UUID, Pageable)`, `findByProjectIdAndStatus(UUID, DebtStatus, Pageable)`, `findByProjectIdAndCategory(UUID, DebtCategory, Pageable)`, `countByProjectIdAndStatus(UUID, DebtStatus)`, `countByProjectId(UUID)`, `deleteByProjectId(UUID)`
+- **DependencyScanRepository** — `findByProjectId(UUID, Pageable)`, `findTopByProjectIdOrderByCreatedAtDesc(UUID)`, `deleteByProjectId(UUID)`
+- **DependencyVulnerabilityRepository** — `findByScanId(UUID, Pageable)`, `findByScanIdAndSeverity(UUID, Severity, Pageable)`, `findByScanIdAndStatus(UUID, VulnerabilityStatus, Pageable)`, `countByScanIdAndSeverity(UUID, Severity)`, `countByScanIdAndStatus(UUID, VulnerabilityStatus)`, `deleteByScanId(UUID)`
+- **HealthScheduleRepository** — `findByProjectId(UUID)`, `findByIsActiveTrue()`
+- **HealthSnapshotRepository** — `findByProjectId(UUID, Pageable)`, `findTopByProjectIdOrderByCreatedAtDesc(UUID)`, `findTop10ByProjectIdOrderByCreatedAtDesc(UUID)`, `deleteByProjectId(UUID)`
+- **PersonaRepository** — `findByTeamId(UUID, Pageable)`, `findByTeamIdAndAgentType(UUID, AgentType)`, `findByTeamIdAndAgentTypeAndIsDefaultTrue(UUID, AgentType)`, `findByCreatedById(UUID)`, `findByScopeAndIsDefaultTrue(Scope)`, `findByScope(Scope)`
+- **DirectiveRepository** — `findByTeamId(UUID)`, `findByTeamIdAndCategory(UUID, DirectiveCategory)`, `findByTeamIdAndScope(UUID, DirectiveScope)`
+- **ProjectDirectiveRepository** — `findByProjectId(UUID)`, `findByProjectIdAndDirective_Id(UUID, UUID)`, `findByProjectIdAndIsEnabledTrue(UUID)`, `deleteByProjectIdAndDirectiveId(UUID, UUID)`
+- **InvitationRepository** — `findByToken(String)`, `findByTeamId(UUID)`, `findByTeamIdAndEmail(UUID, String)`, `findByTeamIdAndStatus(UUID, InvitationStatus)`
+- **GitHubConnectionRepository** — `findByTeamId(UUID)`, `findByTeamIdAndIsActiveTrue(UUID)`
+- **JiraConnectionRepository** — `findByTeamId(UUID)`, `findByTeamIdAndIsActiveTrue(UUID)`
+- **MfaEmailCodeRepository** — `findByUserIdAndCodeAndUsedFalse(UUID, String)`, `deleteByExpiresAtBeforeOrUsedTrue(Instant)`
+- **NotificationPreferenceRepository** — `findByUserId(UUID)`, `findByUserIdAndEventTypeAndChannel(UUID, String, String)`
+- **SystemSettingRepository** — extends `JpaRepository<SystemSetting, String>`
+- **AuditLogRepository** — extends `JpaRepository<AuditLog, Long>`. `findByTeamId(UUID, Pageable)`, `findByUserId(UUID, Pageable)`
 
-| Repository | Entity | Notable Custom Methods |
-|---|---|---|
-| UserRepository | User | `findByEmail(String)`, `findByDisplayNameContainingIgnoreCase(String)` |
-| TeamRepository | Team | `findByOwnerId(UUID)` |
-| TeamMemberRepository | TeamMember | `findByTeamIdAndUserId(UUID, UUID)`, `existsByTeamIdAndUserId(UUID, UUID)`, `findByUserId(UUID)`, `countByTeamId(UUID)` |
-| ProjectRepository | Project | `findByTeamId(UUID, Pageable)`, `findByTeamIdAndIsArchived(UUID, boolean, Pageable)` |
-| QaJobRepository | QaJob | `findByProjectId(UUID, Pageable)`, `findByStartedById(UUID, Pageable)` |
-| FindingRepository | Finding | `findByJobId(UUID, Pageable)`, `findByJobIdAndSeverity/AgentType/Status`, `countByJobIdGroupBySeverity` |
-| AgentRunRepository | AgentRun | `findByJobId(UUID)`, `findByJobIdAndAgentType(UUID, AgentType)` |
-| AuditLogRepository | AuditLog (Long PK) | `findByUserId/TeamId(UUID, Pageable)` |
-| PersonaRepository | Persona | `findByTeamId(UUID, Pageable)`, `findByTeamIdAndAgentType`, `findByScope(Scope)`, `findByUserId` |
-| DirectiveRepository | Directive | `findByTeamId(UUID)` |
-| ProjectDirectiveRepository | ProjectDirective | `findByProjectId(UUID)`, `findByProjectIdAndIsEnabled(UUID, true)`, `deleteByProjectIdAndDirectiveId` |
-| InvitationRepository | Invitation | `findByToken(String)` (with @Lock PESSIMISTIC_WRITE) |
-| GitHubConnectionRepository | GitHubConnection | `findByTeamIdAndIsActive(UUID, true)` |
-| JiraConnectionRepository | JiraConnection | `findByTeamIdAndIsActive(UUID, true)` |
-| BugInvestigationRepository | BugInvestigation | `findByJobId(UUID)` |
-| ComplianceItemRepository | ComplianceItem | `findByJobId(UUID, Pageable)`, `findByJobIdAndStatus` |
-| DependencyScanRepository | DependencyScan | `findByProjectIdOrderByCreatedAtDesc` |
-| DependencyVulnerabilityRepository | DependencyVulnerability | `findByScanId(UUID, Pageable)`, `findByScanIdAndSeverity/Status` |
-| HealthScheduleRepository | HealthSchedule | `findByProjectId(UUID)`, `findByIsActive(true)` |
-| HealthSnapshotRepository | HealthSnapshot | `findByProjectId(UUID, Pageable)`, `findTopByProjectIdOrderByCapturedAtDesc` |
-| MfaEmailCodeRepository | MfaEmailCode | `findByUserIdAndUsed(UUID, false)` |
-| NotificationPreferenceRepository | NotificationPreference | `findByUserId(UUID)`, `findByUserIdAndEventType` |
-| RemediationTaskRepository | RemediationTask | `findByJobId(UUID, Pageable)`, `findByAssignedToId(UUID, Pageable)` |
-| SpecificationRepository | Specification | `findByJobId(UUID, Pageable)` |
-| SystemSettingRepository | SystemSetting (String PK) | `findBySettingKey(String)` |
-| TechDebtItemRepository | TechDebtItem | `findByProjectId(UUID)`, `findByProjectIdAndStatus/Category(UUID, enum, Pageable)` |
+### Courier Repositories
+- **CollectionRepository** — `findByTeamIdAndCreatedBy(UUID, UUID)`, `findByTeamIdAndIsSharedTrue(UUID)`, `findByTeamId(UUID)`, `existsByTeamIdAndName(UUID, String)`
+- **CollectionShareRepository** — `findByCollectionId(UUID)`, `findByCollectionIdAndSharedWithUserId(UUID, UUID)`, `findBySharedWithUserId(UUID)`, `deleteByCollectionIdAndSharedWithUserId(UUID, UUID)`, `existsByCollectionIdAndSharedWithUserId(UUID, UUID)`
+- **EnvironmentRepository** — `findByTeamId(UUID)`, `findByTeamIdAndIsActiveTrue(UUID)`, `existsByTeamIdAndName(UUID, String)`
+- **EnvironmentVariableRepository** — `findByEnvironmentId(UUID)`, `findByCollectionId(UUID)`, `deleteByEnvironmentId(UUID)`, `deleteByCollectionId(UUID)`
+- **FolderRepository** — `findByCollectionId(UUID)`, `findByCollectionIdAndParentFolderIdIsNull(UUID)`, `findByParentFolderId(UUID)`
+- **ForkRepository** — `findByForkedCollectionId(UUID)`, `findBySourceCollectionId(UUID)`
+- **GlobalVariableRepository** — `findByTeamId(UUID)`, `findByTeamIdAndVariableKey(UUID, String)`, `deleteByTeamIdAndVariableKey(UUID, String)`
+- **MergeRequestRepository** — `findBySourceCollectionId(UUID)`, `findByTargetCollectionId(UUID)`, `findByStatus(RunStatus)`
+- **RequestRepository** — `findByFolderId(UUID)`, `findByFolderIdOrderBySortOrderAsc(UUID)`
+- **RequestAuthRepository** — `findByRequestId(UUID)`, `deleteByRequestId(UUID)`
+- **RequestBodyRepository** — `findByRequestId(UUID)`, `deleteByRequestId(UUID)`
+- **RequestHeaderRepository** — `findByRequestId(UUID)`, `deleteByRequestId(UUID)`
+- **RequestHistoryRepository** — `findByRequestId(UUID, Pageable)`, `findByRequestIdAndEnvironmentId(UUID, UUID, Pageable)`
+- **RequestParamRepository** — `findByRequestId(UUID)`, `deleteByRequestId(UUID)`
+- **RequestScriptRepository** — `findByRequestId(UUID)`, `findByRequestIdAndScriptType(UUID, ScriptType)`, `deleteByRequestId(UUID)`
+- **RunIterationRepository** — `findByRunResultId(UUID)`
+- **RunResultRepository** — `findByCollectionId(UUID, Pageable)`, `findByCollectionIdAndStatus(UUID, RunStatus, Pageable)`
+- **CodeSnippetTemplateRepository** — `findByLanguage(CodeLanguage)`, `findAllByOrderBySortOrderAsc()`
 
-### Courier Repositories (18)
-CollectionRepository, FolderRepository, RequestRepository, RequestAuthRepository, RequestBodyRepository, RequestHeaderRepository, RequestParamRepository, RequestScriptRepository, EnvironmentRepository, EnvironmentVariableRepository, GlobalVariableRepository, RequestHistoryRepository, RunResultRepository, RunIterationRepository, ForkRepository, MergeRequestRepository, CollectionShareRepository, CodeSnippetTemplateRepository
+### Fleet Repositories
+- **ServiceProfileRepository** — `findByTeamId(UUID)`, `findByTeamIdAndName(UUID, String)`, `existsByTeamIdAndName(UUID, String)`
+- **SolutionProfileRepository** — `findByTeamId(UUID)`, `existsByTeamIdAndName(UUID, String)`
+- **SolutionServiceRepository** — `findBySolutionProfileId(UUID)`, `findBySolutionProfileIdAndServiceProfileId(UUID, UUID)`, `existsBySolutionProfileIdAndServiceProfileId(UUID, UUID)`, `deleteBySolutionProfileIdAndServiceProfileId(UUID, UUID)`
+- **WorkstationProfileRepository** (fleet) — `findByTeamId(UUID)`, `findByTeamIdAndIsDefaultTrue(UUID)`, `existsByTeamIdAndName(UUID, String)`
+- **WorkstationSolutionRepository** — `findByWorkstationProfileId(UUID)`, `findByWorkstationProfileIdAndSolutionProfileId(UUID, UUID)`, `existsByWorkstationProfileIdAndSolutionProfileId(UUID, UUID)`, `deleteByWorkstationProfileIdAndSolutionProfileId(UUID, UUID)`
+- **ContainerInstanceRepository** — `findByTeamId(UUID)`, `findByContainerId(String)`, `findByServiceProfileId(UUID)`, `findByTeamIdAndStatus(UUID, ContainerStatus)`
+- **ContainerHealthCheckRepository** — `findByServiceProfileId(UUID)`
+- **ContainerLogRepository** — `findByContainerId(String, Pageable)`, `findByContainerIdAndTimestampBetween(String, Instant, Instant, Pageable)`
+- **DeploymentRecordRepository** — `findByTeamId(UUID, Pageable)`, `findBySolutionProfileId(UUID, Pageable)`
+- **DeploymentContainerRepository** — `findByDeploymentRecordId(UUID)`
+- **EnvironmentVariableRepository** (fleet) — `findByServiceProfileId(UUID)`, `deleteByServiceProfileId(UUID)`
+- **NetworkConfigRepository** — `findByServiceProfileId(UUID)`, `deleteByServiceProfileId(UUID)`
+- **PortMappingRepository** — `findByServiceProfileId(UUID)`, `deleteByServiceProfileId(UUID)`
+- **VolumeMountRepository** — `findByServiceProfileId(UUID)`, `deleteByServiceProfileId(UUID)`
 
-### Logger Repositories (16)
-LogEntryRepository, LogSourceRepository, LogTrapRepository, TrapConditionRepository, AlertRuleRepository, AlertChannelRepository, AlertHistoryRepository, DashboardRepository, DashboardWidgetRepository, AnomalyBaselineRepository, MetricRepository, MetricSeriesRepository, QueryHistoryRepository, RetentionPolicyRepository, SavedQueryRepository, TraceSpanRepository
+### Logger Repositories
+- **LogSourceRepository** — `findByTeamId(UUID)`, `findByTeamIdAndName(UUID, String)`, `findByTeamIdAndIsActiveTrue(UUID)`, `findByApiKey(String)`
+- **LogEntryRepository** — `findByTeamId(UUID, Pageable)`, `findByTeamIdAndSourceId(UUID, UUID, Pageable)`, `findByTeamIdAndLevel(UUID, LogLevel, Pageable)`, `findByCorrelationId(String)`, `@Query deleteByTeamIdAndTimestampBefore(UUID, Instant)` (JPQL bulk delete), `@Query countByTeamIdGroupByLevel(UUID)` (aggregate)
+- **DashboardRepository** — `findByTeamId(UUID)`, `findByTeamIdAndIsDefaultTrue(UUID)`
+- **DashboardWidgetRepository** — `findByDashboardId(UUID)`, `findByDashboardIdOrderByPositionAsc(UUID)`, `deleteByDashboardId(UUID)`
+- **SavedQueryRepository** — `findByTeamId(UUID)`, `findByCreatedBy(UUID)`, `findByTeamIdAndIsSharedTrue(UUID)`
+- **QueryHistoryRepository** — `findByTeamId(UUID, Pageable)`, `findByCreatedBy(UUID, Pageable)`
+- **MetricRepository** — `findByTeamId(UUID)`, `findByTeamIdAndName(UUID, String)`, `findByTeamIdAndServiceName(UUID, String)`
+- **MetricSeriesRepository** — `findByMetricId(UUID, Pageable)`, `findByMetricIdAndTimestampBetween(UUID, Instant, Instant)`, `@Query avg/max/min aggregations by metric and time range`
+- **AlertRuleRepository** — `findByTeamId(UUID)`, `findByTeamIdAndIsEnabledTrue(UUID)`, `findByMetricName(String)`
+- **AlertChannelRepository** — `findByTeamId(UUID)`, `findByTeamIdAndIsEnabledTrue(UUID)`
+- **AlertHistoryRepository** — `findByAlertRuleId(UUID, Pageable)`, `findByAlertRuleIdAndStatus(UUID, AlertStatus, Pageable)`
+- **AnomalyBaselineRepository** — `findByMetricId(UUID)`
+- **LogTrapRepository** — `findByTeamId(UUID)`, `findByTeamIdAndIsEnabledTrue(UUID)`
+- **TrapConditionRepository** — `findByTrapId(UUID)`, `deleteByTrapId(UUID)`
+- **RetentionPolicyRepository** — `findByTeamId(UUID)`, `findByIsActiveTrue()`
+- **TraceSpanRepository** — `findByTraceId(String)`, `findByCorrelationId(String)`, `findByTeamIdAndServiceName(UUID, String, Pageable)`, `findByTeamId(UUID, Pageable)`
 
-### Registry Repositories (11)
-ServiceRegistrationRepository, SolutionRepository, SolutionMemberRepository, PortAllocationRepository, PortRangeRepository, ServiceDependencyRepository, ApiRouteRegistrationRepository, EnvironmentConfigRepository, ConfigTemplateRepository, InfraResourceRepository, WorkstationProfileRepository
+### Registry Repositories
+- **ServiceRegistrationRepository** — `findByTeamId(UUID)`, `findByTeamIdAndSlug(UUID, String)`, `existsByTeamIdAndSlug(UUID, String)`, `findByTeamIdAndStatus(UUID, ServiceStatus)`
+- **ServiceDependencyRepository** — `findBySourceServiceId(UUID)`, `findByTargetServiceId(UUID)`, `existsBySourceServiceIdAndTargetServiceId(UUID, UUID)`, `deleteBySourceServiceIdAndTargetServiceId(UUID, UUID)`
+- **PortAllocationRepository** — `findByServiceId(UUID)`, `findByServiceIdAndEnvironment(UUID, String)`, `@Query findConflicting(portNumber, environment, excludeServiceId)` (conflict detection), `@Query findByTeamIdAndEnvironment(teamId, environment)` (team-wide port map)
+- **PortRangeRepository** — `findByTeamId(UUID)`, `findByTeamIdAndPortTypeAndEnvironment(UUID, PortType, String)`
+- **ApiRouteRegistrationRepository** — `findByServiceId(UUID)`, `findByServiceIdAndEnvironment(UUID, String)`, `@Query findConflictingRoutes(routePrefix, environment, excludeServiceId)`
+- **ConfigTemplateRepository** — `findByServiceId(UUID)`, `findByServiceIdAndTemplateTypeAndEnvironment(UUID, ConfigTemplateType, String)`
+- **EnvironmentConfigRepository** — `findByServiceId(UUID)`, `findByServiceIdAndEnvironment(UUID, String)`, `findByServiceIdAndEnvironmentAndConfigKey(UUID, String, String)`, `deleteByServiceIdAndEnvironmentAndConfigKey(UUID, String, String)`
+- **InfraResourceRepository** — `findByTeamId(UUID)`, `findByServiceId(UUID)`, `findByTeamIdAndResourceType(UUID, InfraResourceType)`, `findByTeamIdAndEnvironment(UUID, String)`
+- **SolutionRepository** — `findByTeamId(UUID)`, `findByTeamIdAndSlug(UUID, String)`, `existsByTeamIdAndSlug(UUID, String)`
+- **SolutionMemberRepository** — `findBySolutionId(UUID)`, `findBySolutionIdAndServiceId(UUID, UUID)`, `existsBySolutionIdAndServiceId(UUID, UUID)`, `deleteBySolutionIdAndServiceId(UUID, UUID)`
+- **WorkstationProfileRepository** (registry) — `findByTeamId(UUID)`, `findByTeamIdAndIsDefaultTrue(UUID)`, `existsByTeamIdAndName(UUID, String)`
 
-### Relay Repositories (12)
-ChannelRepository, ChannelMemberRepository, MessageRepository, MessageThreadRepository, DirectConversationRepository, DirectMessageRepository, ReactionRepository, FileAttachmentRepository, PinnedMessageRepository, ReadReceiptRepository, UserPresenceRepository, PlatformEventRepository
+### Relay Repositories
+- **ChannelRepository** — `findByTeamId(UUID)`, `findByTeamIdAndSlug(UUID, String)`, `findByTeamIdAndChannelType(UUID, ChannelType)`, `findByTeamIdAndIsArchivedFalse(UUID)`, `existsByTeamIdAndSlug(UUID, String)`
+- **ChannelMemberRepository** — `findByChannelId(UUID)`, `findByChannelIdAndUserId(UUID, UUID)`, `findByUserId(UUID)`, `existsByChannelIdAndUserId(UUID, UUID)`, `deleteByChannelIdAndUserId(UUID, UUID)`, `countByChannelId(UUID)`
+- **MessageRepository** — `findByChannelId(UUID, Pageable)`, `findByChannelIdAndParentIdIsNull(UUID, Pageable)`, `findByParentId(UUID)`, `@Query searchByChannelIdAndContent(channelId, query, pageable)` (LIKE search), `@Query searchAcrossChannels(channelIds, query, pageable)`
+- **MessageThreadRepository** — `findByRootMessageId(UUID)`, `findByChannelId(UUID)`, `findByChannelIdAndLastReplyAtAfter(UUID, Instant)`
+- **DirectConversationRepository** — `findByTeamId(UUID)`, `@Query findByParticipantIds(teamId, participantIds)`, `findByTeamIdAndParticipantIdsContaining(UUID, String)`
+- **DirectMessageRepository** — `findByConversationId(UUID, Pageable)`, `findByConversationIdAndIsDeletedFalse(UUID, Pageable)`
+- **ReactionRepository** — `findByMessageId(UUID)`, `findByDirectMessageId(UUID)`, `findByMessageIdAndUserId(UUID, UUID)`, `findByDirectMessageIdAndUserId(UUID, UUID)`, `@Query countByMessageIdGroupByEmoji(UUID)` (aggregation), `deleteByMessageId(UUID)`
+- **PinnedMessageRepository** — `findByChannelId(UUID)`, `findByChannelIdAndMessageId(UUID, UUID)`, `deleteByChannelIdAndMessageId(UUID, UUID)`, `countByChannelId(UUID)`
+- **PlatformEventRepository** — `findByTeamId(UUID, Pageable)`, `findByTeamIdAndEventType(UUID, PlatformEventType, Pageable)`, `findBySourceEntityId(UUID)`, `findByTeamIdAndIsDeliveredFalse(UUID)`
+- **FileAttachmentRepository** — `findByMessageId(UUID)`, `findByDirectMessageId(UUID)`, `findByTeamId(UUID, Pageable)`, `findByUploadedBy(UUID, Pageable)`
+- **ReadReceiptRepository** — `findByChannelIdAndUserId(UUID, UUID)`, `findByChannelId(UUID)`
+- **UserPresenceRepository** — `findByUserIdAndTeamId(UUID, UUID)`, `findByTeamId(UUID)`, `findByTeamIdAndStatus(UUID, PresenceStatus)`, `findByTeamIdAndLastHeartbeatAtBefore(UUID, Instant)`
 
 ---
 
 ## 9. Service Layer — Full Method Signatures
 
-### Core Services (26)
+### Core Services
 
-#### AuthService.java
-Injects: UserRepository, PasswordEncoder, JwtTokenProvider, TokenBlacklistService, MfaService, TeamMemberRepository, AuditLogService
-- `register(RegisterRequest): AuthResponse` — Creates user, returns JWT
-- `login(LoginRequest): AuthResponse` — Validates credentials, checks MFA, returns JWT or MFA challenge token
-- `refreshToken(RefreshTokenRequest): AuthResponse` — Validates refresh token, issues new pair
-- `logout(String token): void` — Extracts JTI, blacklists token
-- `changePassword(ChangePasswordRequest, UUID userId): void` — Validates old password, updates hash
+#### AuthService
+**Injects:** UserRepository, PasswordEncoder, JwtTokenProvider, TeamMemberRepository, MfaEmailCodeRepository, EmailService
+- `register(RegisterRequest): AuthResponse`
+- `login(LoginRequest): AuthResponse`
+- `refreshToken(RefreshTokenRequest): AuthResponse`
+- `changePassword(ChangePasswordRequest): void`
 
-#### UserService.java
-Injects: UserRepository
+#### UserService
+**Injects:** UserRepository
 - `getUserById(UUID): UserResponse`
 - `getUserByEmail(String): UserResponse`
 - `getCurrentUser(): UserResponse`
 - `updateUser(UUID, UpdateUserRequest): UserResponse`
-- `searchUsers(String query): List<UserResponse>` — Case-insensitive, max 20 results
+- `searchUsers(String): List<UserResponse>`
 - `deactivateUser(UUID): void`
 - `activateUser(UUID): void`
 
-#### TeamService.java
-Injects: TeamRepository, TeamMemberRepository, UserRepository, InvitationRepository, EmailService, AuditLogService
-- `createTeam(CreateTeamRequest, UUID userId): TeamResponse` — Creator becomes OWNER
-- `getTeamsForUser(UUID): List<TeamResponse>`
+#### TeamService
+**Injects:** TeamRepository, TeamMemberRepository, UserRepository, InvitationRepository
+- `createTeam(CreateTeamRequest): TeamResponse`
 - `getTeam(UUID): TeamResponse`
+- `getTeamsForUser(): List<TeamResponse>`
 - `updateTeam(UUID, UpdateTeamRequest): TeamResponse`
-- `deleteTeam(UUID): void` — Requires OWNER role
-- `getMembers(UUID teamId): List<TeamMemberResponse>`
-- `updateMemberRole(UUID teamId, UUID userId, UpdateRoleRequest): TeamMemberResponse`
-- `removeMember(UUID teamId, UUID userId): void`
-- `inviteMember(UUID teamId, InviteMemberRequest): InvitationResponse` — Generates token, sends email
-- `acceptInvitation(String token): void` — Pessimistic lock on invitation
-- `getInvitations(UUID teamId): List<InvitationResponse>`
-- `cancelInvitation(UUID teamId, UUID invitationId): void`
+- `deleteTeam(UUID): void`
+- `getTeamMembers(UUID): List<TeamMemberResponse>`
+- `updateMemberRole(UUID, UUID, UpdateMemberRoleRequest): TeamMemberResponse`
+- `removeMember(UUID, UUID): void`
+- `inviteMember(UUID, InviteMemberRequest): InvitationResponse`
+- `acceptInvitation(String): TeamResponse`
+- `getTeamInvitations(UUID): List<InvitationResponse>`
+- `cancelInvitation(UUID): void`
 
-#### ProjectService.java
-Injects: ProjectRepository, TeamMemberRepository, GitHubConnectionRepository, JiraConnectionRepository, QaJobRepository, FindingRepository, AgentRunRepository + 8 more repos for cascading delete
-- `createProject(UUID teamId, CreateProjectRequest): ProjectResponse`
-- `getProjectsForTeam(UUID teamId, boolean includeArchived, Pageable): PageResponse<ProjectResponse>`
+#### ProjectService
+**Injects:** ProjectRepository, TeamMemberRepository, UserRepository, TeamRepository, GitHubConnectionRepository, JiraConnectionRepository, ObjectMapper, + 10 related repositories for cascade delete
+- `createProject(UUID, CreateProjectRequest): ProjectResponse`
 - `getProject(UUID): ProjectResponse`
+- `getProjectsForTeam(UUID): List<ProjectResponse>`
+- `getAllProjectsForTeam(UUID, boolean, Pageable): PageResponse<ProjectResponse>`
 - `updateProject(UUID, UpdateProjectRequest): ProjectResponse`
-- `archiveProject(UUID): ProjectResponse`
-- `unarchiveProject(UUID): ProjectResponse`
-- `deleteProject(UUID): void` — Cascading delete across all related entities
-- `updateHealthScore(UUID projectId, Integer score): void` — Called by QaJobService on job completion
+- `archiveProject(UUID): void`
+- `unarchiveProject(UUID): void`
+- `deleteProject(UUID): void` — cascade deletes all related entities
 
-#### QaJobService.java
-Injects: QaJobRepository, ProjectRepository, TeamMemberRepository, AgentRunRepository, BugInvestigationRepository, ProjectService
+#### QaJobService
+**Injects:** QaJobRepository, AgentRunRepository, FindingRepository, ProjectRepository, UserRepository, TeamMemberRepository, ProjectService
 - `createJob(CreateJobRequest): JobResponse`
 - `getJob(UUID): JobResponse`
-- `getJobsForProject(UUID, Pageable): PageResponse<JobResponse>`
-- `getJobsForUser(UUID, Pageable): PageResponse<JobResponse>`
-- `updateJob(UUID, UpdateJobRequest): JobResponse` — Auto-updates project health score on completion
+- `getJobsForProject(UUID, Pageable): PageResponse<JobSummaryResponse>`
+- `getJobsByUser(UUID, Pageable): PageResponse<JobSummaryResponse>`
+- `updateJob(UUID, UpdateJobRequest): JobResponse`
 - `deleteJob(UUID): void`
-- `createAgentRun(UUID jobId, CreateAgentRunRequest): AgentRunResponse`
-- `createAgentRunsBatch(UUID jobId, List<CreateAgentRunRequest>): List<AgentRunResponse>`
-- `getAgentRuns(UUID jobId): List<AgentRunResponse>`
-- `updateAgentRun(UUID agentRunId, UpdateAgentRunRequest): AgentRunResponse`
 
-#### Additional Core Services (signatures abbreviated):
-- **AdminService** — User listing/update, system settings CRUD, usage statistics, audit log queries, MFA reset
-- **AuditLogService** — `@Async log(UUID userId, UUID teamId, String action, String entityType, UUID entityId, String details): void`
-- **BugInvestigationService** — Investigation CRUD with S3 report upload
-- **ComplianceService** — Spec/item CRUD, weighted compliance scoring
-- **DependencyService** — Scan/vulnerability CRUD, severity filtering
-- **DirectiveService** — Directive CRUD, project assignment/toggle, max limits
-- **EncryptionService** — AES-256-GCM encrypt/decrypt with PBKDF2 key derivation
-- **FindingService** — Finding CRUD, bulk status updates, severity count aggregation
-- **GitHubConnectionService** — Soft-delete connections, credential encryption/decryption
-- **HealthMonitorService** — Schedule CRUD, snapshot creation, trend analysis
-- **JiraConnectionService** — Connection CRUD with JiraConnectionDetails record
-- **MetricsService** — Project/team quality metrics aggregation, health trend
-- **MfaService** — TOTP setup/verify, email MFA, recovery codes (encrypted), admin reset
-- **NotificationService** — User preference management, `shouldNotify(UUID userId, String event): boolean`
-- **PersonaService** — CRUD with scope management, default per agent type
-- **RemediationTaskService** — Task CRUD, assignment, S3 prompt uploads
-- **ReportStorageService** — Report/spec upload/download via S3StorageService
-- **S3StorageService** — Transparent S3/local filesystem switching, presigned URLs
-- **TechDebtService** — Item CRUD, status/category filtering, debt summary
-- **TokenBlacklistService** — In-memory ConcurrentHashMap JWT revocation
+#### AgentRunService
+**Injects:** AgentRunRepository, QaJobRepository, TeamMemberRepository
+- `createAgentRun(CreateAgentRunRequest): AgentRunResponse`
+- `createAgentRuns(UUID, List<AgentType>): List<AgentRunResponse>`
+- `getAgentRuns(UUID): List<AgentRunResponse>`
+- `getAgentRun(UUID): AgentRunResponse`
+- `updateAgentRun(UUID, UpdateAgentRunRequest): AgentRunResponse`
 
-### Courier Services (22)
-- **CollectionService** — Collection CRUD, duplication, search, access control
-- **FolderService** — Folder CRUD, tree building, reordering, circular reference prevention
-- **RequestService** — Request CRUD, duplication, component management
-- **RequestProxyService** — HTTP execution with variable resolution, auth, redirect tracking, history
-- **EnvironmentService** — Environment CRUD, activation, cloning, variable management
-- **VariableService** — {{variable}} resolution: Global → Collection → Environment → Local
-- **AuthResolverService** — Auth configuration resolution to HTTP headers/params
-- **ScriptEngineService** — GraalJS sandbox with Postman-compatible `pm` API
-- **CollectionRunnerService** — Sequential request execution with scripts, assertions, data files
-- **ForkService** — Collection forking and fork management
-- **MergeService** — Merge request creation, conflict detection, fork merging
-- **ShareService** — Collection sharing with permission-level checks (VIEWER/EDITOR/ADMIN)
-- **HistoryService** — Request history with pagination, search, filtering, cleanup
-- **ImportService** — Collection import orchestration (Postman, OpenAPI, cURL)
-- **PostmanImporter** — Postman v2.1 JSON parsing with folder nesting
-- **OpenApiImporter** — OpenAPI 3.x spec parsing
-- **CurlImporter** — cURL command parsing with tokenization
-- **ExportService** — Export to Postman v2.1, OpenAPI 3.0.3, native JSON
-- **CodeGenerationService** — Code snippet generation in 12+ languages
-- **GraphQLService** — GraphQL execution, introspection, query validation
-- **DataFileParser** — CSV/JSON data file parsing for collection runs
-- **ScriptContext** — Mutable execution context for script variables
+#### FindingService
+**Injects:** FindingRepository, QaJobRepository, UserRepository, TeamMemberRepository
+- `createFinding(CreateFindingRequest): FindingResponse`
+- `createFindings(List<CreateFindingRequest>): List<FindingResponse>`
+- `getFinding(UUID): FindingResponse`
+- `getFindingsForJob(UUID, Pageable): PageResponse<FindingResponse>`
+- `getFindingsByJobAndSeverity(UUID, Severity, Pageable): PageResponse<FindingResponse>`
+- `getFindingsByJobAndAgent(UUID, AgentType, Pageable): PageResponse<FindingResponse>`
+- `getFindingsByJobAndStatus(UUID, FindingStatus, Pageable): PageResponse<FindingResponse>`
+- `updateFindingStatus(UUID, UpdateFindingStatusRequest): FindingResponse`
+- `bulkUpdateFindingStatus(BulkUpdateFindingsRequest): List<FindingResponse>`
+- `countFindingsBySeverity(UUID): Map<Severity, Long>`
 
-### Logger Services (18)
-- **LogIngestionService** — HTTP push + Kafka ingestion, source auto-creation
-- **LogQueryService** — JPA Criteria queries, full-text search, DSL parsing
-- **LogParsingService** — Raw log parsing (JSON, key-value, Spring Boot, syslog, plain text)
-- **LogSourceService** — Source CRUD
-- **LogTrapService** — Trap CRUD, evaluation engine invocation, historical testing
-- **AlertService** — Rule CRUD, alert firing, throttling, lifecycle management
-- **AlertChannelService** — Channel CRUD, async notification delivery, SSRF protection
-- **DashboardService** — Dashboard CRUD, widget management, template system
-- **MetricsService** — Metric registration (idempotent), time-series push, aggregation
-- **AnomalyDetectionService** — Baseline management, z-score anomaly checking
-- **AnomalyBaselineCalculator** — Statistical calculations (mean, stddev, z-score)
-- **MetricAggregationService** — Percentile, std dev, bucketed time aggregation
-- **TraceService** — Span CRUD, trace assembly, waterfall visualization
-- **TraceAnalysisService** — Waterfall building, parent-child depth, error propagation
-- **RetentionService** — Policy CRUD, storage usage reporting
-- **RetentionExecutor** — `@Scheduled(cron="0 0 2 * * *")` daily execution
-- **TrapEvaluationEngine** — Stateless pattern/keyword/frequency evaluation with regex cache
-- **LogQueryDslParser** — SQL-like DSL parser with field mapping
+#### ComplianceService
+**Injects:** ComplianceItemRepository, SpecificationRepository, QaJobRepository, TeamMemberRepository
+- `createSpecification(CreateSpecificationRequest): SpecificationResponse`
+- `getSpecificationsForJob(UUID, Pageable): PageResponse<SpecificationResponse>`
+- `createComplianceItem(CreateComplianceItemRequest): ComplianceItemResponse`
+- `createComplianceItems(List<CreateComplianceItemRequest>): List<ComplianceItemResponse>`
+- `getComplianceItemsForJob(UUID, Pageable): PageResponse<ComplianceItemResponse>`
+- `getComplianceItemsByStatus(UUID, ComplianceStatus, Pageable): PageResponse<ComplianceItemResponse>`
+- `getComplianceSummary(UUID): Map<String, Object>`
 
-### Registry Services (10)
-- **ServiceRegistryService** — Service CRUD, slug generation, cloning, health checking
-- **SolutionService** — Solution CRUD, member management, health aggregation
-- **PortAllocationService** — Auto-allocation from ranges, conflict detection
-- **DependencyGraphService** — Kahn's topological sort, DFS cycle detection, BFS impact analysis
-- **ApiRouteService** — Route registration with prefix overlap detection
-- **ConfigEngineService** — Generates Docker Compose, application.yml, Claude Code headers
-- **HealthCheckService** — Health aggregation (cached/live), team/solution summaries
-- **InfraResourceService** — Resource CRUD, orphan detection, reassignment
-- **TopologyService** — Ecosystem visualization, neighborhood BFS (depth cap 3)
-- **WorkstationProfileService** — Profile CRUD, startup order from dependency graph
+#### BugInvestigationService
+**Injects:** BugInvestigationRepository, QaJobRepository, TeamMemberRepository, S3StorageService
+- `createInvestigation(CreateBugInvestigationRequest): BugInvestigationResponse`
+- `getInvestigation(UUID): BugInvestigationResponse`
+- `getInvestigationByJob(UUID): BugInvestigationResponse`
+- `getInvestigationByJiraKey(String): BugInvestigationResponse`
+- `updateInvestigation(UUID, UpdateBugInvestigationRequest): BugInvestigationResponse`
+- `uploadRca(UUID, String): String`
 
-### Relay Services (8)
-- **ChannelService** — Channel CRUD, membership, pinned messages, auto-channel creation
-- **MessageService** — Send/edit/delete, threads, search, read receipts, unread counts
-- **ThreadService** — Thread metadata, reply counting, participant management
-- **DirectMessageService** — Conversation CRUD, message CRUD, read tracking
-- **ReactionService** — Toggle-based emoji reactions, aggregated summaries
-- **FileAttachmentService** — Upload (25MB limit), download, MIME detection, local storage
-- **PresenceService** — Status management, heartbeat, stale detection, team-wide queries
-- **PlatformEventService** — Event publishing/delivery, channel resolution, retry logic
+#### RemediationTaskService
+**Injects:** RemediationTaskRepository, QaJobRepository, UserRepository, TeamMemberRepository, FindingRepository, S3StorageService
+- `createTask(CreateTaskRequest): TaskResponse`
+- `createTasks(List<CreateTaskRequest>): List<TaskResponse>`
+- `getTasksForJob(UUID, Pageable): PageResponse<TaskResponse>`
+- `getTask(UUID): TaskResponse`
+- `getTasksAssignedToUser(UUID, Pageable): PageResponse<TaskResponse>`
+- `updateTask(UUID, UpdateTaskRequest): TaskResponse`
+- `uploadTaskPrompt(UUID, int, String): String`
+
+#### TechDebtService
+**Injects:** TechDebtItemRepository, ProjectRepository, TeamMemberRepository, QaJobRepository
+- `createTechDebtItem(CreateTechDebtItemRequest): TechDebtItemResponse`
+- `createTechDebtItems(List<CreateTechDebtItemRequest>): List<TechDebtItemResponse>`
+- `getTechDebtItem(UUID): TechDebtItemResponse`
+- `getTechDebtForProject(UUID, Pageable): PageResponse<TechDebtItemResponse>`
+- `getTechDebtByStatus(UUID, DebtStatus, Pageable): PageResponse<TechDebtItemResponse>`
+- `getTechDebtByCategory(UUID, DebtCategory, Pageable): PageResponse<TechDebtItemResponse>`
+- `updateTechDebtStatus(UUID, UpdateTechDebtStatusRequest): TechDebtItemResponse`
+- `deleteTechDebtItem(UUID): void`
+- `getDebtSummary(UUID): Map<String, Object>`
+
+#### DependencyService
+**Injects:** DependencyScanRepository, DependencyVulnerabilityRepository, ProjectRepository, TeamMemberRepository, QaJobRepository
+- `createScan(CreateDependencyScanRequest): DependencyScanResponse`
+- `getScan(UUID): DependencyScanResponse`
+- `getScansForProject(UUID, Pageable): PageResponse<DependencyScanResponse>`
+- `getLatestScan(UUID): DependencyScanResponse`
+- `addVulnerability(CreateVulnerabilityRequest): VulnerabilityResponse`
+- `addVulnerabilities(List<CreateVulnerabilityRequest>): List<VulnerabilityResponse>`
+- `getVulnerabilities(UUID, Pageable): PageResponse<VulnerabilityResponse>`
+- `getVulnerabilitiesBySeverity(UUID, Severity, Pageable): PageResponse<VulnerabilityResponse>`
+- `getOpenVulnerabilities(UUID, Pageable): PageResponse<VulnerabilityResponse>`
+- `updateVulnerabilityStatus(UUID, VulnerabilityStatus): VulnerabilityResponse`
+
+#### HealthMonitorService
+**Injects:** HealthScheduleRepository, HealthSnapshotRepository, ProjectRepository, TeamMemberRepository, UserRepository, QaJobRepository, ObjectMapper
+- `createSchedule(CreateHealthScheduleRequest): HealthScheduleResponse`
+- `getSchedulesForProject(UUID): List<HealthScheduleResponse>`
+- `getActiveSchedules(): List<HealthScheduleResponse>`
+- `updateSchedule(UUID, boolean): HealthScheduleResponse`
+- `deleteSchedule(UUID): void`
+- `markScheduleRun(UUID): void`
+- `createSnapshot(CreateHealthSnapshotRequest): HealthSnapshotResponse`
+- `getSnapshots(UUID, Pageable): PageResponse<HealthSnapshotResponse>`
+- `getLatestSnapshot(UUID): HealthSnapshotResponse`
+- `getHealthTrend(UUID, int): List<HealthSnapshotResponse>`
+
+#### MetricsService
+**Injects:** ProjectRepository, QaJobRepository, FindingRepository, TechDebtItemRepository, DependencyVulnerabilityRepository, DependencyScanRepository, HealthSnapshotRepository, TeamMemberRepository
+- `getProjectMetrics(UUID): ProjectMetricsResponse`
+- `getTeamMetrics(UUID): TeamMetricsResponse`
+- `getHealthTrend(UUID, int): List<HealthSnapshotResponse>`
+
+#### DirectiveService
+**Injects:** DirectiveRepository, ProjectDirectiveRepository, ProjectRepository, TeamMemberRepository, UserRepository, TeamRepository
+- `createDirective(CreateDirectiveRequest): DirectiveResponse`
+- `getDirective(UUID): DirectiveResponse`
+- `getDirectivesForTeam(UUID): List<DirectiveResponse>`
+- `getDirectivesForProject(UUID): List<DirectiveResponse>`
+- `getDirectivesByCategory(UUID, DirectiveScope): List<DirectiveResponse>`
+- `updateDirective(UUID, UpdateDirectiveRequest): DirectiveResponse`
+- `deleteDirective(UUID): void`
+- `assignToProject(AssignDirectiveRequest): ProjectDirectiveResponse`
+- `removeFromProject(UUID, UUID): void`
+- `getProjectDirectives(UUID): List<ProjectDirectiveResponse>`
+- `getEnabledDirectivesForProject(UUID): List<DirectiveResponse>`
+- `toggleProjectDirective(UUID, UUID, boolean): ProjectDirectiveResponse`
+
+#### PersonaService
+**Injects:** PersonaRepository, TeamMemberRepository, UserRepository, TeamRepository
+- `createPersona(CreatePersonaRequest): PersonaResponse`
+- `getPersona(UUID): PersonaResponse`
+- `getPersonasForTeam(UUID, Pageable): PageResponse<PersonaResponse>`
+- `getPersonasByAgentType(UUID, AgentType): List<PersonaResponse>`
+- `getDefaultPersona(UUID, AgentType): PersonaResponse`
+- `getPersonasByUser(UUID): List<PersonaResponse>`
+- `getSystemPersonas(): List<PersonaResponse>`
+- `updatePersona(UUID, UpdatePersonaRequest): PersonaResponse`
+- `deletePersona(UUID): void`
+- `setAsDefault(UUID): PersonaResponse`
+- `removeDefault(UUID): PersonaResponse`
+
+#### MfaService
+**Injects:** UserRepository, PasswordEncoder, JwtTokenProvider, EncryptionService, TeamMemberRepository, ObjectMapper, MfaEmailCodeRepository, EmailService
+- `setupMfa(MfaSetupRequest): MfaSetupResponse`
+- `verifyAndEnableMfa(MfaVerifyRequest): MfaStatusResponse`
+- `setupEmailMfa(MfaEmailSetupRequest): MfaRecoveryResponse`
+- `verifyEmailSetupAndEnable(MfaVerifyRequest): MfaStatusResponse`
+- `verifyMfaLogin(MfaLoginRequest): AuthResponse`
+- `sendLoginMfaCode(MfaResendRequest): void`
+- `disableMfa(MfaSetupRequest): MfaStatusResponse`
+- `regenerateRecoveryCodes(MfaSetupRequest): MfaRecoveryResponse`
+- `getMfaStatus(): MfaStatusResponse`
+- `adminResetMfa(UUID): void`
+- `cleanupExpiredCodes(): void` — @Scheduled(fixedRate = 900000)
+- `maskEmail(String): String`
+
+#### AdminService
+**Injects:** UserRepository, TeamRepository, ProjectRepository, QaJobRepository, SystemSettingRepository
+- `getAllUsers(Pageable): Page<UserResponse>`
+- `getUserById(UUID): UserResponse`
+- `updateUserStatus(UUID, AdminUpdateUserRequest): UserResponse`
+- `getSystemSetting(String): SystemSettingResponse`
+- `updateSystemSetting(UpdateSystemSettingRequest): SystemSettingResponse`
+- `getAllSettings(): List<SystemSettingResponse>`
+- `getUsageStats(): Map<String, Object>`
+
+#### AuditLogService
+**Injects:** AuditLogRepository, UserRepository, TeamRepository, TeamMemberRepository
+- `log(UUID, UUID, String, String, UUID, String): void` — @Async
+- `getTeamAuditLog(UUID, Pageable): Page<AuditLogResponse>`
+- `getUserAuditLog(UUID, Pageable): Page<AuditLogResponse>`
+
+#### NotificationService
+**Injects:** NotificationPreferenceRepository, UserRepository
+- `getPreferences(UUID): List<NotificationPreferenceResponse>`
+- `updatePreference(UUID, UpdateNotificationPreferenceRequest): NotificationPreferenceResponse`
+- `updatePreferences(UUID, List<UpdateNotificationPreferenceRequest>): List<NotificationPreferenceResponse>`
+- `shouldNotify(UUID, String, String): boolean`
+
+#### GitHubConnectionService
+**Injects:** GitHubConnectionRepository, TeamMemberRepository, EncryptionService, TeamRepository, UserRepository
+- `createConnection(UUID, CreateGitHubConnectionRequest): GitHubConnectionResponse`
+- `getConnections(UUID): List<GitHubConnectionResponse>`
+- `getConnection(UUID): GitHubConnectionResponse`
+- `deleteConnection(UUID): void`
+- `getDecryptedCredentials(UUID): String` — internal use only, never exposed via API
+
+#### JiraConnectionService
+**Injects:** JiraConnectionRepository, TeamMemberRepository, EncryptionService, TeamRepository, UserRepository
+- `createConnection(UUID, CreateJiraConnectionRequest): JiraConnectionResponse`
+- `getConnections(UUID): List<JiraConnectionResponse>`
+- `getConnection(UUID): JiraConnectionResponse`
+- `deleteConnection(UUID): void`
+- `getDecryptedApiToken(UUID): String` — internal use only
+- `getConnectionDetails(UUID): JiraConnectionDetails` (record)
+
+#### ReportStorageService
+**Injects:** S3StorageService, AgentRunRepository
+- `uploadReport(UUID, AgentType, String): String`
+- `uploadSummaryReport(UUID, String): String`
+- `downloadReport(String): String`
+- `deleteReportsForJob(UUID): void`
+- `uploadSpecification(UUID, String, byte[], String): String`
+- `downloadSpecification(String): byte[]`
+
+#### EncryptionService
+**Injects:** SecretKey (derived from `codeops.encryption.key`)
+- `encrypt(String): String` — AES-256-GCM
+- `decrypt(String): String`
+
+#### S3StorageService (dual-mode)
+**Injects:** S3Client (nullable), bucket name, local storage path
+- `upload(String, byte[], String): String`
+- `download(String): byte[]`
+- `delete(String): void`
+- `generatePresignedUrl(String, Duration): String`
+
+#### TokenBlacklistService
+**Injects:** ConcurrentHashMap (in-memory)
+- `blacklist(String, Instant): void`
+- `isBlacklisted(String): boolean`
+
+### Courier Services
+- **CollectionService** — CRUD + search. `createCollection`, `getCollection`, `getCollections`, `getSharedCollections`, `getAccessibleCollections`, `updateCollection`, `deleteCollection`.
+- **FolderService** — CRUD + reorder + tree. `createFolder`, `getFolder`, `getFolders`, `getFolderTree`, `updateFolder`, `deleteFolder`, `reorderFolder`.
+- **RequestService** — CRUD + reorder + duplicate. `createRequest`, `getRequest`, `getRequests`, `updateRequest`, `deleteRequest`, `reorderRequests`, `duplicateRequest`, `saveHeaders`, `saveParams`, `saveBody`, `saveAuth`, `saveScript`.
+- **EnvironmentService** — CRUD + clone. `createEnvironment`, `getEnvironment`, `getEnvironments`, `updateEnvironment`, `deleteEnvironment`, `cloneEnvironment`, `saveVariables`.
+- **VariableService** — Global variables. `getGlobalVariables`, `saveGlobalVariable`, `batchSaveGlobalVariables`, `deleteGlobalVariable`.
+- **HistoryService** — `getHistory`, `getHistoryDetail`, `deleteHistory`.
+- **ShareService** — `shareCollection`, `getShares`, `updateSharePermission`, `revokeShare`.
+- **RequestProxyService** — `sendRequest(SendRequestProxyRequest)` — HTTP proxy that executes requests on behalf of user.
+- **CollectionRunnerService** — `startRun`, `getRun`, `getRuns` — runs all requests in a collection.
+- **ScriptEngineService** — GraalVM Polyglot JavaScript execution for pre-request/post-response scripts.
+- **ImportService** — `importCollection` — Postman, cURL, OpenAPI import.
+- **ExportService** — `exportCollection` — exports to JSON.
+- **ForkService** — `createFork`, `getForks`.
+- **MergeService** — `createMergeRequest`, `resolveMergeRequest`.
+- **GraphQLService** — `execute`, `introspect` — GraphQL query execution.
+- **CodeGenerationService** — `generateCode`, `getTemplates` — generates code snippets from requests.
+- **AuthResolverService** — Resolves auth config (inheritance from collection/folder).
+
+### Fleet Services
+- **DockerEngineService** — Docker Engine API wrapper via RestTemplate. Container lifecycle (`listContainers`, `startContainer`, `stopContainer`, `removeContainer`, `getContainerLogs`, `getContainerStats`, `execInContainer`), images (`listImages`, `pullImage`, `removeImage`), networks (`listNetworks`, `createNetwork`, `removeNetwork`, `connectContainerToNetwork`, `disconnectContainerFromNetwork`), volumes (`listVolumes`, `createVolume`, `removeVolume`, `pruneVolumes`).
+- **ContainerManagementService** — Orchestrates container operations with database persistence. `deployService`, `stopContainer`, `getContainerStatus`, `getContainerLogs`, `getTeamContainers`.
+- **ServiceProfileService** — CRUD for service profiles. `createProfile`, `getProfile`, `getProfiles`, `updateProfile`, `deleteProfile`.
+- **SolutionProfileService** — CRUD for solution profiles + service membership. `createSolution`, `getSolution`, `getSolutions`, `updateSolution`, `deleteSolution`, `addService`, `removeService`, `updateServiceOrder`.
+- **WorkstationProfileService** — CRUD for workstation profiles + solution membership. `createWorkstation`, `getWorkstation`, `getWorkstations`, `updateWorkstation`, `deleteWorkstation`, `addSolution`, `removeSolution`, `setDefault`.
+- **FleetHealthService** — `getFleetHealthSummary(UUID teamId)` — aggregates container, image, and Docker daemon health.
+
+### Logger Services
+- **LogIngestionService** — `ingestLog`, `ingestBatch` — persists log entries, publishes Spring events.
+- **LogQueryService** — `queryLogs`, `getLogEntry`, `getLogsByCorrelation`.
+- **LogQueryDslParser** — Parses custom DSL (`level:ERROR AND service:auth`) into JPA predicates.
+- **LogParsingService** — Extracts structured fields from raw log messages.
+- **LogSourceService** — CRUD for log sources.
+- **DashboardService** — CRUD for dashboards + widgets. `createDashboard`, `getDashboard`, `getDashboards`, `updateDashboard`, `deleteDashboard`, `addWidget`, `updateWidget`, `removeWidget`, `reorderWidgets`, `createFromTemplate`.
+- **MetricsService** (logger) — CRUD for metrics. `registerMetric`, `getMetric`, `getMetrics`, `updateMetric`, `deleteMetric`, `pushData`.
+- **MetricAggregationService** — `getTimeSeries`, `getAggregation` — time-bucketed aggregations (avg, max, min, sum).
+- **AlertService** — CRUD for alert rules. `createRule`, `getRule`, `getRules`, `updateRule`, `deleteRule`, `evaluateAlerts`.
+- **AlertChannelService** — CRUD for notification channels. `createChannel`, `getChannel`, `getChannels`, `updateChannel`, `deleteChannel`, `testChannel`.
+- **AnomalyDetectionService** — `createBaseline`, `getBaseline`, `checkForAnomalies`, `getAnomalyReport`. @Scheduled daily at 3 AM.
+- **AnomalyBaselineCalculator** — Statistical calculations (mean, stddev, z-scores).
+- **LogTrapService** — CRUD for log traps + conditions. `createTrap`, `getTrap`, `getTraps`, `updateTrap`, `deleteTrap`, `testTrap`.
+- **TrapEvaluationEngine** — Evaluates trap conditions against log entries (pattern match, threshold, rate).
+- **RetentionService** — CRUD for retention policies.
+- **RetentionExecutor** — @Scheduled daily at 2 AM. Executes active retention policies (delete/archive old logs).
+- **TraceService** — `createSpan`, `getTrace`, `getTraces`, `getSpansByService`.
+- **TraceAnalysisService** — `getTraceFlow`, `getWaterfall`, `getRootCauseAnalysis` — trace visualization and analysis.
+- **KafkaLogConsumer** — `@KafkaListener(topics = "codeops-logs")` — consumes log entries from Kafka.
+- **LogEntryEventListener** — Spring event listener for `LogEntryIngestedEvent` — evaluates traps on new log entries.
+
+### Registry Services
+- **ServiceRegistryService** — CRUD for service registrations. `createService`, `getService`, `getServices`, `updateService`, `deleteService`, `updateStatus`, `cloneService`.
+- **DependencyGraphService** — `addDependency`, `removeDependency`, `getDependencies`, `getDependants`, `getDependencyGraph`, `getImpactAnalysis`.
+- **PortAllocationService** — `allocatePort`, `autoAllocatePort`, `deallocatePort`, `getPortAllocations`, `getPortMap`, `checkPortAvailability`, `getPortConflicts`, `getPortRanges`, `updatePortRange`.
+- **ApiRouteService** — `createRoute`, `getRoutes`, `deleteRoute`, `checkRouteConflicts`.
+- **ConfigEngineService** — `getConfigs`, `upsertConfig`, `deleteConfig`, `generateConfig` (auto-generates Docker Compose, Dockerfile, Nginx, K8s manifests from service metadata), `getTemplates`.
+- **HealthCheckService** — `checkServiceHealth`, `checkAllServices`, `getTeamHealthSummary`.
+- **InfraResourceService** — CRUD for infrastructure resources. `createResource`, `getResource`, `getResources`, `updateResource`, `deleteResource`.
+- **SolutionService** — CRUD for solutions + member management. `createSolution`, `getSolution`, `getSolutions`, `updateSolution`, `deleteSolution`, `addMember`, `removeMember`, `updateMember`, `getSolutionHealth`.
+- **TopologyService** — `getTopology` (layered dependency graph), `getTopologyStats`.
+- **WorkstationProfileService** (registry) — CRUD for workstation profiles. `createProfile`, `getProfile`, `getProfiles`, `updateProfile`, `deleteProfile`, `setDefault`.
+
+### Relay Services
+- **ChannelService** — CRUD for channels + member management. `createChannel`, `getChannel`, `getChannels`, `updateChannel`, `archiveChannel`, `deleteChannel`, `inviteMember`, `removeMember`, `updateMemberRole`, `getMembers`, `updateTopic`, `getSummaries`.
+- **MessageService** — `sendMessage`, `getMessage`, `getChannelMessages`, `getThreadReplies`, `editMessage`, `deleteMessage`, `searchMessages`, `searchMessagesAcrossChannels`, `markRead`, `getUnreadCounts`.
+- **DirectMessageService** — `createConversation`, `getConversation`, `getConversations`, `sendMessage`, `getMessages`, `editMessage`, `deleteMessage`.
+- **ReactionService** — `toggleReaction`, `getReactionsForMessage`, `getReactionsForMessageWithUser`, `getReactionsByUser`, `removeAllReactionsForMessage`.
+- **ThreadService** — `onReply` (updates thread metadata), `getThreadInfo`, `getThread`, `getActiveThreads`.
+- **FileAttachmentService** — `uploadFile`, `getAttachment`, `getAttachments`, `deleteAttachment`, `completeUpload`.
+- **PlatformEventService** — `publishEvent`, `publishEventSimple`, `getEvent`, `getEventsForTeam`, `getEventsForTeamByType`, `getEventsForEntity`, `getUndeliveredEvents`, `retryDelivery`, `retryAllUndelivered`.
+- **PresenceService** — `updatePresence`, `heartbeat`, `getPresence`, `getTeamPresence`, `getOnlineUsers`, `setDoNotDisturb`, `clearDoNotDisturb`, `goOffline`, `cleanupStalePresences`, `getPresenceCount`.
+
+### Relay WebSocket
+- **RelayWebSocketController** — STOMP controller. `@MessageMapping("/channel.message")` → broadcasts to `/topic/channel.{channelId}`. Also handles typing indicators and DM messages.
+- **RelayWebSocketService** — `broadcastToChannel(UUID, Object)`, `broadcastTypingIndicator(UUID, UUID)`, `broadcastToConversation(UUID, Object)`, `broadcastPresenceUpdate(UUID, Object)`.
+- **WebSocketConfig** — STOMP over SockJS. Endpoint: `/ws`. App destination prefix: `/app`. Topic broker: `/topic`, `/queue`.
+- **WebSocketAuthInterceptor** — Extracts JWT from STOMP CONNECT frame, authenticates user.
+- **WebSocketSessionRegistry** — Tracks active WebSocket sessions by user ID.
+
+### Notification Services
+- **EmailService** — Sends emails via SMTP (prod) or logs to console (dev). `sendEmail(to, subject, body)`.
+- **NotificationDispatcher** — Routes notifications to appropriate channels (email, Teams webhook).
+- **TeamsWebhookService** — Sends messages to Microsoft Teams via incoming webhook.
 
 ---
 
-## 10. Controller / API Layer — Method Signatures Only
+## 10. Controller / API Layer
 
-### Core Controllers (17 + 1 Health)
+All controllers use `@RequiredArgsConstructor` for DI. Auth annotations noted. Base paths from `AppConstants`.
 
-| Controller | Base Path | Injects | Endpoint Count |
-|---|---|---|---|
-| AuthController | /api/v1/auth | AuthService, AuditLogService, MfaService | 14 |
-| AdminController | /api/v1/admin | AdminService, AuditLogService | 10 |
-| UserController | /api/v1/users | UserService, AuditLogService | 6 |
-| TeamController | /api/v1/teams | TeamService, AuditLogService | 12 |
-| ProjectController | /api/v1/projects | ProjectService, AuditLogService | 7 |
-| JobController | /api/v1/jobs | QaJobService, AuditLogService | 13 |
-| FindingController | /api/v1/findings | FindingService, AuditLogService | 10 |
-| ComplianceController | /api/v1/compliance | ComplianceService | 7 |
-| DependencyController | /api/v1/dependencies | DependencyService | 10 |
-| DirectiveController | /api/v1/directives | DirectiveService, AuditLogService | 11 |
-| HealthMonitorController | /api/v1/health-monitor | HealthMonitorService | 8 |
-| IntegrationController | /api/v1/integrations | GitHubConnectionService, JiraConnectionService, AuditLogService | 8 |
-| MetricsController | /api/v1/metrics | MetricsService | 3 |
-| PersonaController | /api/v1/personas | PersonaService, AuditLogService | 11 |
-| ReportController | /api/v1/reports | ReportStorageService | 5 |
-| TaskController | /api/v1/tasks | RemediationTaskService, AuditLogService | 6 |
-| TechDebtController | /api/v1/tech-debt | TechDebtService, AuditLogService | 9 |
-| HealthController | /api/v1/health | (none) | 1 |
+### Core Controllers (prefix: `/api/v1/`)
+- **AuthController** (`/auth`) — `register()→authService.register`, `login()→authService.login`, `refreshToken()→authService.refreshToken`, `changePassword()→authService.changePassword`. MFA endpoints: `setupMfa`, `verifyMfa`, `setupEmailMfa`, `verifyEmailMfa`, `mfaLogin`, `resendMfaCode`, `disableMfa`, `regenerateRecoveryCodes`, `mfaStatus`, `adminResetMfa`. Public: register, login, refreshToken, mfaLogin, resendMfaCode.
+- **UserController** (`/users`) — @PreAuthorize("isAuthenticated()"). `getCurrentUser`, `getUserById`, `updateUser`, `searchUsers`.
+- **TeamController** (`/teams`) — @PreAuthorize("isAuthenticated()"). CRUD + members + invitations.
+- **ProjectController** (`/teams/{teamId}/projects`) — @PreAuthorize("isAuthenticated()"). CRUD + archive/unarchive.
+- **JobController** (`/jobs`) — @PreAuthorize("isAuthenticated()"). CRUD for QA jobs.
+- **FindingController** (`/findings`) — @PreAuthorize("isAuthenticated()"). CRUD + bulk update + severity counts.
+- **ComplianceController** (`/compliance`) — @PreAuthorize("isAuthenticated()"). Specifications + compliance items + summary.
+- **TaskController** (`/tasks`) — @PreAuthorize("isAuthenticated()"). Remediation tasks.
+- **TechDebtController** (`/tech-debt`) — @PreAuthorize("isAuthenticated()"). Tech debt items + summary.
+- **DependencyController** (`/dependencies`) — @PreAuthorize("isAuthenticated()"). Scans + vulnerabilities.
+- **HealthMonitorController** (`/health-monitor`) — @PreAuthorize("isAuthenticated()"). Schedules + snapshots + trends.
+- **MetricsController** (`/metrics`) — @PreAuthorize("isAuthenticated()"). Project + team metrics.
+- **DirectiveController** (`/directives`) — @PreAuthorize("isAuthenticated()"). CRUD + project assignment.
+- **PersonaController** (`/personas`) — @PreAuthorize("isAuthenticated()"). CRUD + system personas.
+- **IntegrationController** (`/integrations`) — @PreAuthorize("isAuthenticated()"). GitHub + Jira connections.
+- **ReportController** (`/reports`) — @PreAuthorize("isAuthenticated()"). Upload/download reports.
+- **AdminController** (`/admin`) — @PreAuthorize("hasRole('OWNER')"). User management + system settings + usage stats.
+- **HealthController** (`/health`) — Public. Health check endpoint.
 
-### Courier Controllers (13)
-| Controller | Base Path |
-|---|---|
-| CollectionController | /api/v1/courier/collections |
-| FolderController | /api/v1/courier/folders |
-| RequestController | /api/v1/courier/requests |
-| ProxyController | /api/v1/courier/proxy |
-| EnvironmentController | /api/v1/courier/environments |
-| VariableController | /api/v1/courier/variables |
-| HistoryController | /api/v1/courier/history |
-| RunnerController | /api/v1/courier/runner |
-| ShareController | /api/v1/courier/shares |
-| ImportController | /api/v1/courier/import |
-| CodeGenerationController | /api/v1/courier/codegen |
-| GraphQLController | /api/v1/courier/graphql |
-| HealthController (Courier) | /api/v1/courier/health |
+### Courier Controllers (prefix: `/api/v1/courier/`)
+- **CollectionController** — @PreAuthorize("isAuthenticated()"). CRUD + accessible collections.
+- **FolderController** — @PreAuthorize("isAuthenticated()"). CRUD + tree + reorder.
+- **RequestController** — @PreAuthorize("isAuthenticated()"). CRUD + save headers/params/body/auth/scripts + duplicate + reorder.
+- **EnvironmentController** — @PreAuthorize("isAuthenticated()"). CRUD + clone + save variables.
+- **VariableController** — @PreAuthorize("isAuthenticated()"). Global variables CRUD.
+- **HistoryController** — @PreAuthorize("isAuthenticated()"). Request history.
+- **ShareController** — @PreAuthorize("isAuthenticated()"). Collection sharing.
+- **ProxyController** — @PreAuthorize("isAuthenticated()"). HTTP request proxy.
+- **RunnerController** — @PreAuthorize("isAuthenticated()"). Collection runner.
+- **ImportController** — @PreAuthorize("isAuthenticated()"). Import (Postman, cURL, OpenAPI).
+- **GraphQLController** — @PreAuthorize("isAuthenticated()"). GraphQL execution + introspection.
+- **CodeGenerationController** — @PreAuthorize("isAuthenticated()"). Code snippet generation.
+- **HealthController** (courier) — Public. Module health check.
 
-### Logger Controllers (11)
-| Controller | Base Path |
-|---|---|
-| LogSourceController | /api/v1/logger/sources |
-| LogIngestionController | /api/v1/logger/logs |
-| LogQueryController | /api/v1/logger/query |
-| LogTrapController | /api/v1/logger/traps |
-| AlertController | /api/v1/logger/alerts |
-| DashboardController | /api/v1/logger/dashboards |
-| MetricsController | /api/v1/logger/metrics |
-| AnomalyController | /api/v1/logger/anomalies |
-| RetentionController | /api/v1/logger/retention |
-| TraceController | /api/v1/logger/traces |
-| BaseController | (abstract, shared utilities) |
+### Fleet Controllers (prefix: `/api/v1/fleet/`)
+- **ContainerController** — @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')"). Container lifecycle management.
+- **ImageController** — @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')"). Docker image management.
+- **NetworkController** — @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')"). Docker network management.
+- **VolumeController** — @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')"). Docker volume management.
+- **ServiceProfileController** — @PreAuthorize("isAuthenticated()"). Service profile CRUD.
+- **SolutionProfileController** — @PreAuthorize("isAuthenticated()"). Solution profile CRUD.
+- **WorkstationProfileController** — @PreAuthorize("isAuthenticated()"). Workstation profile CRUD.
+- **FleetHealthController** — @PreAuthorize("isAuthenticated()"). Fleet health summary.
 
-### Registry Controllers (10)
-| Controller | Base Path |
-|---|---|
-| RegistryController | /api/v1/registry/teams/{teamId}/services |
-| SolutionController | /api/v1/registry/teams/{teamId}/solutions |
-| PortController | /api/v1/registry |
-| DependencyController | /api/v1/registry |
-| ConfigController | /api/v1/registry |
-| InfraController | /api/v1/registry |
-| RouteController | /api/v1/registry |
-| TopologyController | /api/v1/registry |
-| WorkstationController | /api/v1/registry |
-| HealthManagementController | /api/v1/registry |
+### Logger Controllers (prefix: `/api/v1/logger/`)
+- **LogIngestionController** — @PreAuthorize("isAuthenticated()"). Log ingestion (single + batch).
+- **LogQueryController** — @PreAuthorize("isAuthenticated()"). Log querying (structured + DSL).
+- **LogSourceController** — @PreAuthorize("isAuthenticated()"). Log source CRUD.
+- **DashboardController** — @PreAuthorize("isAuthenticated()"). Dashboard + widget CRUD + templates.
+- **MetricsController** (logger) — @PreAuthorize("isAuthenticated()"). Metric registration + data push + aggregation.
+- **AlertController** — @PreAuthorize("isAuthenticated()"). Alert rules + channels + history.
+- **AnomalyController** — @PreAuthorize("isAuthenticated()"). Anomaly baselines + detection + reports.
+- **LogTrapController** — @PreAuthorize("isAuthenticated()"). Log trap CRUD + testing.
+- **RetentionController** — @PreAuthorize("isAuthenticated()"). Retention policy CRUD.
+- **TraceController** — @PreAuthorize("isAuthenticated()"). Trace spans + flow + waterfall + RCA.
 
-### Relay Controllers (8)
-| Controller | Base Path |
-|---|---|
-| ChannelController | /api/v1/relay/channels |
-| MessageController | /api/v1/relay/messages |
-| DirectMessageController | /api/v1/relay/dm |
-| ReactionController | /api/v1/relay/reactions |
-| FileController | /api/v1/relay/files |
-| PresenceController | /api/v1/relay/presence |
-| PlatformEventController | /api/v1/relay/events |
-| RelayHealthController | /api/v1/relay/health |
+### Registry Controllers (prefix: `/api/v1/registry/`)
+- **RegistryController** — @PreAuthorize("isAuthenticated()"). Service registration CRUD + status + clone.
+- **DependencyController** (registry) — @PreAuthorize("isAuthenticated()"). Dependencies + graph + impact analysis.
+- **PortController** — @PreAuthorize("isAuthenticated()"). Port allocation + ranges + conflicts + port map.
+- **RouteController** — @PreAuthorize("isAuthenticated()"). API route registration + conflict check.
+- **ConfigController** — @PreAuthorize("isAuthenticated()"). Environment configs + template generation.
+- **InfraController** — @PreAuthorize("isAuthenticated()"). Infrastructure resource CRUD.
+- **SolutionController** — @PreAuthorize("isAuthenticated()"). Solution CRUD + member management + health.
+- **TopologyController** — @PreAuthorize("isAuthenticated()"). Topology graph + stats.
+- **HealthManagementController** — @PreAuthorize("isAuthenticated()"). Service health checks.
+- **WorkstationController** (registry) — @PreAuthorize("isAuthenticated()"). Workstation profile CRUD.
+
+### Relay Controllers (prefix: `/api/v1/relay/`)
+- **ChannelController** — @PreAuthorize("isAuthenticated()"). Channel CRUD + members + archive.
+- **MessageController** — @PreAuthorize("isAuthenticated()"). Messages + threads + search + read receipts.
+- **DirectMessageController** — @PreAuthorize("isAuthenticated()"). DM conversations + messages.
+- **ReactionController** — @PreAuthorize("isAuthenticated()"). Reaction toggle + summaries.
+- **FileController** — @PreAuthorize("isAuthenticated()"). File upload/download.
+- **PlatformEventController** — @PreAuthorize("isAuthenticated()"). Platform events + retry.
+- **PresenceController** — @PreAuthorize("isAuthenticated()"). User presence + heartbeat + DND.
+- **RelayHealthController** — Public. Module health check.
 
 ---
 
 ## 11. Security Configuration
 
 ```
-Authentication: JWT (HS256) — internal token provider
-Token issuer/validator: JwtTokenProvider (internal)
+Authentication: JWT (HS256) — stateless
+Token issuer/validator: Internal (JwtTokenProvider)
 Password encoder: BCrypt (strength 12)
 
 Public endpoints (no auth required):
-  - /api/v1/auth/**
-  - /api/v1/health
-  - /api/v1/courier/health
-  - /swagger-ui/**
-  - /v3/api-docs/**
-  - /ws/relay/**
+  - /api/v1/auth/register, /api/v1/auth/login, /api/v1/auth/refresh-token
+  - /api/v1/auth/mfa/login, /api/v1/auth/mfa/resend
+  - /api/v1/health, /api/v1/courier/health, /api/v1/fleet/health, /api/v1/relay/health
+  - /swagger-ui/**, /v3/api-docs/**
+  - /ws/** (WebSocket)
 
 Protected endpoints:
-  - /api/** → authenticated (via @PreAuthorize on each controller)
-  - Admin endpoints → hasRole('ADMIN') or hasRole('OWNER')
+  - /api/v1/admin/** → hasRole('OWNER')
+  - /api/v1/fleet/containers/**, /api/v1/fleet/images/**, /api/v1/fleet/networks/**, /api/v1/fleet/volumes/** → hasRole('ADMIN') or hasRole('OWNER')
+  - All other /api/** → isAuthenticated()
 
-CORS: Origins from codeops.cors.allowed-origins (localhost:3000,5173 in dev)
-      Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS
-      Headers: Authorization, Content-Type, X-Requested-With
+CORS: Configurable via codeops.cors.allowed-origins (env var)
 
 CSRF: Disabled (stateless JWT API)
 
-Rate limiting: RateLimitFilter on /api/v1/auth/** — 10 requests per 60s per IP
-               Client IP from X-Forwarded-For or remote addr
+Security headers: CSP, X-Frame-Options DENY, HSTS, X-Content-Type-Options nosniff
 
-Security headers: CSP, HSTS (31536000s), X-Frame-Options DENY, X-Content-Type-Options
+Rate limiting: 10 requests per 60 seconds on /api/v1/auth/** endpoints (RateLimitFilter)
+
+Session: SessionCreationPolicy.STATELESS
 ```
 
 ---
 
 ## 12. Custom Security Components
 
-```
-=== JwtAuthFilter.java ===
-Extends: OncePerRequestFilter
-Purpose: Extracts and validates JWT from Authorization header
-Extracts token from: Authorization: Bearer {token} header
-Validates via: JwtTokenProvider.validateToken()
-Rejects MFA challenge tokens for normal API access
-Sets SecurityContext: YES — UsernamePasswordAuthenticationToken with userId as principal, ROLE_* authorities
+### JwtAuthFilter
+- Extends `OncePerRequestFilter`
+- Extracts token from `Authorization: Bearer {token}` header
+- Validates via `JwtTokenProvider.validateToken()`
+- Checks `TokenBlacklistService.isBlacklisted()`
+- Sets `UsernamePasswordAuthenticationToken` in SecurityContext with UUID principal
+- Skips filter for public endpoints
 
-=== JwtTokenProvider.java ===
-Generates: Access tokens (24h), refresh tokens (30d), MFA challenge tokens (5min)
-Algorithm: HS256 with minimum 32-char secret
-Claims: sub (userId), email, roles, jti (for blacklisting), type (refresh/mfa_challenge)
-Validates against: TokenBlacklistService for revocation
+### JwtTokenProvider
+- 3 token types: access (24h), refresh (30d), MFA (5min)
+- HS256 signing with configurable secret (`codeops.jwt.secret`)
+- Claims: `sub` (userId), `jti` (token ID), `type` (access/refresh/mfa), `roles` (team roles)
+- Methods: `generateAccessToken(UUID, List<TeamRole>)`, `generateRefreshToken(UUID)`, `generateMfaToken(UUID)`, `validateToken(String)`, `getUserIdFromToken(String)`, `getTokenType(String)`
 
-=== RateLimitFilter.java ===
-Extends: OncePerRequestFilter
-Purpose: Per-IP sliding window rate limiting on auth endpoints
-Config: 10 requests per 60s window
-Storage: ConcurrentHashMap (in-memory)
-Response on exceed: 429 JSON
+### SecurityUtils
+- Static utility: `getCurrentUserId()` → extracts UUID from SecurityContext
+- Throws `AuthorizationException` if not authenticated
 
-=== RequestCorrelationFilter.java ===
-Extends: OncePerRequestFilter (HIGHEST_PRECEDENCE)
-Purpose: Generates/propagates X-Correlation-ID, enriches MDC
-MDC keys: correlationId, requestPath, requestMethod
+### RateLimitFilter
+- In-memory bucket per IP address (ConcurrentHashMap)
+- 10 requests per 60 seconds on auth endpoints
+- Returns 429 Too Many Requests when exceeded
 
-=== SecurityUtils.java ===
-Static utility: getCurrentUserId(), hasRole(), isAdmin()
-```
+### RequestCorrelationFilter
+- Generates/propagates `X-Correlation-Id` header
+- Adds to MDC for structured logging
+
+### TokenBlacklistService
+- In-memory blacklist (ConcurrentHashMap)
+- Used on logout to invalidate tokens before expiry
 
 ---
 
 ## 13. Exception Handling & Error Responses
 
+### GlobalExceptionHandler (@ControllerAdvice)
 ```
-=== GlobalExceptionHandler.java ===
-@ControllerAdvice: YES
-
 Exception Mappings:
-  - EntityNotFoundException → 404
   - NotFoundException → 404
-  - IllegalArgumentException → 400
   - ValidationException → 400
-  - MethodArgumentNotValidException → 400 (field-level errors)
-  - MissingServletRequestParameterException → 400
-  - HttpMessageNotReadableException → 400 (malformed JSON/enum)
-  - MethodArgumentTypeMismatchException → 400
-  - NoResourceFoundException → 404
-  - AccessDeniedException → 403
   - AuthorizationException → 403
+  - AccessDeniedException → 403
+  - MethodArgumentNotValidException → 400 (field validation errors)
+  - ConstraintViolationException → 400
+  - HttpMessageNotReadableException → 400 (malformed JSON, invalid enum, bad timestamp)
   - HttpRequestMethodNotSupportedException → 405
-  - CodeOpsException → 500
-  - Exception (catch-all) → 500
+  - NoResourceFoundException → 404
+  - DataIntegrityViolationException → 409 (duplicate key, FK violation)
+  - MaxUploadSizeExceededException → 413
+  - Exception (catch-all) → 500 (masks internal details)
 
-Standard error response format:
-{
-  "timestamp": "2026-02-26T01:35:27Z",
-  "status": 400,
-  "error": "Bad Request",
-  "message": "Validation failed",
-  "path": "/api/v1/..."
-}
+Standard error response:
+  ErrorResponse(int status, String error, String message, Instant timestamp, String path)
+```
 
-For validation errors, includes "fieldErrors" map with field-specific messages.
+### Exception Hierarchy
+```
+CodeOpsException (RuntimeException)
+├── NotFoundException → 404
+├── ValidationException → 400
+└── AuthorizationException → 403
 ```
 
 ---
 
 ## 14. Mappers / DTOs
 
-### Core Module
-No MapStruct mappers — manual mapping in service classes via private `mapToResponse()` methods.
+All mappers use MapStruct: `@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))`. Boolean `is*` fields require explicit `@Mapping(target = "isXxx", source = "xxx")` due to Lombok/JavaBeans naming mismatch.
 
-### Courier Module (13 MapStruct mappers)
-All use `componentModel = "spring"`, `builder = @Builder(disableBuilder = true)`:
-- RequestMapper, RequestBodyMapper, RequestParamMapper, RequestHeaderMapper, RequestScriptMapper, RequestAuthMapper
-- CollectionMapper, FolderMapper, EnvironmentMapper, EnvironmentVariableMapper, GlobalVariableMapper
-- RunResultMapper, RequestHistoryMapper
+### Courier Mappers (13)
+CollectionMapper, EnvironmentMapper, EnvironmentVariableMapper, FolderMapper, GlobalVariableMapper, RequestAuthMapper, RequestBodyMapper, RequestHeaderMapper, RequestHistoryMapper, RequestMapper, RequestParamMapper, RequestScriptMapper, RunResultMapper
 
-Custom `@Mapping` annotations for boolean `is*` fields → source `shared`/`enabled` (Lombok naming convention).
+### Fleet Mappers (10)
+ContainerHealthCheckMapper, ContainerInstanceMapper, ContainerLogMapper, NetworkConfigMapper, ServiceProfileMapper, SolutionProfileMapper, SolutionServiceMapper, VolumeMountMapper, WorkstationProfileMapper, WorkstationSolutionMapper
 
-### Logger Module (13 MapStruct mappers)
-LogEntryMapper, LogSourceMapper, LogTrapMapper, TrapConditionMapper, AlertRuleMapper, AlertChannelMapper, AlertHistoryMapper, DashboardMapper, DashboardWidgetMapper, MetricMapper, AnomalyBaselineMapper, QueryHistoryMapper, SavedQueryMapper, RetentionPolicyMapper, TraceSpanMapper
+### Logger Mappers (13)
+AlertChannelMapper, AlertHistoryMapper, AlertRuleMapper, AnomalyBaselineMapper, DashboardMapper, LogEntryMapper, LogSourceMapper, LogTrapMapper, MetricMapper, QueryHistoryMapper, RetentionPolicyMapper, SavedQueryMapper, TraceSpanMapper
 
-### Registry Module
-No MapStruct mappers — manual mapping in service classes.
-
-### Relay Module (11 MapStruct mappers)
-ChannelMapper, ChannelMemberMapper, MessageMapper, MessageThreadMapper, DirectConversationMapper, DirectMessageMapper, ReactionMapper, FileAttachmentMapper, PinnedMessageMapper, UserPresenceMapper, PlatformEventMapper
-
-Custom mappings for `isEdited`/`isDeleted`/`isArchived` → source `edited`/`deleted`/`archived`.
+### Relay Mappers (11)
+ChannelMapper, ChannelMemberMapper, DirectConversationMapper, DirectMessageMapper, FileAttachmentMapper, MessageMapper, MessageThreadMapper, PinnedMessageMapper, PlatformEventMapper, ReactionMapper, UserPresenceMapper
 
 ---
 
 ## 15. Utility Classes & Shared Components
 
-```
-=== AppConstants.java ===
-Centralized constants for all modules:
-  Team limits: 50 members, 100 projects
-  File limits: 25MB reports, 100KB personas, 200KB directives
-  Auth: JWT 24h, refresh 30d, invitation 7d, min password 1 char
-  S3 prefixes: reports/, specs/, personas/, releases/
-  Port ranges per type (HTTP: 8080-8099, etc.)
-  Registry: max 500 services, 100 solutions, 50 ports, 100 dependencies
-  Courier: 30s timeout, 10 max redirects, 10MB response, 100 req/min rate limit
-  Relay: 10000 char message, 25MB file, 50 max reactions, 25 group DM, 5min heartbeat
-  Logger: Kafka topics, 30-day retention, query limits
+### AppConstants
+Centralized constants file organized by domain:
+- API prefixes: `API_PREFIX = "/api/v1"`, `COURIER_API_PREFIX`, `FLEET_API_PREFIX`, `LOGGER_API_PREFIX`, `REGISTRY_API_PREFIX`, `RELAY_API_PREFIX`
+- Pagination defaults: `DEFAULT_PAGE_SIZE = 20`, `MAX_PAGE_SIZE = 100`
+- Validation limits, error messages, S3 key prefixes, Kafka topics
 
-=== SecurityUtils.java ===
-Methods: getCurrentUserId(), hasRole(String), isAdmin()
-Used by: All services for authorization checks
+### EncryptionService
+AES-256-GCM encryption for sensitive credentials (GitHub PATs, Jira API tokens). Key derived from `codeops.encryption.key` env var via SHA-256.
 
-=== SlugUtils.java (Registry)
-Methods: generateSlug(String name), validateSlug(String), makeUnique(String, Set<String>)
-Algorithm: lowercase, replace non-alphanumeric with hyphens, 3-63 chars
+### S3StorageService (dual-mode)
+Prod: AWS S3 client. Dev: local filesystem at `~/.codeops/storage/`. Transparent switching via `codeops.s3.enabled` flag.
 
-=== PageResponse<T> (record)
-Fields: content, page, size, totalElements, totalPages, last
-Used by: All paginated endpoints across all modules
-```
+### JacksonConfig
+Custom `ObjectMapper` with `LenientInstantDeserializer` that accepts ISO-8601 timestamps with or without timezone suffix (`Z`). Falls back to `LocalDateTime.parse().toInstant(ZoneOffset.UTC)` for bare timestamps.
+
+### JwtProperties
+`@ConfigurationProperties("codeops.jwt")`: secret, accessTokenExpiration, refreshTokenExpiration.
+
+### SlugUtils (registry)
+`generateSlug(String name)` — lowercase, replace non-alphanumeric with hyphens, trim, max 63 chars.
+
+### PageResponse\<T\>
+Generic record for paginated responses: `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last`.
 
 ---
 
 ## 16. Database Schema (Live)
 
-84 tables in the `public` schema, managed by Hibernate ddl-auto:update.
+Hibernate `ddl-auto: update` manages schema. All tables in `public` schema. 84+ tables across 6 modules.
 
-### Table Inventory by Module
+**Core tables:** users, teams, team_members, projects, qa_jobs, agent_runs, findings, bug_investigations, compliance_items, specifications, remediation_tasks, tech_debt_items, dependency_scans, dependency_vulnerabilities, health_schedules, health_snapshots, personas, directives, project_directives, invitations, github_connections, jira_connections, mfa_email_codes, notification_preferences, system_settings, audit_logs
 
-**Core (28 tables):** users, teams, team_members, projects, qa_jobs, findings, agent_runs, audit_log, personas, directives, project_directives, invitations, github_connections, jira_connections, bug_investigations, compliance_items, dependency_scans, dependency_vulnerabilities, health_schedules, health_snapshots, mfa_email_codes, notification_preferences, remediation_tasks, remediation_task_findings (join), specifications, system_settings, tech_debt_items
+**Courier tables:** collections, collection_shares, environments, environment_variables, folders, forks, global_variables, merge_requests, requests, request_auths, request_bodies, request_headers, request_histories, request_params, request_scripts, run_iterations, run_results, code_snippet_templates
 
-**Courier (18 tables):** courier_collections, courier_collection_shares, courier_code_snippet_templates, courier_environments, courier_environment_variables, courier_folders, courier_forks, courier_global_variables, courier_merge_requests, courier_requests, courier_request_auths, courier_request_bodies, courier_request_headers, courier_request_histories, courier_request_params, courier_request_scripts, courier_run_iterations, courier_run_results
+**Fleet tables:** service_profiles, solution_profiles, solution_services, fleet_workstation_profiles, fleet_workstation_solutions, container_instances, container_health_checks, container_logs, deployment_records, deployment_containers, fleet_environment_variables, network_configs, port_mappings, volume_mounts
 
-**Logger (16 tables):** log_entries, log_sources, log_traps, trap_conditions, alert_rules, alert_channels, alert_histories, logger_dashboards, logger_dashboard_widgets, anomaly_baselines, logger_metrics, metric_series, query_histories, retention_policies, saved_queries, trace_spans
+**Logger tables:** log_sources, log_entries, dashboards, dashboard_widgets, saved_queries, query_history, metrics, metric_series, alert_rules, alert_channels, alert_histories, anomaly_baselines, log_traps, trap_conditions, retention_policies, trace_spans
 
-**Registry (11 tables):** service_registrations, solutions, solution_members, port_allocations, port_ranges, service_dependencies, api_route_registrations, registry_environment_configs, config_templates, infra_resources, workstation_profiles
+**Registry tables:** service_registrations, service_dependencies, port_allocations, port_ranges, api_route_registrations, config_templates, environment_configs, infra_resources, solutions, solution_members, workstation_profiles
 
-**Relay (12 tables):** relay_channels, relay_channel_members, relay_messages, relay_message_threads, relay_direct_conversations, relay_direct_messages, relay_reactions, relay_file_attachments, relay_pinned_messages, relay_read_receipts, relay_user_presences, relay_platform_events
-
-Schema drift: None detected — Hibernate ddl-auto manages all tables.
+**Relay tables:** channels, channel_members, messages, message_threads, direct_conversations, direct_messages, reactions, pinned_messages, file_attachments, platform_events, read_receipts, user_presences
 
 ---
 
 ## 17. Message Broker Configuration
 
 ```
-Broker: Apache Kafka 7.5.0 (Confluent)
-Connection: localhost:9092 (external), localhost:29092 (internal)
+Broker: Apache Kafka
+Connection: localhost:9094 (configurable via spring.kafka.bootstrap-servers)
 Consumer Group: codeops-server
-Auto-offset-reset: earliest
-Deserializers: StringDeserializer (key + value)
-Error handling: DefaultErrorHandler, 3 retries, 1s fixed backoff
 
-Topics (created by kafka-init container, 3 partitions each):
-  - codeops-decisions
-  - codeops-outcomes
-  - codeops-hypotheses
-  - codeops-integrations
-  - codeops-notifications
+Topics:
+  - codeops-logs
+    Consumer: KafkaLogConsumer.consumeLog()
+    Message type: JSON (log entry payload)
+    Ack mode: AUTO (default)
 
-Consumers:
-  - KafkaLogConsumer.consume(String message, Headers headers)
-    Listens: codeops-logs topic
-    Extracts: X-Team-Id header
-    Delegates to: LogIngestionService
-
-Publishers:
-  - No explicit Kafka producers detected in source
+Publishers: None (server is consumer-only)
 ```
+
+Kafka is used exclusively by the Logger module to receive log entries from external services. The `KafkaConsumerConfig` configures `StringDeserializer` for keys and `JsonDeserializer` for values.
 
 ---
 
 ## 18. Cache Layer
 
-```
-Cache Provider: Redis 7 (available but not used for application caching)
-Connection: localhost:6379 (append-only persistence)
-
-No @Cacheable, @CacheEvict, or CacheManager annotations detected.
-Redis is provisioned in docker-compose but not actively used for caching.
-Rate limiting uses in-memory ConcurrentHashMap, not Redis.
-Token blacklist uses in-memory ConcurrentHashMap, not Redis.
-```
+No Redis or caching layer detected in application code. Redis is configured in `docker-compose.yml` but not referenced by any Spring configuration or service class. `TokenBlacklistService` uses an in-memory `ConcurrentHashMap` for token blacklisting.
 
 ---
 
 ## 19. Environment Variable Inventory
 
 | Variable | Used In | Default | Required in Prod |
-|----------|---------|---------|-----------------|
+|---|---|---|---|
 | DATABASE_URL | application-prod.yml | localhost:5432/codeops | YES |
-| JWT_SECRET | application-prod.yml | (none) | YES |
-| ENCRYPTION_KEY | application-prod.yml | (none) | YES |
-| AWS_S3_BUCKET | application-prod.yml | (none) | YES |
-| AWS_S3_REGION | application-prod.yml | us-east-1 | YES |
-| MAIL_FROM_EMAIL | application-prod.yml | noreply@codeops.dev | NO |
-| CORS_ORIGINS | application-prod.yml | (none) | YES |
-| KAFKA_BOOTSTRAP_SERVERS | application-prod.yml | localhost:9094 | YES |
-| SPRING_PROFILES_ACTIVE | Dockerfile | dev | YES (set to prod) |
+| DATABASE_USERNAME | application-prod.yml | codeops | YES |
+| DATABASE_PASSWORD | application-prod.yml | codeops | YES |
+| JWT_SECRET | application.yml | (dev default in application-dev.yml) | YES |
+| ENCRYPTION_KEY | application.yml | (dev default in application-dev.yml) | YES |
+| CORS_ALLOWED_ORIGINS | application.yml | http://localhost:3000 | YES |
+| AWS_REGION | application.yml | us-east-1 | NO (S3 disabled in dev) |
+| MAIL_FROM_EMAIL | application.yml | noreply@codeops.dev | NO (email logged in dev) |
 
 ---
 
 ## 20. Service Dependency Map
 
-```
-This Service → Depends On
---------------------------
-PostgreSQL: Primary data store (all 84 tables)
-Redis: Provisioned but not actively used
-Kafka: Log ingestion (codeops-logs topic)
-GitHub API: Repository access via PAT/OAuth (encrypted credentials)
-Jira API: Issue tracking via API token (encrypted credentials)
-Microsoft Teams: Webhook notifications (job completion, critical findings)
-AWS S3: File/report storage (disabled in dev, local filesystem fallback)
-AWS SES: Email sending (disabled in dev, logged to console)
+Standalone service — no inter-service REST dependencies. All modules are co-located in a single Spring Boot application.
 
-Downstream Consumers (services that call this one):
-- CodeOps-Client (Flutter desktop app) — all /api/v1/** endpoints
-- CodeOps-Analytics (port 8081) — reads analytics schema (separate)
-```
+**External integrations (credential-based, client-initiated):**
+- GitHub API: Stored PATs used by CodeOps Client to proxy GitHub requests
+- Jira API: Stored API tokens used by CodeOps Client to proxy Jira requests
+
+**Downstream consumers:**
+- CodeOps-Client (Flutter desktop app) — consumes all REST endpoints
+- CodeOps-Analytics (port 8081) — reads from shared PostgreSQL database (`analytics` schema)
+- External services → Kafka topic `codeops-logs` → Logger module
 
 ---
 
 ## 21. Known Technical Debt & Issues
 
-| Issue | Location | Severity | Notes |
-|-------|----------|----------|-------|
-| No CI/CD pipeline | Project root | High | No .github/workflows or Jenkinsfile detected |
-| Redis provisioned but unused | docker-compose.yml | Low | Rate limiting and token blacklist use in-memory maps instead |
-| 4 System.out/printStackTrace | Various source files | Low | Should use SLF4J logger |
-| No HTTPS enforcement | application-prod.yml | Medium | Should be handled at LB/proxy layer |
-| TokenBlacklistService in-memory | TokenBlacklistService.java | Medium | Blacklisted tokens lost on restart; consider Redis-backed implementation |
-| 1 potential SQL string concat | Source files | Medium | Verify no SQL injection risk |
-| MFA recovery codes in memory | MfaService.java | Low | Encrypted but stored in entity TEXT field, not separate secure store |
-| Kafka topics auto-create disabled | docker-compose.yml | Info | Topics created by kafka-init container — ensure prod provisioning |
-| No request/response logging filter | Configuration | Low | LoggingInterceptor exists but CommonsRequestLoggingFilter not used |
-| 2 field injection instances | Various | Low | Should be converted to constructor injection |
+### TODO/FIXME Scan Results
 
-END OF AUDIT FILE.
+| Issue | Location | Severity | Notes |
+|---|---|---|---|
+| TODO: Changing key derivation invalidates existing encrypted data | EncryptionService.java:56 | CRITICAL | Requires re-encryption migration strategy before key rotation |
+| TODO: Add junixsocket dependency for Unix socket Docker communication | fleet/config/DockerConfig.java:17 | Medium | Currently uses TCP connection to Docker daemon |
+
+**Total: 2 TODOs found in production code.** The EncryptionService TODO is the most critical as it affects data migration strategy.
+
+### Other Issues Discovered During Audit
+
+| Issue | Location | Severity | Notes |
+|---|---|---|---|
+| Redis configured but unused | docker-compose.yml | Low | Redis container runs but application doesn't use it — wasted resources |
+| No CI/CD pipeline | project root | Medium | No GitHub Actions, Jenkinsfile, or other CI/CD configuration detected |
+| In-memory token blacklist | TokenBlacklistService.java | Medium | Blacklisted tokens lost on restart; won't work in multi-instance deployment |
+| 4 System.out.println calls | various | Low | Should use SLF4J logger instead |
