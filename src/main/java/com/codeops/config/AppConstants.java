@@ -295,4 +295,27 @@ public final class AppConstants {
 
     /** Maximum number of solution profiles per workstation. */
     public static final int FLEET_MAX_SOLUTIONS_PER_WORKSTATION = 10;
+
+    // ── MCP Constants ──
+
+    /** Base path prefix for all MCP API endpoints. */
+    public static final String MCP_API_PREFIX = "/api/v1/mcp";
+
+    /** Default session timeout in minutes before automatic expiration. */
+    public static final int MCP_DEFAULT_SESSION_TIMEOUT_MINUTES = 120;
+
+    /** Maximum length of a tool call response stored in the database. */
+    public static final int MCP_MAX_TOOL_CALL_RESPONSE_LENGTH = 50000;
+
+    /** Prefix for generated MCP API tokens. */
+    public static final String MCP_TOKEN_PREFIX = "mcp_";
+
+    /** Number of characters from the token to store as a display prefix. */
+    public static final int MCP_TOKEN_PREFIX_LENGTH = 8;
+
+    /** Default page size for MCP activity feed queries. */
+    public static final int MCP_ACTIVITY_FEED_PAGE_SIZE = 20;
+
+    /** Maximum number of recent sessions returned in session history queries. */
+    public static final int MCP_SESSION_HISTORY_LIMIT = 10;
 }
