@@ -1,6 +1,7 @@
 package com.codeops.relay.controller;
 
 import com.codeops.config.RequestCorrelationFilter;
+import com.codeops.mcp.security.McpTokenAuthFilter;
 import com.codeops.security.JwtAuthFilter;
 import com.codeops.security.JwtTokenProvider;
 import com.codeops.security.RateLimitFilter;
@@ -49,6 +50,9 @@ class RelayHealthControllerTest {
         @Bean FilterRegistrationBean<RequestCorrelationFilter> disableCorrelation(RequestCorrelationFilter f) {
             var reg = new FilterRegistrationBean<>(f); reg.setEnabled(false); return reg;
         }
+        @Bean FilterRegistrationBean<McpTokenAuthFilter> disableMcpTokenAuth(McpTokenAuthFilter f) {
+            var reg = new FilterRegistrationBean<>(f); reg.setEnabled(false); return reg;
+        }
     }
 
     @Autowired MockMvc mockMvc;
@@ -57,6 +61,7 @@ class RelayHealthControllerTest {
     @MockBean JwtTokenProvider jwtTokenValidator;
     @MockBean RateLimitFilter rateLimitFilter;
     @MockBean RequestCorrelationFilter requestCorrelationFilter;
+    @MockBean McpTokenAuthFilter mcpTokenAuthFilter;
 
     // ── health ────────────────────────────────────────────────────────────
 

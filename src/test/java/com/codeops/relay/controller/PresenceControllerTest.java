@@ -1,6 +1,7 @@
 package com.codeops.relay.controller;
 
 import com.codeops.config.RequestCorrelationFilter;
+import com.codeops.mcp.security.McpTokenAuthFilter;
 import com.codeops.relay.dto.request.UpdatePresenceRequest;
 import com.codeops.relay.dto.response.UserPresenceResponse;
 import com.codeops.relay.entity.enums.PresenceStatus;
@@ -72,6 +73,9 @@ class PresenceControllerTest {
         @Bean FilterRegistrationBean<RequestCorrelationFilter> disableCorrelation(RequestCorrelationFilter f) {
             var reg = new FilterRegistrationBean<>(f); reg.setEnabled(false); return reg;
         }
+        @Bean FilterRegistrationBean<McpTokenAuthFilter> disableMcpTokenAuth(McpTokenAuthFilter f) {
+            var reg = new FilterRegistrationBean<>(f); reg.setEnabled(false); return reg;
+        }
     }
 
     @Autowired MockMvc mockMvc;
@@ -83,6 +87,7 @@ class PresenceControllerTest {
     @MockBean JwtTokenProvider jwtTokenValidator;
     @MockBean RateLimitFilter rateLimitFilter;
     @MockBean RequestCorrelationFilter requestCorrelationFilter;
+    @MockBean McpTokenAuthFilter mcpTokenAuthFilter;
 
     private static final UUID TEAM_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();
