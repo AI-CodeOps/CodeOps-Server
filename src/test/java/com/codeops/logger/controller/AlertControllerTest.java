@@ -5,6 +5,7 @@ import com.codeops.logger.dto.response.AlertHistoryResponse;
 import com.codeops.logger.dto.response.AlertRuleResponse;
 import com.codeops.logger.dto.response.PageResponse;
 import com.codeops.exception.NotFoundException;
+import com.codeops.mcp.security.McpTokenAuthFilter;
 import com.codeops.security.JwtTokenProvider;
 import com.codeops.logger.service.AlertChannelService;
 import com.codeops.logger.service.AlertService;
@@ -54,6 +55,9 @@ class AlertControllerTest {
 
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private McpTokenAuthFilter mcpTokenAuthFilter;
 
     private static final UUID TEAM_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();

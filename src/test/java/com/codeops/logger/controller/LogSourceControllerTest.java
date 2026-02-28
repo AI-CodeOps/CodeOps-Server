@@ -3,6 +3,7 @@ package com.codeops.logger.controller;
 import com.codeops.logger.dto.response.LogSourceResponse;
 import com.codeops.logger.dto.response.PageResponse;
 import com.codeops.exception.NotFoundException;
+import com.codeops.mcp.security.McpTokenAuthFilter;
 import com.codeops.security.JwtTokenProvider;
 import com.codeops.logger.service.LogSourceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,6 +50,9 @@ class LogSourceControllerTest {
 
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private McpTokenAuthFilter mcpTokenAuthFilter;
 
     private static final UUID TEAM_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();

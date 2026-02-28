@@ -318,4 +318,10 @@ public final class AppConstants {
 
     /** Maximum number of recent sessions returned in session history queries. */
     public static final int MCP_SESSION_HISTORY_LIMIT = 10;
+
+    /** Maximum concurrent active MCP sessions per developer profile. */
+    public static final int MCP_MAX_CONCURRENT_SESSIONS = 3;
+
+    /** Maximum tool calls per minute per session for rate limiting. */
+    public static final int MCP_MAX_TOOL_CALLS_PER_MINUTE = 60;
 }

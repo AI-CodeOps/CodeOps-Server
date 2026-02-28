@@ -3,6 +3,7 @@ package com.codeops.logger.controller;
 import com.codeops.logger.dto.response.RetentionPolicyResponse;
 import com.codeops.logger.dto.response.StorageUsageResponse;
 import com.codeops.exception.NotFoundException;
+import com.codeops.mcp.security.McpTokenAuthFilter;
 import com.codeops.security.JwtTokenProvider;
 import com.codeops.logger.service.RetentionExecutor;
 import com.codeops.logger.service.RetentionService;
@@ -52,6 +53,9 @@ class RetentionControllerTest {
 
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private McpTokenAuthFilter mcpTokenAuthFilter;
 
     private static final UUID TEAM_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();

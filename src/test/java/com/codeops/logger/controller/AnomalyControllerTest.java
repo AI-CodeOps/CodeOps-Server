@@ -4,6 +4,7 @@ import com.codeops.logger.dto.response.AnomalyBaselineResponse;
 import com.codeops.logger.dto.response.AnomalyCheckResponse;
 import com.codeops.logger.dto.response.AnomalyReportResponse;
 import com.codeops.exception.NotFoundException;
+import com.codeops.mcp.security.McpTokenAuthFilter;
 import com.codeops.security.JwtTokenProvider;
 import com.codeops.logger.service.AnomalyDetectionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,6 +50,9 @@ class AnomalyControllerTest {
 
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private McpTokenAuthFilter mcpTokenAuthFilter;
 
     private static final UUID TEAM_ID = UUID.randomUUID();
     private static final UUID USER_ID = UUID.randomUUID();

@@ -1,6 +1,7 @@
 package com.codeops.security;
 
 import com.codeops.config.RequestCorrelationFilter;
+import com.codeops.mcp.security.McpTokenAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +27,9 @@ import jakarta.servlet.http.HttpServletResponse;
  *   <li>Authentication endpoints ({@code /api/v1/auth/**}), health, and Swagger UI are publicly accessible</li>
  *   <li>All other {@code /api/**} endpoints require authentication</li>
  *   <li>Security headers include CSP, HSTS, X-Frame-Options DENY, and X-Content-Type-Options</li>
- *   <li>{@link RequestCorrelationFilter}, {@link RateLimitFilter}, and {@link JwtAuthFilter}
- *       are registered before {@link UsernamePasswordAuthenticationFilter} (in that execution order)</li>
+ *   <li>{@link RequestCorrelationFilter}, {@link RateLimitFilter}, {@link McpTokenAuthFilter}, and
+ *       {@link JwtAuthFilter} are registered before {@link UsernamePasswordAuthenticationFilter}
+ *       (in that execution order)</li>
  * </ul>
  *
  * @see JwtAuthFilter
@@ -41,6 +43,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final McpTokenAuthFilter mcpTokenAuthFilter;
     private final RateLimitFilter rateLimitingFilter;
     private final RequestCorrelationFilter requestCorrelationFilter;
     private final CorsConfigurationSource corsConfigurationSource;
@@ -86,6 +89,7 @@ public class SecurityConfig {
                         )
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(mcpTokenAuthFilter, JwtAuthFilter.class)
                 .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(requestCorrelationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
