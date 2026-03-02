@@ -1,1109 +1,981 @@
 # CodeOps-Server — Codebase Audit
 
-**Audit Date:** 2026-02-28T21:02:36Z
-**Branch:** main
-**Commit:** 30465ca90c67b0413d9bbfa330d1e90adc2fc91e
-**Auditor:** Claude Code (Automated)
-**Purpose:** Zero-context reference for AI-assisted development
-**Audit File:** CodeOps-Server-Audit.md
-**Scorecard:** CodeOps-Server-Scorecard.md
-**OpenAPI Spec:** CodeOps-Server-OpenAPI.yaml (generated separately)
-
-> This audit is the source of truth for the CodeOps-Server codebase structure, entities, services, and configuration.
-> The OpenAPI spec (CodeOps-Server-OpenAPI.yaml) is the source of truth for all endpoints, DTOs, and API contracts.
-> An AI reading this audit + the OpenAPI spec should be able to generate accurate code
-> changes, new features, tests, and fixes without filesystem access.
+**Generated:** 2026-03-02T19:14:57Z
+**Commit:** `ab48bcf80d292567683063ff547f5fb11fd86a6d` — FIX-001: Add 4 adversarial AgentType values — CHAOS_MONKEY, HOSTILE_USER, COMPLIANCE_AUDITOR, LOAD_SABOTEUR
+**Branch:** `main`
+**Auditor:** Claude Code (claude-sonnet-4-6)
 
 ---
 
 ## 1. Project Identity
 
-```
-Project Name: CodeOps-Server
-Repository URL: https://github.com/adamallard/CodeOps-Server
-Primary Language / Framework: Java / Spring Boot 3.3.0
-Java Version: 21 (target) / 25 (runtime)
-Build Tool + Version: Maven 3.9.x (Maven Wrapper)
-Current Branch: main
-Latest Commit Hash: 30465ca90c67b0413d9bbfa330d1e90adc2fc91e
-Audit Timestamp: 2026-02-28T21:02:36Z
-```
+| Field | Value |
+|---|---|
+| Artifact | `com.codeops:codeops-server:0.1.0-SNAPSHOT` |
+| Framework | Spring Boot 3.3.0 |
+| Java Target | 21 (compiled with Java 25, Lombok/Mockito override versions applied) |
+| Port | 8090 |
+| API Prefix | `/api/v1/` |
+| Active Profile (default) | `dev` |
+| Source Files | 905 Java files (main) |
+| Test Files | 243 Java files |
+| Controllers | 72 |
+| Services | 98 |
+| Mappers | 55 |
 
 ---
 
 ## 2. Directory Structure
 
-Spring Boot monolith with 7 logical modules under a single Maven artifact. 900+ Java source files.
-
 ```
 CodeOps-Server/
-├── pom.xml
-├── Dockerfile
-├── docker-compose.yml
-├── start-codeops.sh
-├── scripts/seed-codeops.sh
 ├── src/main/java/com/codeops/
-│   ├── CodeOpsApplication.java          ← Entry point
-│   ├── config/                          ← 16 config classes
-│   ├── controller/                      ← 18 core controllers
-│   ├── dto/request/                     ← 42 core request DTOs
-│   ├── dto/response/                    ← 40 core response DTOs
-│   ├── entity/                          ← 27 core entities
-│   ├── entity/enums/                    ← 25 core enums
-│   ├── exception/                       ← 4 custom exceptions
-│   ├── notification/                    ← 3 notification classes
-│   ├── repository/                      ← 26 core repositories
-│   ├── security/                        ← 5 security classes
-│   ├── service/                         ← 26 core services
-│   ├── courier/                         ← Courier module (API testing)
-│   │   ├── config/                      ← HttpClientConfig
-│   │   ├── controller/                  ← 13 controllers
-│   │   ├── dto/mapper/                  ← 13 MapStruct mappers
-│   │   ├── dto/request/                 ← 31 request DTOs
-│   │   ├── dto/response/               ← 29 response DTOs
-│   │   ├── entity/                      ← 18 entities
-│   │   ├── entity/enums/               ← 7 enums
-│   │   ├── repository/                  ← 18 repositories
-│   │   └── service/                     ← 22 services
-│   ├── fleet/                           ← Fleet module (Docker mgmt)
-│   │   ├── config/                      ← DockerConfig
-│   │   ├── controller/                  ← 8 controllers
-│   │   ├── dto/mapper/                  ← 10 mappers
-│   │   ├── entity/                      ← 11 entities
-│   │   ├── entity/enums/               ← 6 enums
-│   │   ├── repository/                  ← 14 repositories
-│   │   └── service/                     ← 6 services
-│   ├── logger/                          ← Logger module (logging/monitoring)
-│   │   ├── controller/                  ← 10 controllers
-│   │   ├── dto/mapper/                  ← 15 mappers
-│   │   ├── entity/                      ← 14 entities
-│   │   ├── entity/enums/               ← 10 enums
-│   │   ├── repository/                  ← 14 repositories
-│   │   └── service/                     ← 20 services
-│   ├── mcp/                             ← MCP module (Model Context Protocol)
-│   │   ├── controller/                  ← 5 controllers
-│   │   ├── dto/mapper/                  ← 8 mappers
-│   │   ├── entity/                      ← 9 entities
-│   │   ├── repository/                  ← 8 repositories
-│   │   ├── security/                    ← McpTokenAuthFilter
-│   │   └── service/                     ← 8 services
-│   ├── registry/                        ← Registry module (service registry)
-│   │   ├── controller/                  ← 10 controllers
-│   │   ├── entity/                      ← 18 entities
-│   │   ├── entity/enums/               ← 8 enums
-│   │   ├── repository/                  ← 11 repositories
-│   │   ├── service/                     ← 10 services
-│   │   └── util/                        ← SlugUtils
-│   └── relay/                           ← Relay module (messaging/WebSocket)
-│       ├── config/                      ← WebSocketConfig
-│       ├── controller/                  ← 8 controllers
-│       ├── dto/mapper/                  ← 11 mappers
-│       ├── entity/                      ← 14 entities
-│       ├── entity/enums/               ← 6 enums
-│       ├── repository/                  ← 12 repositories
-│       └── service/                     ← 8 services
+│   ├── CodeOpsApplication.java           ← Entry point (@SpringBootApplication, @EnableScheduling)
+│   ├── config/                           ← AppConstants, AsyncConfig, CorsConfig, DataSeeder,
+│   │                                        GlobalExceptionHandler, JacksonConfig, JwtProperties,
+│   │                                        KafkaConsumerConfig, LoggingInterceptor, MailProperties,
+│   │                                        RequestCorrelationFilter, RestTemplateConfig, S3Config, WebMvcConfig
+│   ├── controller/                       ← 18 core controllers
+│   ├── dto/                              ← request/ and response/ (Java records)
+│   ├── entity/                           ← 22 core entities + enums/
+│   ├── exception/                        ← CodeOpsException, NotFoundException, ValidationException, AuthorizationException
+│   ├── notification/                     ← EmailService, TeamsWebhookService, NotificationDispatcher
+│   ├── repository/                       ← 25 core repositories
+│   ├── security/                         ← SecurityConfig, JwtTokenProvider, JwtAuthFilter, RateLimitFilter, SecurityUtils
+│   ├── service/                          ← 24 core services
+│   ├── courier/                          ← HTTP client subsystem (Postman-like)
+│   ├── fleet/                            ← Docker container management subsystem
+│   ├── logger/                           ← Centralized logging/metrics subsystem
+│   ├── mcp/                              ← Model Context Protocol subsystem
+│   ├── registry/                         ← Service registry subsystem
+│   └── relay/                            ← Real-time messaging + WebSocket subsystem
 ├── src/main/resources/
-│   ├── application.yml
-│   ├── application-dev.yml
-│   ├── application-prod.yml
-│   └── logback-spring.xml
-└── src/test/
-    ├── 225 unit test files
-    └── 16 integration test files
+│   ├── application.yml                   ← name + port (8090), active profile: dev
+│   ├── application-dev.yml               ← DB, JWT, encryption, CORS, S3 (disabled), mail (disabled), fleet
+│   ├── application-prod.yml              ← All env vars required; ddl-auto: validate; S3+mail enabled
+│   └── logback-spring.xml                ← Profile-specific: dev=plain, prod=JSON/Logstash, test=WARN
+├── docker-compose.yml                    ← PostgreSQL 16, Redis 7, Zookeeper 7.5, Kafka 7.5 + topic init
+└── pom.xml
 ```
 
 ---
 
 ## 3. Build & Dependency Manifest
 
-**File:** `pom.xml`
+**Parent:** `spring-boot-starter-parent:3.3.0`
+
+**Version Overrides (Java 25 compatibility):**
+- `lombok.version`: 1.18.42
+- `mockito.version`: 5.21.0
+- `byte-buddy.version`: 1.18.4
 
 | Dependency | Version | Purpose |
 |---|---|---|
-| spring-boot-starter-web | 3.3.0 | REST API framework |
-| spring-boot-starter-data-jpa | 3.3.0 | JPA/Hibernate ORM |
-| spring-boot-starter-security | 3.3.0 | Authentication/authorization |
-| spring-boot-starter-validation | 3.3.0 | Bean validation (Jakarta) |
-| spring-boot-starter-websocket | 3.3.0 | WebSocket/STOMP support |
-| spring-boot-starter-mail | 3.3.0 | Email sending |
-| spring-kafka | 3.3.0 | Kafka producer/consumer |
-| postgresql | 42.7.3 | PostgreSQL JDBC driver |
-| jjwt-api / jjwt-impl / jjwt-jackson | 0.12.6 | JWT token creation/validation |
-| lombok | 1.18.42 (override) | Boilerplate reduction |
-| mapstruct | 1.5.5.Final | DTO mapping |
-| mapstruct-processor | 1.5.5.Final | MapStruct annotation processor |
-| software.amazon.awssdk:s3 | 2.25.0 | AWS S3 storage |
-| graalvm-polyglot | 24.1.1 | Script execution engine (Courier) |
-| spring-boot-starter-test | 3.3.0 | Test framework |
-| testcontainers (postgresql) | 1.19.8 | Integration test containers |
-| mockito-core | 5.21.0 (override) | Mocking framework |
-| byte-buddy | 1.18.4 (override) | Bytecode generation (Java 25 compat) |
-| jacoco-maven-plugin | 0.8.14 | Code coverage |
+| spring-boot-starter-web | (SB 3.3.0) | REST API, embedded Tomcat |
+| spring-boot-starter-data-jpa | (SB 3.3.0) | Hibernate ORM, Spring Data |
+| spring-boot-starter-security | (SB 3.3.0) | Authentication/authorization |
+| spring-boot-starter-validation | (SB 3.3.0) | Jakarta Bean Validation |
+| spring-boot-starter-websocket | (SB 3.3.0) | STOMP WebSocket (Relay) |
+| spring-boot-starter-mail | (SB 3.3.0) | SMTP email (MFA, notifications) |
+| postgresql | (SB 3.3.0) | PostgreSQL JDBC driver (runtime) |
+| jjwt-api / jjwt-impl / jjwt-jackson | 0.12.6 | JWT generation/validation (HS256) |
+| software.amazon.awssdk:s3 | 2.25.0 | S3 file storage |
+| dev.samstevens.totp:totp | 1.7.1 | TOTP/HOTP MFA support |
+| lombok | 1.18.42 | Code generation (provided) |
+| mapstruct | 1.5.5.Final | Entity-to-DTO mapping |
+| jackson-datatype-jsr310 | (SB 3.3.0) | Java time module for Jackson |
+| springdoc-openapi-starter-webmvc-ui | 2.5.0 | Swagger UI at `/swagger-ui/index.html` |
+| logstash-logback-encoder | 7.4 | JSON logging for prod |
+| spring-kafka | (SB 3.3.0) | Kafka producer/consumer |
+| org.graalvm.polyglot:polyglot + js | 24.1.1 | GraalVM JS engine (Courier scripts) |
+| jackson-dataformat-yaml | (SB 3.3.0) | YAML parsing (Courier OpenAPI import) |
+| spring-boot-starter-test | (SB 3.3.0) | JUnit 5, Mockito, AssertJ (test) |
+| spring-security-test | (SB 3.3.0) | Security test support (test) |
+| testcontainers:postgresql | 1.19.8 | Real DB integration tests (test) |
+| testcontainers:junit-jupiter | 1.19.8 | Testcontainers JUnit 5 support (test) |
+| h2 | (SB 3.3.0) | In-memory DB for unit tests (test) |
+| spring-kafka-test | (SB 3.3.0) | Embedded Kafka for tests (test) |
+| testcontainers:kafka | 1.19.8 | Kafka Testcontainer (test) |
 
-**Build plugins:** maven-compiler-plugin (Java 21, Lombok + MapStruct processors), maven-surefire-plugin (--add-opens for Java 25), spring-boot-maven-plugin, jacoco-maven-plugin.
-
-```
-Build: ./mvnw clean package -DskipTests
-Test: ./mvnw test
-Run: ./mvnw spring-boot:run
-Package: ./mvnw clean package
-```
+**Build Plugins:**
+- `spring-boot-maven-plugin` — fat JAR, excludes Lombok
+- `maven-compiler-plugin` — explicit `annotationProcessorPaths` for Lombok 1.18.42 + MapStruct 1.5.5.Final (required for Java 22+)
+- `maven-surefire-plugin` — `--add-opens` for java.base reflection; includes `**/*Test.java` and `**/*IT.java`
+- `jacoco-maven-plugin:0.8.14` — coverage report (prepare-agent + report goals)
 
 ---
 
 ## 4. Configuration & Infrastructure Summary
 
-- **`application.yml`** — `src/main/resources/application.yml` — Sets `spring.application.name: codeops-server`, `spring.profiles.active: dev`, `server.port: 8090`.
-- **`application-dev.yml`** — `src/main/resources/application-dev.yml` — PostgreSQL `localhost:5432/codeops` (user/pass: `codeops/codeops`), Hibernate `ddl-auto: update`, Kafka `localhost:9094`, JWT dev fallback secret, encryption dev key, CORS `localhost:3000,5173`, S3 disabled (local fallback `~/.codeops/storage`), mail disabled (logged to console), Fleet Docker `tcp://localhost:2375`, DEBUG logging.
-- **`application-prod.yml`** — `src/main/resources/application-prod.yml` — All secrets from env vars (`$DATABASE_URL`, `$DATABASE_USERNAME`, `$DATABASE_PASSWORD`, `$JWT_SECRET`, `$ENCRYPTION_KEY`, `$CORS_ALLOWED_ORIGINS`, `$S3_BUCKET`, `$AWS_REGION`, `$MAIL_FROM_EMAIL`), Hibernate `ddl-auto: validate`, S3 enabled, mail enabled, INFO logging.
-- **`logback-spring.xml`** — `src/main/resources/logback-spring.xml` — dev: human-readable console; prod: JSON via LogstashEncoder with MDC fields (correlationId, userId, teamId, requestPath); test: WARN only.
-- **`docker-compose.yml`** — PostgreSQL 16 Alpine (5432, `codeops-db`), Redis 7 Alpine (6379, `codeops-redis`), Zookeeper (2181), Kafka Confluent 7.5.0 (9092/9094, `codeops-kafka`), kafka-init creates 10 topics.
-- **`Dockerfile`** — Eclipse Temurin 21 JRE Alpine, non-root user `appuser`, exposes 8090.
-- **`.env`** — Not committed. `.env.example` not present.
+**`src/main/resources/application.yml`** — Sets `spring.application.name=codeops-server`, `server.port=8090`, active profile `dev`.
 
-**Connection map:**
-```
-Database: PostgreSQL, localhost, 5432, codeops
-Cache: Redis, localhost, 6379 (declared in docker-compose, not used in app code)
-Message Broker: Kafka, localhost, 9094, 10 topics (codeops.core.decision.*, codeops.core.outcome.*, codeops.core.hypothesis.*, codeops.integrations.sync, codeops.notifications)
-External APIs: Microsoft Teams webhooks (SSRF-protected), SMTP mail
-Cloud Services: AWS S3 (optional, disabled in dev)
-```
+**`src/main/resources/application-dev.yml`** — Key values:
+- DB: `jdbc:postgresql://localhost:5432/codeops`, credentials `codeops/codeops` (with `${DB_USERNAME}/${DB_PASSWORD}` fallback)
+- JPA: `ddl-auto: update`, `show-sql: true`, `open-in-view: false`
+- Kafka: `bootstrap-servers: localhost:9094`, group `codeops-server`, earliest offset
+- JWT: `secret: ${JWT_SECRET:dev-secret-key-...}`, 24h access, 30d refresh
+- Encryption: `key: dev-only-encryption-key-minimum-32ch`
+- CORS: `http://localhost:3000,http://localhost:5173`
+- S3: `enabled: false` — local filesystem at `${user.home}/.codeops/storage`
+- Mail: `enabled: false` — emails logged to console
+- Fleet Docker: `host: tcp://localhost:2375`, API version `v1.43`
+- Log levels: `com.codeops=DEBUG`, Hibernate SQL=DEBUG
 
-**CI/CD:** None detected.
+**`src/main/resources/application-prod.yml`** — All configuration via env vars; `ddl-auto: validate`; S3 and mail enabled; log levels INFO/WARN.
+
+**`src/main/resources/logback-spring.xml`** — Dev: plain console with `correlationId` and `userId` MDC fields. Prod: JSON/Logstash encoder with `correlationId`, `userId`, `teamId`, `requestPath` MDC. Test: WARN level, minimal output.
+
+**`docker-compose.yml`** — Services: `codeops-db` (PostgreSQL 16, port 5432, volume `codeops-postgres-data`), `codeops-redis` (Redis 7, port 6379, AOF persistence), `codeops-zookeeper` (7.5.0, port 2181), `codeops-kafka` (7.5.0, port 9092, `KAFKA_AUTO_CREATE_TOPICS_ENABLE=false`). A `kafka-init` service creates 10 topics at startup.
+
+**Kafka Topics (created at startup):**
+- `codeops.core.decision.created`, `.resolved`, `.escalated`
+- `codeops.core.outcome.created`, `.validated`, `.invalidated`
+- `codeops.core.hypothesis.created`, `.concluded`
+- `codeops.integrations.sync`
+- `codeops.notifications`
+- All: 3 partitions, replication-factor 1
 
 ---
 
 ## 5. Startup & Runtime Behavior
 
-- **Entry point:** `com.codeops.CodeOpsApplication` (standard Spring Boot main class)
-- **@PostConstruct:** `JwtTokenProvider` validates JWT secret length (min 32 chars)
-- **Seed data:** `DataSeeder` (`@Profile("dev")`, `CommandLineRunner`) seeds users, teams, projects, personas, directives, jobs, findings, tasks, specs, compliance items, tech debt, scans, vulnerabilities, health snapshots, system settings, audit logs, and module-specific data (Registry, Logger, Courier). Skips if `userRepository.count() > 0`.
-- **Scheduled tasks:** `MfaService.cleanupExpiredCodes()` — `@Scheduled(fixedRate = 900_000)` (every 15 min), deletes expired MFA email codes.
-- **Health check:** GET `/api/v1/health` — returns `{"status":"UP","service":"codeops-server","timestamp":"<ISO-8601>"}` (public, no auth required). Also `/api/v1/courier/health` and `/api/v1/fleet/health`.
+`CodeOpsApplication` is annotated `@SpringBootApplication`, `@EnableConfigurationProperties({JwtProperties.class, MailProperties.class})`, `@EnableScheduling`. On startup: Hibernate validates/updates schema (`ddl-auto`), `DataSeeder` populates system personas and directives, `JwtTokenProvider.validateSecret()` enforces 32-char minimum JWT secret. Scheduling enables `MfaService.cleanupExpiredCodes()`. The filter chain executes `RequestCorrelationFilter` → `RateLimitFilter` → `McpTokenAuthFilter` → `JwtAuthFilter` → `UsernamePasswordAuthenticationFilter`.
 
 ---
 
 ## 6. Entity / Data Model Layer
 
-### BaseEntity (Abstract Superclass)
+All entities extend `BaseEntity` unless noted. `BaseEntity`: `@MappedSuperclass`, fields `UUID id` (`@GeneratedValue(UUID)`), `Instant createdAt`, `Instant updatedAt` (managed by `@PrePersist`/`@PreUpdate`).
 
-**File:** `src/main/java/com/codeops/entity/BaseEntity.java`
-**Lombok:** `@Getter`, `@Setter`, `@MappedSuperclass`
+### Core Entities (`com.codeops.entity`)
 
-| Field | Type | Column | Annotations |
-|-------|------|--------|-------------|
-| `id` | `UUID` | `id` | `@Id`, `@GeneratedValue(UUID)`, `@Column(nullable=false, updatable=false)` |
-| `createdAt` | `Instant` | `created_at` | `@Column(nullable=false, updatable=false)`, set via `@PrePersist` |
-| `updatedAt` | `Instant` | `updated_at` | `@Column(nullable=false)`, set via `@PrePersist` + `@PreUpdate` |
+**User** (`@Table("users")`): `String email` (unique, 255), `String passwordHash` (255), `String displayName` (100), `String avatarUrl` (500), `Boolean isActive=true`, `Instant lastLoginAt`, `Boolean mfaEnabled=false`, `MfaMethod mfaMethod=NONE`, `String mfaSecret` (500), `String mfaRecoveryCodes` (2000).
 
-22 core entities extend BaseEntity. 4 standalone: AuditLog, MfaEmailCode, SystemSetting, ProjectDirective.
+**Team** (`@Table("teams")`): `String name` (100), `String description` (TEXT), `User owner` (ManyToOne LAZY), `String teamsWebhookUrl` (500), `String settingsJson` (TEXT).
 
-### Core Entities (com.codeops.entity)
+**TeamMember** (`@Table("team_members")`): UC on `(team_id, user_id)`, indexes on `team_id`, `user_id`. `Team team` (ManyToOne LAZY), `User user` (ManyToOne LAZY), `TeamRole role`, `Instant joinedAt`.
 
-#### AgentRun
-**Table:** `agent_runs` | **Extends:** BaseEntity | **@Version:** Yes (Long)
-**Fields:** `job` (QaJob, @ManyToOne LAZY), `agentType` (AgentType enum), `status` (AgentStatus enum), `result` (AgentResult enum), `s3ReportKey` (String 500), `summaryMd` (TEXT), `findingsCount` (Integer, default 0), `startedAt` (Instant), `completedAt` (Instant), `version` (Long @Version)
+**Project** (`@Table("projects")`): index on `team_id`. `Team team` (ManyToOne LAZY), `String name` (200), `String description` (TEXT), `GitHubConnection githubConnection` (nullable ManyToOne LAZY), `String repoUrl` (500), `String repoFullName` (200), `String defaultBranch` (default `main`), `JiraConnection jiraConnection` (nullable ManyToOne LAZY), `String jiraProjectKey` (20), `String jiraDefaultIssueType` (default `Task`), `String jiraLabels` (TEXT/JSON), `String jiraComponent` (100), `String techStack` (200), `Integer healthScore`, `Instant lastAuditAt`, `String settingsJson` (TEXT), `Boolean isArchived=false`, `User createdBy` (ManyToOne LAZY).
 
-#### AuditLog
-**Table:** `audit_log` | **Extends:** STANDALONE (own UUID PK)
-**Fields:** `id` (UUID), `userId` (UUID), `action` (String 100), `entityType` (String 100), `entityId` (String 100), `details` (TEXT), `ipAddress` (String 45), `timestamp` (Instant, default Instant.now())
+**QaJob** (`@Table("qa_jobs")`): indexes on `project_id`, `started_by`. `Project project` (ManyToOne LAZY), `JobMode mode`, `JobStatus status`, `String name` (200), `String branch` (100), `String configJson` (TEXT), `String summaryMd` (TEXT), `JobResult overallResult`, `Integer healthScore`, `Integer totalFindings=0`, `Integer criticalCount=0`, `Integer highCount=0`, `Integer mediumCount=0`, `Integer lowCount=0`, `String jiraTicketKey` (50), `User startedBy` (ManyToOne LAZY), `Instant startedAt`, `Instant completedAt`, `@Version Long version`.
 
-#### BugInvestigation
-**Table:** `bug_investigations` | **Extends:** BaseEntity
-**Fields:** `job` (QaJob @ManyToOne LAZY), `title` (String 500), `description` (TEXT), `rootCauseMd` (TEXT), `impactMd` (TEXT), `stepsToReproduceMd` (TEXT), `suggestedFixMd` (TEXT), `affectedFiles` (TEXT), `severity` (Severity enum), `isConfirmed` (Boolean, default false)
+**AgentRun** (`@Table("agent_runs")`): index on `job_id`. `QaJob job` (ManyToOne LAZY), `AgentType agentType`, `AgentStatus status`, `AgentResult result`, `String reportS3Key` (500), `Integer score`, `Integer findingsCount=0`, `Integer criticalCount=0`, `Integer highCount=0`, `Instant startedAt`, `Instant completedAt`, `@Version Long version`.
 
-#### ComplianceItem
-**Table:** `compliance_items` | **Extends:** BaseEntity
-**Fields:** `job` (QaJob @ManyToOne LAZY), `agentType` (AgentType enum), `ruleName` (String 200), `description` (TEXT), `status` (ComplianceStatus enum), `evidenceMd` (TEXT), `remediationMd` (TEXT)
+**Finding** (`@Table("findings")`): indexes on `job_id`, `status`. `QaJob job` (ManyToOne LAZY), `AgentType agentType`, `Severity severity`, `String title` (500), `String description` (TEXT), `String filePath` (500), `Integer lineNumber`, `String recommendation` (TEXT), `String evidence` (TEXT), `Effort effortEstimate`, `DebtCategory debtCategory`, `FindingStatus status=OPEN`, `User statusChangedBy` (nullable ManyToOne LAZY), `Instant statusChangedAt`, `@Version Long version`.
 
-#### DependencyScan
-**Table:** `dependency_scans` | **Extends:** BaseEntity
-**Fields:** `project` (Project @ManyToOne LAZY), `job` (QaJob @ManyToOne LAZY), `totalDependencies` (Integer, default 0), `vulnerableCount` (Integer, default 0), `outdatedCount` (Integer, default 0), `scanToolVersion` (String 100)
+**RemediationTask** (`@Table("remediation_tasks")`): index on `job_id`. `QaJob job` (ManyToOne LAZY), `Integer taskNumber`, `String title` (500), `String description` (TEXT), `String promptMd` (TEXT), `String promptS3Key` (500), `List<Finding> findings` (ManyToMany via `remediation_task_findings` join table), `Priority priority`, `TaskStatus status=PENDING`, `User assignedTo` (nullable ManyToOne LAZY), `String jiraKey` (50), `@Version Long version`.
 
-#### DependencyVulnerability
-**Table:** `dependency_vulnerabilities` | **Extends:** BaseEntity
-**Fields:** `scan` (DependencyScan @ManyToOne LAZY), `packageName` (String 200), `currentVersion` (String 50), `fixedVersion` (String 50), `severity` (Severity enum), `cveId` (String 50), `title` (String 500), `description` (TEXT), `status` (VulnerabilityStatus enum, default OPEN)
+**TechDebtItem** (`@Table("tech_debt_items")`): index on `project_id`. `Project project` (ManyToOne LAZY), `DebtCategory category`, `String title` (500), `String description` (TEXT), `String filePath` (500), `Effort effortEstimate`, `BusinessImpact businessImpact`, `DebtStatus status=IDENTIFIED`, `QaJob firstDetectedJob` (nullable ManyToOne LAZY), `QaJob resolvedJob` (nullable ManyToOne LAZY), `@Version Long version`.
 
-#### Directive
-**Table:** `directives` | **Extends:** BaseEntity
-**Fields:** `name` (String 200), `category` (DirectiveCategory enum), `scope` (DirectiveScope enum), `contentMd` (TEXT), `team` (Team @ManyToOne LAZY, nullable), `createdBy` (User @ManyToOne LAZY), `isActive` (Boolean, default true), `version` (Integer, default 1 — business version, NOT @Version)
+**ComplianceItem** (`@Table("compliance_items")`): index on `job_id`. `QaJob job` (ManyToOne LAZY), `String requirement` (TEXT), `Specification spec` (nullable ManyToOne LAZY), `ComplianceStatus status`, `String evidence` (TEXT), `AgentType agentType`, `String notes` (TEXT).
 
-#### Finding
-**Table:** `findings` | **Extends:** BaseEntity | **@Version:** Yes (Long)
-**Fields:** `job` (QaJob @ManyToOne LAZY), `agentRun` (AgentRun @ManyToOne LAZY, nullable), `agentType` (AgentType enum), `severity` (Severity enum), `title` (String 500), `description` (TEXT), `filePath` (String 500), `lineNumber` (Integer), `codeSnippet` (TEXT), `suggestionMd` (TEXT), `debtCategory` (DebtCategory enum), `effortEstimate` (Effort enum), `status` (FindingStatus enum, default OPEN), `version` (Long @Version)
-**Indexes:** `idx_finding_job_id`, `idx_finding_severity`, `idx_finding_status`
+**Specification** (`@Table("specifications")`): index on `job_id`. `QaJob job` (ManyToOne LAZY), `String name` (200), `SpecType specType`, `String s3Key` (500).
 
-#### GitHubConnection
-**Table:** `github_connections` | **Extends:** BaseEntity
-**Fields:** `team` (Team @ManyToOne LAZY), `name` (String 100), `authType` (GitHubAuthType enum), `encryptedToken` (String 2000), `sshKeyFingerprint` (String 100), `apiUrl` (String 500, default "https://api.github.com"), `lastValidatedAt` (Instant), `isActive` (Boolean, default true)
+**BugInvestigation** (`@Table("bug_investigations")`): `QaJob job` (ManyToOne LAZY), `String jiraKey` (50), `String jiraSummary` (TEXT), `String jiraDescription` (TEXT), `String jiraCommentsJson` (TEXT), `String jiraAttachmentsJson` (TEXT), `String jiraLinkedIssues` (TEXT), `String additionalContext` (TEXT), `String rcaMd` (TEXT), `String impactAssessmentMd` (TEXT), `String rcaS3Key` (500), `Boolean rcaPostedToJira=false`, `Boolean fixTasksCreatedInJira=false`.
 
-#### HealthSchedule
-**Table:** `health_schedules` | **Extends:** BaseEntity
-**Fields:** `project` (Project @ManyToOne LAZY), `scheduleType` (ScheduleType enum), `isActive` (Boolean, default true), `cronExpression` (String 50), `lastRunAt` (Instant), `nextRunAt` (Instant)
+**HealthSnapshot** (`@Table("health_snapshots")`): index on `project_id`. `Project project` (ManyToOne LAZY), `QaJob job` (nullable ManyToOne LAZY), `Integer healthScore`, `String findingsBySeverity` (TEXT/JSON), `Integer techDebtScore`, `Integer dependencyScore`, `BigDecimal testCoveragePercent` (5,2), `Instant capturedAt`.
 
-#### HealthSnapshot
-**Table:** `health_snapshots` | **Extends:** BaseEntity
-**Fields:** `project` (Project @ManyToOne LAZY), `healthScore` (Integer), `criticalCount` (Integer, default 0), `highCount` (Integer, default 0), `mediumCount` (Integer, default 0), `lowCount` (Integer, default 0), `totalFindings` (Integer, default 0), `capturedAt` (Instant)
+**HealthSchedule** (`@Table("health_schedules")`): index on `project_id`. `Project project` (ManyToOne LAZY), `ScheduleType scheduleType`, `String cronExpression` (50), `String agentTypes` (TEXT/JSON), `Boolean isActive=true`, `Instant lastRunAt`, `Instant nextRunAt`, `User createdBy` (ManyToOne LAZY).
 
-#### Invitation
-**Table:** `invitations` | **Extends:** BaseEntity
-**Fields:** `team` (Team @ManyToOne LAZY), `invitedBy` (User @ManyToOne LAZY), `email` (String 255), `role` (TeamRole enum), `token` (String, unique), `status` (InvitationStatus enum, default PENDING), `expiresAt` (Instant)
+**DependencyScan** (`@Table("dependency_scans")`): index on `project_id`. `Project project` (ManyToOne LAZY), `QaJob job` (nullable ManyToOne LAZY), `String manifestFile` (200), `Integer totalDependencies`, `Integer outdatedCount`, `Integer vulnerableCount`, `String scanDataJson` (TEXT).
 
-#### JiraConnection
-**Table:** `jira_connections` | **Extends:** BaseEntity
-**Fields:** `team` (Team @ManyToOne LAZY), `name` (String 100), `baseUrl` (String 500), `email` (String 255), `encryptedApiToken` (String 2000), `isActive` (Boolean, default true)
+**DependencyVulnerability** (`@Table("dependency_vulnerabilities")`): index on `scan_id`. `DependencyScan scan` (ManyToOne LAZY), `String dependencyName` (200), `String currentVersion` (50), `String fixedVersion` (50), `String cveId` (30), `Severity severity`, `String description` (TEXT), `VulnerabilityStatus status=OPEN`.
 
-#### MfaEmailCode
-**Table:** `mfa_email_codes` | **Extends:** STANDALONE (own UUID PK)
-**Fields:** `id` (UUID), `userId` (UUID — raw FK, not @ManyToOne), `codeHash` (String 255), `expiresAt` (Instant), `used` (boolean primitive, default false), `createdAt` (Instant, default Instant.now())
+**GitHubConnection** (`@Table("github_connections")`): `Team team` (ManyToOne LAZY), `String name` (100), `GitHubAuthType authType`, `String encryptedCredentials` (TEXT), `String githubUsername` (100), `Boolean isActive=true`, `User createdBy` (ManyToOne LAZY).
 
-#### NotificationPreference
-**Table:** `notification_preferences` | **Extends:** BaseEntity
-**Unique:** `(user_id, event_type)`
-**Fields:** `user` (User @ManyToOne LAZY), `eventType` (String 50), `inApp` (Boolean, default true), `email` (Boolean, default false)
+**JiraConnection** (`@Table("jira_connections")`): `Team team` (ManyToOne LAZY), `String name` (100), `String instanceUrl` (500), `String email` (255), `String encryptedApiToken` (TEXT), `Boolean isActive=true`, `User createdBy` (ManyToOne LAZY).
 
-#### Persona
-**Table:** `personas` | **Extends:** BaseEntity
-**Fields:** `name` (String 100), `agentType` (AgentType enum), `description` (TEXT), `contentMd` (TEXT), `scope` (Scope enum), `team` (Team @ManyToOne LAZY, nullable), `createdBy` (User @ManyToOne LAZY), `isDefault` (Boolean, default false), `version` (Integer, default 1 — business version)
+**Invitation** (`@Table("invitations")`): indexes on `team_id`, `email`. `Team team` (ManyToOne LAZY), `String email` (255), `User invitedBy` (ManyToOne LAZY), `TeamRole role`, `String token` (100, unique), `InvitationStatus status`, `Instant expiresAt`.
 
-#### Project
-**Table:** `projects` | **Extends:** BaseEntity
-**Fields:** `team` (Team @ManyToOne LAZY), `name` (String 200), `description` (TEXT), `githubConnection` (GitHubConnection @ManyToOne LAZY, nullable), `repoUrl` (String 500), `repoFullName` (String 200), `defaultBranch` (String 100, default "main"), `jiraConnection` (JiraConnection @ManyToOne LAZY, nullable), `jiraProjectKey` (String 20), `jiraDefaultIssueType` (String 50, default "Task"), `jiraLabels` (TEXT), `jiraComponent` (String 100), `techStack` (String 200), `healthScore` (Integer), `lastAuditAt` (Instant), `settingsJson` (TEXT), `isArchived` (Boolean, default false), `createdBy` (User @ManyToOne LAZY)
+**Persona** (`@Table("personas")`): index on `team_id`. `String name` (100), `AgentType agentType`, `String description` (TEXT), `String contentMd` (TEXT), `Scope scope`, `Team team` (nullable ManyToOne LAZY), `User createdBy` (ManyToOne LAZY), `Boolean isDefault=false`, `Integer version=1`.
 
-#### ProjectDirective
-**Table:** `project_directives` | **Extends:** STANDALONE (composite @EmbeddedId)
-**PK:** `ProjectDirectiveId` (projectId UUID + directiveId UUID)
-**Fields:** `project` (Project @ManyToOne LAZY, @MapsId), `directive` (Directive @ManyToOne LAZY, @MapsId), `enabled` (Boolean, default true)
+**Directive** (`@Table("directives")`): index on `team_id`. `String name` (200), `String description` (TEXT), `String contentMd` (TEXT), `DirectiveCategory category`, `DirectiveScope scope`, `Team team` (nullable ManyToOne LAZY), `Project project` (nullable ManyToOne LAZY), `User createdBy` (ManyToOne LAZY), `Integer version=1`.
 
-#### QaJob
-**Table:** `qa_jobs` | **Extends:** BaseEntity | **@Version:** Yes (Long)
-**Fields:** `project` (Project @ManyToOne LAZY), `mode` (JobMode enum), `status` (JobStatus enum), `name` (String 200), `branch` (String 100), `configJson` (TEXT), `summaryMd` (TEXT), `overallResult` (JobResult enum), `healthScore` (Integer), `totalFindings`/`criticalCount`/`highCount`/`mediumCount`/`lowCount` (Integer, all default 0), `jiraTicketKey` (String 50), `startedBy` (User @ManyToOne LAZY), `startedAt`/`completedAt` (Instant), `version` (Long @Version)
+**ProjectDirective** (`@Table("project_directives")`): Composite PK — `@EmbeddedId ProjectDirectiveId` (fields: `UUID projectId`, `UUID directiveId`). Does NOT extend BaseEntity. `Project project` (`@MapsId("projectId")`), `Directive directive` (`@MapsId("directiveId")`), `Boolean enabled=true`.
 
-#### RemediationTask
-**Table:** `remediation_tasks` | **Extends:** BaseEntity | **@Version:** Yes (Long)
-**Fields:** `job` (QaJob @ManyToOne LAZY), `taskNumber` (Integer), `title` (String 500), `description` (TEXT), `promptMd` (TEXT), `promptS3Key` (String 500), `findings` (List\<Finding\> @ManyToMany LAZY, join table `remediation_task_findings`), `priority` (Priority enum), `status` (TaskStatus enum, default PENDING), `assignedTo` (User @ManyToOne LAZY, nullable), `jiraKey` (String 50), `version` (Long @Version)
+**NotificationPreference** (`@Table("notification_preferences")`): UC on `(user_id, event_type)`. `User user` (ManyToOne LAZY), `String eventType` (50), `Boolean inApp=true`, `Boolean email=false`.
 
-#### Specification
-**Table:** `specifications` | **Extends:** BaseEntity
-**Fields:** `job` (QaJob @ManyToOne LAZY), `name` (String 200), `specType` (SpecType enum), `s3Key` (String 500)
+**MfaEmailCode** (`@Table("mfa_email_codes")`): Does NOT extend BaseEntity. `UUID id` (GenerationType.UUID), `UUID userId`, `String codeHash` (255), `Instant expiresAt`, `boolean used=false`, `Instant createdAt`. BCrypt-hashed, 10-min TTL, single-use.
 
-#### SystemSetting
-**Table:** `system_settings` | **Extends:** STANDALONE (String PK)
-**PK:** `settingKey` (String mapped to column `key`, length 100)
-**Fields:** `value` (TEXT), `updatedBy` (User @ManyToOne LAZY, nullable), `updatedAt` (Instant)
+**AuditLog** (`@Table("audit_log")`): Does NOT extend BaseEntity. Long PK (`IDENTITY`). `User user` (nullable ManyToOne LAZY), `Team team` (nullable ManyToOne LAZY), `String action` (50), `String entityType` (30), `UUID entityId`, `String details` (TEXT), `String ipAddress` (45), `Instant createdAt`.
 
-#### Team
-**Table:** `teams` | **Extends:** BaseEntity
-**Fields:** `name` (String 100), `description` (TEXT), `owner` (User @ManyToOne LAZY), `teamsWebhookUrl` (String 500), `settingsJson` (TEXT)
+**SystemSetting** (`@Table("system_settings")`): Does NOT extend BaseEntity. `String settingKey` (PK, 100), `String value` (TEXT), `User updatedBy` (nullable ManyToOne LAZY), `Instant updatedAt`.
 
-#### TeamMember
-**Table:** `team_members` | **Extends:** BaseEntity
-**Unique:** `(team_id, user_id)`
-**Fields:** `team` (Team @ManyToOne LAZY), `user` (User @ManyToOne LAZY), `role` (TeamRole enum), `joinedAt` (Instant)
+### Courier Entities (`com.codeops.courier.entity`)
 
-#### TechDebtItem
-**Table:** `tech_debt_items` | **Extends:** BaseEntity | **@Version:** Yes (Long)
-**Fields:** `project` (Project @ManyToOne LAZY), `category` (DebtCategory enum), `title` (String 500), `description` (TEXT), `filePath` (String 500), `effortEstimate` (Effort enum), `businessImpact` (BusinessImpact enum), `status` (DebtStatus enum, default IDENTIFIED), `firstDetectedJob`/`resolvedJob` (QaJob @ManyToOne LAZY, nullable), `version` (Long @Version)
+**Collection**: `User owner` (ManyToOne LAZY), `String name`, `String description`, `Boolean isShared=false`, `String settings` (TEXT). Owns `Folder`, `Request`, `CollectionShare`, `Fork`, `MergeRequest`.
 
-#### User
-**Table:** `users` | **Extends:** BaseEntity
-**Fields:** `email` (String 255, unique), `passwordHash` (String 255), `displayName` (String 100), `avatarUrl` (String 500), `isActive` (Boolean, default true), `lastLoginAt` (Instant), `mfaEnabled` (Boolean, default false), `mfaMethod` (MfaMethod enum, default NONE), `mfaSecret` (String 500), `mfaRecoveryCodes` (String 2000)
+**Request**: `Collection collection` (ManyToOne LAZY), `Folder folder` (nullable ManyToOne LAZY), `HttpMethod method`, `String url`, `String name`, `Integer sortOrder`. Has `RequestHeader`, `RequestParam`, `RequestBody`, `RequestAuth`, `RequestScript` children.
 
-### Courier Module Entities (com.codeops.courier.entity)
+**RequestHistory**: `User user` (ManyToOne LAZY), `Request request` (nullable ManyToOne LAZY), `HttpMethod method`, `String url`, `Integer statusCode`, `Long durationMs`, `String requestJson` (TEXT), `String responseJson` (TEXT), `Instant executedAt`.
 
-18 entities. Key entities: `Collection` (teamId, createdBy, name, description, shared, pre/postScripts), `Folder` (collection @ManyToOne, parentFolder @ManyToOne self-ref, name, sortOrder, authType, authConfig), `Request` (folder @ManyToOne, name, method, url, description, sortOrder), `RequestHeader`, `RequestParam`, `RequestBody` (bodyType BodyType enum, rawContent, formDataJson), `RequestAuth` (authType AuthType enum, configJson), `RequestScript` (scriptType ScriptType enum, scriptContent), `RequestHistory`, `Environment` (collectionId, name, isActive), `EnvironmentVariable`, `GlobalVariable`, `RunResult`, `RunIteration`, `Fork`, `MergeRequest`, `CollectionShare`, `CodeSnippetTemplate`.
+**Environment**: `User owner`, `Team team`, `String name`, `Boolean isActive=false`, `Boolean isShared=false`. Has `EnvironmentVariable` children.
 
-All Courier entities extend BaseEntity. All relationships @ManyToOne LAZY.
+**GlobalVariable**: `User user`, `Team team`, `String key`, `String value`, `Boolean isSecret=false`.
 
-### Fleet Module Entities (com.codeops.fleet.entity)
+**RunResult** / **RunIteration**: Collection run results with pass/fail counts, duration, and per-iteration details.
 
-11 entities. Key entities: `ServiceProfile` (serviceName, imageName, imageTag, command, healthCheck*, restartPolicy RestartPolicy enum, memoryLimitMb, cpuLimit, startOrder, isAutoGenerated, isEnabled, serviceRegistration @ManyToOne, team @ManyToOne, volumeMounts @OneToMany CascadeType.ALL, networkConfigs @OneToMany CascadeType.ALL, portMappings @OneToMany CascadeType.ALL, environmentVariables @OneToMany CascadeType.ALL), `ContainerInstance` (serviceProfile @ManyToOne, containerId, containerName, status ContainerStatus enum, hostPort, startedAt, stoppedAt), `ContainerLog`, `ContainerHealthCheck`, `VolumeMount`, `NetworkConfig`, `PortMapping`, `EnvironmentVariable`, `SolutionProfile`, `SolutionService`, `WorkstationProfile`, `WorkstationSolution`, `DeploymentRecord`, `DeploymentContainer`.
+**CollectionShare**: `Collection collection`, `User sharedWith`, `SharePermission permission`.
 
-Fleet is the only module using `@OneToMany` with `CascadeType.ALL` + `orphanRemoval = true` (on ServiceProfile children).
+**Fork** / **MergeRequest**: Support collection branching and merge workflows.
 
-**Fleet Enums:** ContainerStatus (CREATED, RUNNING, PAUSED, RESTARTING, REMOVING, EXITED, DEAD, STOPPED), RestartPolicy (NO, ALWAYS, ON_FAILURE, UNLESS_STOPPED), NetworkMode (BRIDGE, HOST, NONE, CUSTOM), VolumeType (BIND, VOLUME, TMPFS), ProtocolType (TCP, UDP), DeploymentStatus (PENDING, IN_PROGRESS, COMPLETED, FAILED, ROLLED_BACK)
+**CodeSnippetTemplate**: Built-in code generation templates per language.
 
-### Logger Module Entities (com.codeops.logger.entity)
+### Fleet Entities (`com.codeops.fleet.entity`)
 
-14 entities. Key entities: `LogSource` (teamId, name, serviceName, sourceType, configJson), `LogEntry` (source @ManyToOne, level LogLevel enum, message TEXT, timestamp, serviceName denormalized, correlationId, traceId, spanId, loggerName, threadName, exception*, customFields, hostName, ipAddress, teamId), `LogTrap` (teamId, name, description, trapType TrapType enum, isEnabled, conditions @OneToMany), `TrapCondition`, `AlertRule` (name, trap @ManyToOne, channel @ManyToOne, severity AlertSeverity enum, isActive, throttleMinutes), `AlertChannel` (teamId, name, channelType AlertChannelType enum, configJson, isEnabled), `AlertHistory`, `Metric` (teamId, name, serviceName, metricType MetricType enum, unit, description, tags), `MetricSeries` (metric @ManyToOne, timestamp, value, tags, resolution), `RetentionPolicy`, `Dashboard`, `DashboardWidget`, `SavedQuery`, `QueryHistory`, `AnomalyBaseline`, `TraceSpan`.
+**ContainerInstance**, **DeploymentRecord**, **ContainerHealthCheck**, **ContainerLog**, **ServiceProfile**, **SolutionProfile**, **SolutionService**, **EnvironmentVariable**, **PortMapping**, **VolumeMount**, **NetworkConfig**, **WorkstationProfile**, **WorkstationSolution**, **DeploymentContainer**.
 
-**Logger Enums:** LogLevel (TRACE, DEBUG, INFO, WARN, ERROR, FATAL), AlertSeverity (INFO, WARNING, CRITICAL), AlertStatus (TRIGGERED, ACKNOWLEDGED, RESOLVED), AlertChannelType (EMAIL, WEBHOOK, SLACK, TEAMS), ConditionType (CONTAINS, NOT_CONTAINS, REGEX, EQUALS, GREATER_THAN, LESS_THAN), MetricType (COUNTER, GAUGE, HISTOGRAM, SUMMARY), RetentionAction (DELETE, ARCHIVE, DOWNSAMPLE), SpanStatus (OK, ERROR, TIMEOUT), TrapType (LOG_PATTERN, METRIC_THRESHOLD, ANOMALY), WidgetType (LINE_CHART, BAR_CHART, PIE_CHART, TABLE, STAT, LOG_STREAM)
+### Logger Entities (`com.codeops.logger.entity`)
 
-### MCP Module Entities (com.codeops.mcp.entity)
+**LogEntry**, **LogSource**, **LogTrap**, **TrapCondition**, **Metric**, **MetricSeries**, **TraceSpan**, **Dashboard**, **DashboardWidget**, **AlertRule**, **AlertChannel**, **AlertHistory**, **AnomalyBaseline**, **SavedQuery**, **QueryHistory**, **RetentionPolicy**.
 
-9 entities: `McpSession` (project @ManyToOne, developerProfile @ManyToOne, status, startedAt, endedAt, summaryMd), `SessionResult`, `SessionToolCall`, `DeveloperProfile` (user @ManyToOne, team @ManyToOne, preferences), `McpApiToken` (teamId, name, tokenHash, expiresAt, isActive), `ProjectDocument`, `ProjectDocumentVersion`, `ActivityFeedEntry`.
+### MCP Entities (`com.codeops.mcp.entity`)
 
-### Registry Module Entities (com.codeops.registry.entity)
+**McpApiToken**: SHA-256 hashed token, `String tokenHash` (64), `String scopesJson` (TEXT), `Instant expiresAt`, `TokenStatus status`, `String displayPrefix` (8).
 
-18 entities: `ServiceRegistration` (teamId, slug unique, name, description, serviceType, port, healthEndpoint, dependsOn), `ServiceDependency`, `ApiRouteRegistration`, `Solution` (teamId, slug unique, name, description), `SolutionMember`, `InfraResource`, `EnvironmentConfig`, `ConfigTemplate`, and related entities.
+**McpSession**: `DeveloperProfile developerProfile`, `SessionStatus status`, `McpTransport transport`, `Instant startedAt`, `Instant lastActivityAt`, `Integer toolCallCount=0`.
 
-**Registry Enums:** ServiceType, DependencyType, RouteMethod, InfraResourceType, EnvironmentType, ResourceStatus, ConfigValueType, SolutionStatus
+**DeveloperProfile**: `User user`, `Team team`, `String displayName`, `String idePreferences` (TEXT), `Boolean isActive=true`.
 
-### Relay Module Entities (com.codeops.relay.entity)
+**ProjectDocument** / **ProjectDocumentVersion**: Document versioning with `DocumentType`, `Boolean isFlagged`.
 
-14 entities: `Channel` (teamId, name, slug, description, isArchived, topic, isPinned), `ChannelMember` (channel @ManyToOne, userId, role ChannelRole enum, joinedAt), `Message` (channel @ManyToOne, senderId, content TEXT, messageType, parentMessageId, isEdited, isPinned), `MessageThread`, `DirectConversation` (teamId, user1Id, user2Id), `DirectMessage`, `FileAttachment`, `Reaction`, `PinnedMessage`, `ReadReceipt`, `UserPresence`, `PlatformEvent`.
+**SessionResult** / **SessionToolCall**: Tool call history with `ToolCallStatus`, request/response JSON.
 
-**Relay Enums:** ChannelRole (OWNER, ADMIN, MEMBER), MessageType (TEXT, SYSTEM, FILE, CODE_SNIPPET), PresenceStatus (ONLINE, AWAY, DO_NOT_DISTURB, OFFLINE), EventType (CHANNEL_CREATED, MEMBER_JOINED, MEMBER_LEFT, MESSAGE_PINNED, etc.), FileType (IMAGE, DOCUMENT, VIDEO, AUDIO, CODE, OTHER)
+**ActivityFeedEntry**: `ActivityType`, `String description`, linked to session/document/project.
 
-### Entity Summary Statistics
+### Registry Entities (`com.codeops.registry.entity`)
 
-| Metric | Count |
-|--------|-------|
-| Total entities (all modules) | 100+ |
-| Core entities extending BaseEntity | 22 |
-| Core standalone entities | 4 |
-| Courier entities | 18 |
-| Fleet entities | 11 |
-| Logger entities | 14 |
-| MCP entities | 9 |
-| Registry entities | 18 |
-| Relay entities | 14 |
-| Core @ManyToOne relationships | 38 |
-| Core @ManyToMany | 1 (RemediationTask ↔ Finding) |
-| Core @OneToMany | 0 (all unidirectional ManyToOne) |
-| Fleet @OneToMany with CascadeType.ALL | 4 (ServiceProfile children) |
-| Entities with @Version (optimistic locking) | 5 (AgentRun, Finding, QaJob, RemediationTask, TechDebtItem) |
-| All fetch strategies | LAZY |
-| All enum storage | @Enumerated(STRING) |
+**ServiceRegistration**: `String slug` (unique per team), `ServiceType serviceType`, `ServiceStatus status`, `HealthStatus healthStatus`, linked ports, dependencies.
+
+**Solution** / **SolutionMember**: Groups services, `SolutionStatus`, `SolutionCategory`.
+
+**PortRange** / **PortAllocation**: Port management with conflict detection.
+
+**ServiceDependency**: `DependencyType` (REQUIRED, OPTIONAL, DEV_ONLY, CIRCULAR).
+
+**EnvironmentConfig** / **ConfigTemplate** / **ApiRouteRegistration** / **InfraResource** / **WorkstationProfile**.
+
+### Relay Entities (`com.codeops.relay.entity`)
+
+**Channel**: `String name`, `String slug`, `ChannelType`, `Boolean isArchived`, `UUID teamId`, `String topic`, `UUID createdBy`. Has `ChannelMember`, `Message`, `PinnedMessage` children.
+
+**Message**: `UUID channelId`, `UUID authorId`, `MessageType`, `String content` (TEXT), `Boolean isEdited`, `UUID parentMessageId` (nullable, threads). Has `Reaction` children.
+
+**DirectConversation** / **DirectMessage**: DM channels with `ConversationType` (DM, GROUP).
+
+**ChannelMember**: `MemberRole` (OWNER, MODERATOR, MEMBER).
+
+**UserPresence**: `UUID userId`, `PresenceStatus`, `Instant lastSeen`, `String statusMessage`.
+
+**MessageThread** / **PinnedMessage** / **Reaction** / **ReadReceipt** / **FileAttachment** / **PlatformEvent**.
 
 ---
 
 ## 7. Enum Inventory
 
-### Core Enums (com.codeops.entity.enums) — 25 enums
+### Core Enums (`com.codeops.entity.enums`)
 
-| Enum | Values | Used By |
-|------|--------|---------|
-| AgentType | SECURITY, CODE_QUALITY, BUILD_HEALTH, COMPLETENESS, API_CONTRACT, TEST_COVERAGE, UI_UX, DOCUMENTATION, DATABASE, PERFORMANCE, DEPENDENCY, ARCHITECTURE | AgentRun, Finding, ComplianceItem, Persona |
-| AgentStatus | PENDING, RUNNING, COMPLETED, FAILED | AgentRun |
-| AgentResult | PASS, WARN, FAIL | AgentRun |
-| BusinessImpact | LOW, MEDIUM, HIGH, CRITICAL | TechDebtItem |
-| ComplianceStatus | MET, PARTIAL, MISSING, NOT_APPLICABLE | ComplianceItem |
-| DebtCategory | ARCHITECTURE, CODE, TEST, DEPENDENCY, DOCUMENTATION | TechDebtItem, Finding |
-| DebtStatus | IDENTIFIED, PLANNED, IN_PROGRESS, RESOLVED | TechDebtItem |
-| DirectiveCategory | ARCHITECTURE, STANDARDS, CONVENTIONS, CONTEXT, OTHER | Directive |
-| DirectiveScope | TEAM, PROJECT, USER | Directive |
-| Effort | S, M, L, XL | Finding, TechDebtItem |
-| FindingStatus | OPEN, ACKNOWLEDGED, FALSE_POSITIVE, FIXED, WONT_FIX | Finding |
-| GitHubAuthType | PAT, OAUTH, SSH | GitHubConnection |
-| InvitationStatus | PENDING, ACCEPTED, EXPIRED | Invitation |
-| JobMode | AUDIT, COMPLIANCE, BUG_INVESTIGATE, REMEDIATE, TECH_DEBT, DEPENDENCY, HEALTH_MONITOR | QaJob |
-| JobResult | PASS, WARN, FAIL | QaJob |
-| JobStatus | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED | QaJob |
-| MfaMethod | NONE, TOTP, EMAIL | User |
-| Priority | P0, P1, P2, P3 | RemediationTask |
-| ScheduleType | DAILY, WEEKLY, ON_COMMIT | HealthSchedule |
-| Scope | SYSTEM, TEAM, USER | Persona |
-| Severity | CRITICAL, HIGH, MEDIUM, LOW | Finding, DependencyVulnerability |
-| SpecType | OPENAPI, MARKDOWN, SCREENSHOT, FIGMA | Specification |
-| TaskStatus | PENDING, ASSIGNED, EXPORTED, JIRA_CREATED, COMPLETED | RemediationTask |
-| TeamRole | OWNER, ADMIN, MEMBER, VIEWER | TeamMember, Invitation |
-| VulnerabilityStatus | OPEN, UPDATING, SUPPRESSED, RESOLVED | DependencyVulnerability |
+| Enum | Values | Used In |
+|---|---|---|
+| `AgentType` | SECURITY, CODE_QUALITY, BUILD_HEALTH, COMPLETENESS (Tier 1); API_CONTRACT, TEST_COVERAGE, UI_UX, DOCUMENTATION, DATABASE, PERFORMANCE, DEPENDENCY, ARCHITECTURE (Tier 2); CHAOS_MONKEY, HOSTILE_USER, COMPLIANCE_AUDITOR, LOAD_SABOTEUR (Tier 3) | AgentRun, Finding, ComplianceItem, Persona |
+| `AgentStatus` | PENDING, RUNNING, COMPLETED, FAILED | AgentRun |
+| `AgentResult` | PASS, WARN, FAIL | AgentRun |
+| `JobMode` | AUDIT, COMPLIANCE, BUG_INVESTIGATE, REMEDIATE, TECH_DEBT, DEPENDENCY, HEALTH_MONITOR | QaJob |
+| `JobStatus` | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED | QaJob |
+| `JobResult` | PASS, WARN, FAIL | QaJob |
+| `Severity` | CRITICAL, HIGH, MEDIUM, LOW | Finding, DependencyVulnerability |
+| `FindingStatus` | OPEN, ACKNOWLEDGED, FALSE_POSITIVE, FIXED, WONT_FIX | Finding |
+| `VulnerabilityStatus` | OPEN, UPDATING, SUPPRESSED, RESOLVED | DependencyVulnerability |
+| `DebtCategory` | ARCHITECTURE, CODE, TEST, DEPENDENCY, DOCUMENTATION | TechDebtItem, Finding |
+| `DebtStatus` | IDENTIFIED, PLANNED, IN_PROGRESS, RESOLVED | TechDebtItem |
+| `ComplianceStatus` | MET, PARTIAL, MISSING, NOT_APPLICABLE | ComplianceItem |
+| `TaskStatus` | PENDING, ASSIGNED, EXPORTED, JIRA_CREATED, COMPLETED | RemediationTask |
+| `Priority` | P0, P1, P2, P3 | RemediationTask |
+| `Effort` | S, M, L, XL | Finding, TechDebtItem |
+| `BusinessImpact` | LOW, MEDIUM, HIGH, CRITICAL | TechDebtItem |
+| `TeamRole` | OWNER, ADMIN, MEMBER, VIEWER | TeamMember, Invitation |
+| `InvitationStatus` | PENDING, ACCEPTED, EXPIRED | Invitation |
+| `Scope` | SYSTEM, TEAM, USER | Persona |
+| `DirectiveScope` | TEAM, PROJECT, USER | Directive |
+| `DirectiveCategory` | ARCHITECTURE, STANDARDS, CONVENTIONS, CONTEXT, OTHER | Directive |
+| `SpecType` | OPENAPI, MARKDOWN, SCREENSHOT, FIGMA | Specification |
+| `ScheduleType` | DAILY, WEEKLY, ON_COMMIT | HealthSchedule |
+| `MfaMethod` | NONE, TOTP, EMAIL | User |
+| `GitHubAuthType` | PAT, OAUTH, SSH | GitHubConnection |
 
-### Courier Enums (com.codeops.courier.entity.enums) — 7 enums
+### Courier Enums (`com.codeops.courier.entity.enums`)
 
 | Enum | Values |
-|------|--------|
-| BodyType | NONE, FORM_DATA, X_WWW_FORM_URLENCODED, RAW_JSON, RAW_XML, RAW_HTML, RAW_TEXT, RAW_YAML, BINARY, GRAPHQL |
-| AuthType | NO_AUTH, API_KEY, BEARER_TOKEN, BASIC_AUTH, OAUTH2_AUTHORIZATION_CODE, OAUTH2_CLIENT_CREDENTIALS, OAUTH2_IMPLICIT, OAUTH2_PASSWORD, JWT_BEARER, INHERIT_FROM_PARENT |
-| ScriptType | PRE_REQUEST, POST_RESPONSE |
-| HttpMethod | GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS |
-| ExportFormat | JSON, YAML |
-| SharePermission | VIEW, EDIT |
-| RunStatus | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED |
+|---|---|
+| `AuthType` | NO_AUTH, API_KEY, BEARER_TOKEN, BASIC_AUTH, OAUTH2_AUTHORIZATION_CODE, OAUTH2_CLIENT_CREDENTIALS, OAUTH2_IMPLICIT, OAUTH2_PASSWORD, JWT_BEARER, INHERIT_FROM_PARENT |
+| `BodyType` | NONE, FORM_DATA, X_WWW_FORM_URLENCODED, RAW_JSON, RAW_XML, RAW_HTML, RAW_TEXT, RAW_YAML, BINARY, GRAPHQL |
+| `HttpMethod` | GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS |
+| `ScriptType` | PRE_REQUEST, POST_RESPONSE |
+| `RunStatus` | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED |
+| `CodeLanguage` | CURL, PYTHON_REQUESTS, JAVASCRIPT_FETCH, JAVASCRIPT_AXIOS, JAVA_HTTP_CLIENT, JAVA_OKHTTP, CSHARP_HTTP_CLIENT, GO, RUBY, PHP, SWIFT, KOTLIN |
+| `SharePermission` | (values in file — VIEW, EDIT) |
 
-### Module Enums Summary
+### Fleet Enums (`com.codeops.fleet.entity.enums`)
 
-Fleet (6), Logger (10), Registry (8), Relay (6) — see entity sections above for values.
+`ContainerStatus`, `DeploymentAction`, `HealthStatus`, `RestartPolicy`
+
+### Logger Enums (`com.codeops.logger.entity.enums`)
+
+`AlertChannelType`, `AlertSeverity`, `AlertStatus`, `ConditionType`, `LogLevel`, `MetricType`, `RetentionAction`, `SpanStatus`, `TrapType`, `WidgetType`
+
+### MCP Enums (`com.codeops.mcp.entity.enums`)
+
+`ActivityType`, `AuthorType`, `DocumentType`, `Environment`, `McpTransport`, `SessionStatus`, `TokenStatus`, `ToolCallStatus`
+
+### Registry Enums (`com.codeops.registry.entity.enums`)
+
+`ConfigSource`, `ConfigTemplateType`, `DependencyType`, `HealthStatus`, `InfraResourceType`, `PortType`, `ServiceStatus`, `ServiceType`, `SolutionCategory`, `SolutionMemberRole`, `SolutionStatus`
+
+### Relay Enums (`com.codeops.relay.entity.enums`)
+
+`ChannelType`, `ConversationType`, `FileUploadStatus`, `MemberRole`, `MessageType`, `PlatformEventType`, `PresenceStatus`, `ReactionType`
 
 ---
 
 ## 8. Repository Layer
 
-### Core Repositories (com.codeops.repository) — 26 total
+All repositories extend `JpaRepository<Entity, ID>` unless noted.
 
-All extend `JpaRepository<Entity, UUID>`. No `@EntityGraph` usage. No projections.
+### Core Repositories (`com.codeops.repository`)
 
-| Repository | Custom Methods |
-|---|---|
-| AgentRunRepository | `findByJobId(UUID)`, `findByJobIdAndAgentType(UUID, AgentType)`, `deleteAllByJobId(UUID)` |
-| AuditLogRepository | `findByUserId(UUID, Pageable)`, `findByEntityTypeAndEntityId(String, String, Pageable)`, `findByAction(String, Pageable)` |
-| BugInvestigationRepository | `findByJobId(UUID)`, `deleteAllByProjectId(UUID)` |
-| ComplianceItemRepository | `findByJobId(UUID, Pageable)`, `findByJobIdAndStatus(UUID, ComplianceStatus, Pageable)`, `countByJobIdAndStatus(UUID, ComplianceStatus)`, `deleteAllByProjectId(UUID)` |
-| DependencyScanRepository | `findByProjectId(UUID, Pageable)`, `findFirstByProjectIdOrderByCreatedAtDesc(UUID)`, `deleteAllByProjectId(UUID)` |
-| DependencyVulnerabilityRepository | `findByScanId(UUID, Pageable)`, `findByScanIdAndSeverity(UUID, Severity, Pageable)`, `countByScanIdAndStatus(UUID, VulnerabilityStatus)`, `countByScanIdAndSeverity(UUID, Severity)`, `deleteAllByScanId(UUID)` |
-| DirectiveRepository | `findByTeamId(UUID)`, `findByScope(DirectiveScope)`, `findByCreatedById(UUID)`, `deleteAllByTeamId(UUID)` |
-| FindingRepository | `findByJobId(UUID, Pageable)`, `findByJobIdAndSeverity(UUID, Severity, Pageable)`, `findByJobIdAndStatus(UUID, FindingStatus, Pageable)`, `countByJobIdAndSeverity(UUID, Severity)`, `countByJobIdAndSeverityAndStatus(UUID, Severity, FindingStatus)`, `deleteAllByProjectId(UUID)` |
-| GitHubConnectionRepository | `findByTeamId(UUID)`, `findByTeamIdAndIsActiveTrue(UUID)` |
-| HealthScheduleRepository | `findByProjectId(UUID)`, `findByIsActiveTrueAndNextRunAtBefore(Instant)`, `deleteAllByProjectId(UUID)` |
-| HealthSnapshotRepository | `findByProjectIdOrderByCapturedAtDesc(UUID)`, `findByProjectId(UUID, Pageable)`, `deleteAllByProjectId(UUID)` |
-| InvitationRepository | `findByToken(String)`, `findByTeamIdAndStatus(UUID, InvitationStatus)`, `@Lock(PESSIMISTIC_WRITE) findByTeamIdAndEmailAndStatusForUpdate(UUID, String, InvitationStatus)` |
-| JiraConnectionRepository | `findByTeamId(UUID)`, `findByTeamIdAndIsActiveTrue(UUID)` |
-| MfaEmailCodeRepository | `findByUserIdAndUsedFalseOrderByCreatedAtDesc(UUID)`, `deleteByUserId(UUID)`, `deleteByExpiresAtBefore(Instant)` |
-| NotificationPreferenceRepository | `findByUserId(UUID)`, `findByUserIdAndEventType(UUID, String)` |
-| PersonaRepository | `findByTeamId(UUID)`, `findByTeamId(UUID, Pageable)`, `findByTeamIdAndAgentType(UUID, AgentType)`, `findByTeamIdAndAgentTypeAndIsDefaultTrue(UUID, AgentType)`, `findByCreatedById(UUID)`, `findByScope(Scope)` |
-| ProjectDirectiveRepository | `findByIdProjectId(UUID)`, `deleteByIdProjectId(UUID)`, `deleteByIdDirectiveId(UUID)` |
-| ProjectRepository | `findByTeamId(UUID, Pageable)`, `findByTeamIdAndIsArchivedFalse(UUID)`, `findByTeamIdAndIsArchivedFalse(UUID, Pageable)`, `countByTeamId(UUID)` |
-| QaJobRepository | `findByProjectId(UUID, Pageable)`, `findByStartedById(UUID, Pageable)`, `findByProjectIdOrderByCreatedAtDesc(UUID)`, `deleteAllByProjectId(UUID)` |
-| RemediationTaskRepository | `findByJobId(UUID, Pageable)`, `findByAssignedToId(UUID, Pageable)`, `deleteAllByJobId(UUID)`, `@Query(native) deleteJoinTableByProjectId(UUID)`, `deleteAllByProjectId(UUID)` |
-| SpecificationRepository | `findByJobId(UUID)`, `deleteAllByProjectId(UUID)` |
-| SystemSettingRepository | extends `JpaRepository<SystemSetting, String>` (String PK) |
-| TeamMemberRepository | `findByTeamId(UUID)`, `findByUserId(UUID)`, `findByTeamIdAndUserId(UUID, UUID)`, `existsByTeamIdAndUserId(UUID, UUID)`, `countByTeamId(UUID)` |
-| TeamRepository | (standard JpaRepository methods only) |
-| TechDebtItemRepository | `findByProjectId(UUID, Pageable)`, `findByProjectIdAndStatus(UUID, DebtStatus, Pageable)`, `findByProjectIdAndCategory(UUID, DebtCategory, Pageable)`, `findByProjectId(UUID)`, `countByProjectIdAndStatus(UUID, DebtStatus)`, `deleteAllByProjectId(UUID)` |
-| UserRepository | `findByEmail(String)`, `existsByEmail(String)`, `findByDisplayNameContainingIgnoreCase(String, Pageable)` |
+**UserRepository**: `Optional<User> findByEmail(String)`, `boolean existsByEmail(String)`, `List<User> findByDisplayNameContainingIgnoreCase(String)`.
 
-**Notable patterns:**
-- 1 native query: `RemediationTaskRepository.deleteJoinTableByProjectId`
-- 1 pessimistic lock: `InvitationRepository.findByTeamIdAndEmailAndStatusForUpdate`
-- 15 repositories have bulk `deleteAllByProjectId()` (used in ProjectService cascade delete)
+**TeamRepository**: Standard CRUD.
 
-### Module Repositories
+**TeamMemberRepository**: `List<TeamMember> findByTeamId(UUID)`, `List<TeamMember> findByUserId(UUID)`, `Optional<TeamMember> findByTeamIdAndUserId(UUID, UUID)`, `boolean existsByTeamIdAndUserId(UUID, UUID)`, `long countByTeamId(UUID)`, `void deleteByTeamIdAndUserId(UUID, UUID)`.
 
-**Courier:** 18 repos (Collection, Folder, Request, RequestHeader, RequestParam, RequestBody, RequestAuth, RequestScript, RequestHistory, Environment, EnvironmentVariable, GlobalVariable, RunResult, RunIteration, Fork, MergeRequest, CollectionShare, CodeSnippetTemplate)
+**ProjectRepository**: `List<Project> findByTeamIdAndIsArchivedFalse(UUID)`, `Page<Project> findByTeamIdAndIsArchivedFalse(UUID, Pageable)`, `Page<Project> findByTeamId(UUID, Pageable)`, `long countByTeamId(UUID)`, `@Modifying void deleteAllByProjectId(UUID)`.
 
-**Fleet:** 14 repos (ServiceProfile, ContainerInstance, ContainerLog, ContainerHealthCheck, VolumeMount, NetworkConfig, PortMapping, EnvironmentVariable, SolutionProfile, SolutionService, WorkstationProfile, WorkstationSolution, DeploymentRecord, DeploymentContainer)
+**QaJobRepository**: `Page<QaJob> findByProjectId(UUID, Pageable)`, `Page<QaJob> findByStartedById(UUID, Pageable)`, `@Modifying void deleteAllByProjectId(UUID)`.
 
-**Logger:** 14 repos (LogSource, LogEntry, LogTrap, TrapCondition, AlertRule, AlertChannel, AlertHistory, Metric, MetricSeries, RetentionPolicy, Dashboard, DashboardWidget, SavedQuery, QueryHistory, AnomalyBaseline, TraceSpan)
+**AgentRunRepository**: `List<AgentRun> findByJobId(UUID)`, `Optional<AgentRun> findByJobIdAndAgentType(UUID, AgentType)`, `@Modifying void deleteAllByProjectId(UUID)`.
 
-**MCP:** 8 repos (McpSession, SessionResult, SessionToolCall, DeveloperProfile, McpApiToken, ProjectDocument, ProjectDocumentVersion, ActivityFeedEntry)
+**FindingRepository**: `Page<Finding> findByJobId(UUID, Pageable)`, `Page<Finding> findByJobIdAndSeverity(UUID, Severity, Pageable)`, `Page<Finding> findByJobIdAndAgentType(UUID, AgentType, Pageable)`, `Page<Finding> findByJobIdAndStatus(UUID, FindingStatus, Pageable)`, `Map<Severity, Long> countBySeverityGrouped(UUID)`, `@Modifying void deleteAllByProjectId(UUID)`.
 
-**Registry:** 11 repos (ServiceRegistration, ServiceDependency, ApiRouteRegistration, Solution, SolutionMember, InfraResource, EnvironmentConfig, ConfigTemplate, and related)
+**TechDebtItemRepository**: `Page<TechDebtItem> findByProjectId(UUID, Pageable)`, `Page<TechDebtItem> findByProjectIdAndStatus(UUID, DebtStatus, Pageable)`, `Page<TechDebtItem> findByProjectIdAndCategory(UUID, DebtCategory, Pageable)`, `@Modifying void deleteAllByProjectId(UUID)`.
 
-**Relay:** 12 repos (Channel, ChannelMember, Message, MessageThread, DirectConversation, DirectMessage, FileAttachment, Reaction, PinnedMessage, ReadReceipt, UserPresence, PlatformEvent)
+**RemediationTaskRepository**: `Page<RemediationTask> findByJobId(UUID, Pageable)`, `Page<RemediationTask> findByAssignedToId(UUID, Pageable)`, `@Modifying void deleteJoinTableByProjectId(UUID)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**ComplianceItemRepository**: `Page<ComplianceItem> findByJobId(UUID, Pageable)`, `Page<ComplianceItem> findByJobIdAndStatus(UUID, ComplianceStatus, Pageable)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**SpecificationRepository**: `Page<Specification> findByJobId(UUID, Pageable)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**BugInvestigationRepository**: `Optional<BugInvestigation> findByJobId(UUID)`, `Optional<BugInvestigation> findByJiraKey(String)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**DependencyScanRepository**: `Page<DependencyScan> findByProjectId(UUID, Pageable)`, `Optional<DependencyScan> findFirstByProjectIdOrderByCreatedAtDesc(UUID)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**DependencyVulnerabilityRepository**: `Page<DependencyVulnerability> findByScanId(UUID, Pageable)`, `Page<DependencyVulnerability> findByScanIdAndSeverity(UUID, Severity, Pageable)`, `Page<DependencyVulnerability> findByScanIdAndStatus(UUID, VulnerabilityStatus, Pageable)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**HealthSnapshotRepository**: `Page<HealthSnapshot> findByProjectId(UUID, Pageable)`, `Optional<HealthSnapshot> findFirstByProjectIdOrderByCapturedAtDesc(UUID)`, `List<HealthSnapshot> findTopNByProjectIdOrderByCapturedAtDesc(UUID, int)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**HealthScheduleRepository**: `List<HealthSchedule> findByProjectId(UUID)`, `List<HealthSchedule> findByIsActiveTrue()`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**GitHubConnectionRepository**: `List<GitHubConnection> findByTeamId(UUID)`.
+
+**JiraConnectionRepository**: `List<JiraConnection> findByTeamId(UUID)`.
+
+**PersonaRepository**: `Page<Persona> findByTeamId(UUID, Pageable)`, `List<Persona> findByTeamIdAndAgentType(UUID, AgentType)`, `Optional<Persona> findByTeamIdAndAgentTypeAndIsDefaultTrue(UUID, AgentType)`, `List<Persona> findByCreatedById(UUID)`, `List<Persona> findByScopeAndIsDefaultTrue(Scope)`.
+
+**DirectiveRepository**: `List<Directive> findByTeamId(UUID)`, `List<Directive> findByProjectId(UUID)`, `List<Directive> findByTeamIdAndScope(UUID, DirectiveScope)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**ProjectDirectiveRepository**: `List<ProjectDirective> findByProjectId(UUID)`, `Optional<ProjectDirective> findByProjectIdAndDirectiveId(UUID, UUID)`, `@Modifying void deleteAllByProjectId(UUID)`.
+
+**InvitationRepository**: `Optional<Invitation> findByToken(String)`, `List<Invitation> findByTeamIdAndStatus(UUID, InvitationStatus)`, `List<Invitation> findByTeamIdAndEmailAndStatusForUpdate(UUID, String, InvitationStatus)`.
+
+**AuditLogRepository**: `Page<AuditLog> findByTeamId(UUID, Pageable)`, `Page<AuditLog> findByUserId(UUID, Pageable)`.
+
+**MfaEmailCodeRepository**: `Optional<MfaEmailCode> findFirstByUserIdAndUsedFalseAndExpiresAtAfterOrderByCreatedAtDesc(UUID, Instant)`, `@Modifying void deleteByExpiresAtBefore(Instant)`.
+
+**NotificationPreferenceRepository**: `List<NotificationPreference> findByUserId(UUID)`, `Optional<NotificationPreference> findByUserIdAndEventType(UUID, String)`.
+
+**SystemSettingRepository**: Standard CRUD (String key PK).
 
 ---
 
 ## 9. Service Layer — Full Method Signatures
 
-### Core Services (com.codeops.service) — 26 services
+### Core Services (`com.codeops.service`)
 
-#### AdminService
-**Injects:** UserRepository, TeamRepository, TeamMemberRepository, ProjectRepository, QaJobRepository, SystemSettingRepository
-- `getSystemStats()`: SystemStatsResponse — system-wide counts
-- `getSystemSettings()`: List\<SystemSettingResponse\> — all settings
-- `updateSystemSetting(UpdateSystemSettingRequest)`: SystemSettingResponse — create/update setting
-- `getAllUsers(Pageable)`: PageResponse\<UserResponse\> — paginated user list
+**AuthService** (`@Transactional`):
+- `AuthResponse register(RegisterRequest request)`
+- `AuthResponse login(LoginRequest request)`
+- `AuthResponse refreshToken(RefreshTokenRequest request)`
+- `void changePassword(ChangePasswordRequest request)`
 
-#### AgentRunService
-**Injects:** AgentRunRepository, QaJobRepository, TeamMemberRepository
-- `createAgentRun(CreateAgentRunRequest)`: AgentRunResponse — @Transactional
-- `createAgentRuns(UUID jobId, List<AgentType>)`: List\<AgentRunResponse\> — batch create
-- `getAgentRuns(UUID jobId)`: List\<AgentRunResponse\> — readOnly
-- `updateAgentRun(UUID, UpdateAgentRunRequest)`: AgentRunResponse — @Transactional
-- `deleteAgentRun(UUID)`: void — @Transactional
+**UserService** (`@Transactional(readOnly=true)` class-level):
+- `UserResponse getUserById(UUID id)`
+- `UserResponse getUserByEmail(String email)`
+- `UserResponse getCurrentUser()`
+- `@Transactional UserResponse updateUser(UUID userId, UpdateUserRequest request)`
+- `List<UserResponse> searchUsers(String query)`
+- `@Transactional void deactivateUser(UUID userId)`
+- `@Transactional void activateUser(UUID userId)`
 
-#### AuditLogService
-**Injects:** AuditLogRepository
-- `@Async log(UUID userId, String action, String entityType, String entityId, String details, String ip)`: void
-- `getLogsForUser(UUID, Pageable)`: PageResponse — readOnly
-- `getLogsForEntity(String, String, Pageable)`: PageResponse — readOnly
-- `getLogsByAction(String, Pageable)`: PageResponse — readOnly
+**TeamService** (`@Transactional`):
+- `TeamResponse createTeam(CreateTeamRequest request)`
+- `@Transactional(readOnly=true) TeamResponse getTeam(UUID teamId)`
+- `@Transactional(readOnly=true) List<TeamResponse> getTeamsForUser()`
+- `TeamResponse updateTeam(UUID teamId, UpdateTeamRequest request)`
+- `void deleteTeam(UUID teamId)` — owner-only
+- `@Transactional(readOnly=true) List<TeamMemberResponse> getTeamMembers(UUID teamId)`
+- `TeamMemberResponse updateMemberRole(UUID teamId, UUID userId, UpdateMemberRoleRequest request)`
+- `void removeMember(UUID teamId, UUID userId)` — self-removal allowed; admin needed for others
+- `InvitationResponse inviteMember(UUID teamId, InviteMemberRequest request)`
+- `TeamResponse acceptInvitation(String token)`
+- `@Transactional(readOnly=true) List<InvitationResponse> getTeamInvitations(UUID teamId)`
+- `void cancelInvitation(UUID invitationId)`
 
-#### AuthService
-**Injects:** UserRepository, PasswordEncoder, JwtTokenProvider, TeamMemberRepository, MfaEmailCodeRepository, EmailService
-- `register(RegisterRequest)`: AuthResponse — @Transactional
-- `login(LoginRequest)`: AuthResponse — readOnly (returns MFA challenge token if MFA enabled)
-- `refreshToken(RefreshTokenRequest)`: AuthResponse — readOnly
-- `logout(LogoutRequest)`: void
-- `changePassword(ChangePasswordRequest)`: void — @Transactional
+**ProjectService** (`@Transactional`):
+- `ProjectResponse createProject(UUID teamId, CreateProjectRequest request)`
+- `@Transactional(readOnly=true) ProjectResponse getProject(UUID projectId)`
+- `@Transactional(readOnly=true) List<ProjectResponse> getProjectsForTeam(UUID teamId)`
+- `@Transactional(readOnly=true) PageResponse<ProjectResponse> getAllProjectsForTeam(UUID teamId, boolean includeArchived, Pageable pageable)`
+- `ProjectResponse updateProject(UUID projectId, UpdateProjectRequest request)`
+- `void archiveProject(UUID projectId)`
+- `void unarchiveProject(UUID projectId)`
+- `void deleteProject(UUID projectId)` — owner-only; manual cascade delete of all child records
+- `void updateHealthScore(UUID projectId, int score)`
 
-#### BugInvestigationService
-**Injects:** BugInvestigationRepository, QaJobRepository, TeamMemberRepository
-- `createInvestigation(CreateBugInvestigationRequest)`: BugInvestigationResponse
-- `getInvestigationByJob(UUID)`: BugInvestigationResponse — readOnly
-- `updateInvestigation(UUID, UpdateBugInvestigationRequest)`: BugInvestigationResponse
+**QaJobService** (`@Transactional`):
+- `JobResponse createJob(CreateJobRequest request)`
+- `@Transactional(readOnly=true) JobResponse getJob(UUID jobId)`
+- `@Transactional(readOnly=true) PageResponse<JobSummaryResponse> getJobsForProject(UUID projectId, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<JobSummaryResponse> getJobsByUser(UUID userId, Pageable pageable)`
+- `JobResponse updateJob(UUID jobId, UpdateJobRequest request)`
+- `void deleteJob(UUID jobId)`
 
-#### ComplianceService
-**Injects:** ComplianceItemRepository, QaJobRepository, TeamMemberRepository
-- `createComplianceItem(CreateComplianceItemRequest)`: ComplianceItemResponse
-- `createComplianceItems(List<CreateComplianceItemRequest>)`: List — batch
-- `getComplianceItems(UUID jobId, Pageable)`: PageResponse — readOnly
-- `getComplianceByStatus(UUID jobId, ComplianceStatus, Pageable)`: PageResponse — readOnly
-- `updateComplianceStatus(UUID, UpdateComplianceStatusRequest)`: ComplianceItemResponse
+**AgentRunService** (`@Transactional`):
+- `AgentRunResponse createAgentRun(CreateAgentRunRequest request)`
+- `List<AgentRunResponse> createAgentRuns(UUID jobId, List<AgentType> agentTypes)`
+- `@Transactional(readOnly=true) List<AgentRunResponse> getAgentRuns(UUID jobId)`
+- `@Transactional(readOnly=true) AgentRunResponse getAgentRun(UUID agentRunId)`
+- `AgentRunResponse updateAgentRun(UUID agentRunId, UpdateAgentRunRequest request)`
+- `@Transactional(readOnly=true) List<AgentType> getEligibleAdversarialAgents(UUID jobId)`
 
-#### DependencyService
-**Injects:** DependencyScanRepository, DependencyVulnerabilityRepository, ProjectRepository, TeamMemberRepository
-- `createScan(CreateDependencyScanRequest)`: DependencyScanResponse
-- `getScansForProject(UUID, Pageable)`: PageResponse — readOnly
-- `getLatestScan(UUID)`: DependencyScanResponse — readOnly
-- `addVulnerability(CreateVulnerabilityRequest)`: VulnerabilityResponse
-- `addVulnerabilities(List)`: List — batch
-- `getVulnerabilities(UUID scanId, Pageable)`: PageResponse — readOnly
-- `updateVulnerabilityStatus(UUID, UpdateVulnerabilityStatusRequest)`: VulnerabilityResponse
+**FindingService** (`@Transactional`):
+- `FindingResponse createFinding(CreateFindingRequest request)`
+- `List<FindingResponse> createFindings(List<CreateFindingRequest> requests)`
+- `@Transactional(readOnly=true) FindingResponse getFinding(UUID findingId)`
+- `@Transactional(readOnly=true) PageResponse<FindingResponse> getFindingsForJob(UUID jobId, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<FindingResponse> getFindingsByJobAndSeverity(UUID jobId, Severity severity, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<FindingResponse> getFindingsByJobAndAgent(UUID jobId, AgentType agentType, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<FindingResponse> getFindingsByJobAndStatus(UUID jobId, FindingStatus status, Pageable pageable)`
+- `FindingResponse updateFindingStatus(UUID findingId, UpdateFindingStatusRequest request)`
+- `List<FindingResponse> bulkUpdateFindingStatus(BulkUpdateFindingsRequest request)`
+- `@Transactional(readOnly=true) Map<Severity, Long> countFindingsBySeverity(UUID jobId)`
 
-#### DirectiveService
-**Injects:** DirectiveRepository, ProjectDirectiveRepository, TeamMemberRepository, UserRepository, TeamRepository, ProjectRepository
-- `createDirective(CreateDirectiveRequest)`: DirectiveResponse
-- `getDirective(UUID)`: DirectiveResponse — readOnly
-- `getDirectivesForTeam(UUID)`: List — readOnly
-- `updateDirective(UUID, UpdateDirectiveRequest)`: DirectiveResponse
-- `deleteDirective(UUID)`: void
-- `getProjectDirectives(UUID projectId)`: List — readOnly
-- `assignDirectiveToProject(UUID projectId, UUID directiveId)`: ProjectDirectiveResponse
-- `removeDirectiveFromProject(UUID, UUID)`: void
-- `toggleProjectDirective(UUID, UUID, boolean)`: ProjectDirectiveResponse
+**TechDebtService** (`@Transactional`):
+- `TechDebtItemResponse createTechDebtItem(CreateTechDebtItemRequest request)`
+- `List<TechDebtItemResponse> createTechDebtItems(List<CreateTechDebtItemRequest> requests)`
+- `@Transactional(readOnly=true) TechDebtItemResponse getTechDebtItem(UUID itemId)`
+- `@Transactional(readOnly=true) PageResponse<TechDebtItemResponse> getTechDebtForProject(UUID projectId, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<TechDebtItemResponse> getTechDebtByStatus(UUID projectId, DebtStatus status, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<TechDebtItemResponse> getTechDebtByCategory(UUID projectId, DebtCategory category, Pageable pageable)`
+- `TechDebtItemResponse updateTechDebtStatus(UUID itemId, UpdateTechDebtStatusRequest request)`
+- `void deleteTechDebtItem(UUID itemId)`
+- `@Transactional(readOnly=true) Map<String, Object> getDebtSummary(UUID projectId)`
 
-#### EncryptionService
-**Injects:** `@Value codeops.encryption.key`
-AES-256-GCM encryption. Manual constructor validates key length.
-- `encrypt(String)`: String — returns Base64(IV + ciphertext + tag)
-- `decrypt(String)`: String — reverses encrypt
+**ComplianceService** (`@Transactional`):
+- `SpecificationResponse createSpecification(CreateSpecificationRequest request)`
+- `@Transactional(readOnly=true) PageResponse<SpecificationResponse> getSpecificationsForJob(UUID jobId, Pageable pageable)`
+- `ComplianceItemResponse createComplianceItem(CreateComplianceItemRequest request)`
+- `List<ComplianceItemResponse> createComplianceItems(List<CreateComplianceItemRequest> requests)`
+- `@Transactional(readOnly=true) PageResponse<ComplianceItemResponse> getComplianceItemsForJob(UUID jobId, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<ComplianceItemResponse> getComplianceItemsByStatus(UUID jobId, ComplianceStatus status, Pageable pageable)`
+- `@Transactional(readOnly=true) Map<String, Object> getComplianceSummary(UUID jobId)`
 
-#### FindingService
-**Injects:** FindingRepository, QaJobRepository, TeamMemberRepository, AgentRunRepository
-- `createFinding(CreateFindingRequest)`: FindingResponse
-- `createFindings(List)`: List — batch
-- `getFindingsForJob(UUID, Pageable)`: PageResponse — readOnly
-- `getFindingsBySeverity(UUID, Severity, Pageable)`: PageResponse — readOnly
-- `getFindingsByStatus(UUID, FindingStatus, Pageable)`: PageResponse — readOnly
-- `updateFindingStatus(UUID, UpdateFindingStatusRequest)`: FindingResponse
-- `deleteFinding(UUID)`: void
+**DependencyService** (`@Transactional`):
+- `DependencyScanResponse createScan(CreateDependencyScanRequest request)`
+- `@Transactional(readOnly=true) DependencyScanResponse getScan(UUID scanId)`
+- `@Transactional(readOnly=true) PageResponse<DependencyScanResponse> getScansForProject(UUID projectId, Pageable pageable)`
+- `@Transactional(readOnly=true) DependencyScanResponse getLatestScan(UUID projectId)`
+- `VulnerabilityResponse addVulnerability(CreateVulnerabilityRequest request)`
+- `List<VulnerabilityResponse> addVulnerabilities(List<CreateVulnerabilityRequest> requests)`
+- `@Transactional(readOnly=true) PageResponse<VulnerabilityResponse> getVulnerabilities(UUID scanId, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<VulnerabilityResponse> getVulnerabilitiesBySeverity(UUID scanId, Severity severity, Pageable pageable)`
+- `@Transactional(readOnly=true) PageResponse<VulnerabilityResponse> getOpenVulnerabilities(UUID scanId, Pageable pageable)`
+- `VulnerabilityResponse updateVulnerabilityStatus(UUID vulnerabilityId, VulnerabilityStatus status)`
 
-#### GitHubConnectionService
-**Injects:** GitHubConnectionRepository, TeamMemberRepository, EncryptionService
-- `createConnection(CreateGitHubConnectionRequest)`: GitHubConnectionResponse — encrypts token
-- `getConnectionsForTeam(UUID)`: List — readOnly
-- `updateConnection(UUID, UpdateGitHubConnectionRequest)`: GitHubConnectionResponse
-- `deleteConnection(UUID)`: void
-- `validateConnection(UUID)`: GitHubConnectionResponse
+**RemediationTaskService** (`@Transactional`):
+- `TaskResponse createTask(CreateTaskRequest request)`
+- `List<TaskResponse> createTasks(List<CreateTaskRequest> requests)`
+- `@Transactional(readOnly=true) PageResponse<TaskResponse> getTasksForJob(UUID jobId, Pageable pageable)`
+- `@Transactional(readOnly=true) TaskResponse getTask(UUID taskId)`
+- `@Transactional(readOnly=true) PageResponse<TaskResponse> getTasksAssignedToUser(UUID userId, Pageable pageable)`
+- `TaskResponse updateTask(UUID taskId, UpdateTaskRequest request)`
+- `String uploadTaskPrompt(UUID jobId, int taskNumber, String promptMd)`
 
-#### HealthMonitorService
-**Injects:** HealthScheduleRepository, HealthSnapshotRepository, ProjectRepository, TeamMemberRepository
-- `createSchedule(CreateHealthScheduleRequest)`: HealthScheduleResponse
-- `getSchedulesForProject(UUID)`: List — readOnly
-- `updateSchedule(UUID, UpdateHealthScheduleRequest)`: HealthScheduleResponse
-- `deleteSchedule(UUID)`: void
-- `createSnapshot(CreateHealthSnapshotRequest)`: HealthSnapshotResponse
-- `getSnapshots(UUID, Pageable)`: PageResponse — readOnly
+**BugInvestigationService** (`@Transactional`):
+- `BugInvestigationResponse createInvestigation(CreateBugInvestigationRequest request)`
+- `@Transactional(readOnly=true) BugInvestigationResponse getInvestigation(UUID investigationId)`
+- `@Transactional(readOnly=true) BugInvestigationResponse getInvestigationByJob(UUID jobId)`
+- `@Transactional(readOnly=true) BugInvestigationResponse getInvestigationByJiraKey(String jiraKey)`
+- `BugInvestigationResponse updateInvestigation(UUID investigationId, UpdateBugInvestigationRequest request)`
+- `String uploadRca(UUID jobId, String rcaMd)`
 
-#### JiraConnectionService
-**Injects:** JiraConnectionRepository, TeamMemberRepository, EncryptionService
-- `createConnection(CreateJiraConnectionRequest)`: JiraConnectionResponse — encrypts token
-- `getConnectionsForTeam(UUID)`: List — readOnly
-- `updateConnection(UUID, UpdateJiraConnectionRequest)`: JiraConnectionResponse
-- `deleteConnection(UUID)`: void
+**HealthMonitorService** (`@Transactional`):
+- `HealthScheduleResponse createSchedule(CreateHealthScheduleRequest request)`
+- `@Transactional(readOnly=true) List<HealthScheduleResponse> getSchedulesForProject(UUID projectId)`
+- `@Transactional(readOnly=true) List<HealthScheduleResponse> getActiveSchedules()`
+- `HealthScheduleResponse updateSchedule(UUID scheduleId, boolean isActive)`
+- `void deleteSchedule(UUID scheduleId)`
+- `void markScheduleRun(UUID scheduleId)`
+- `HealthSnapshotResponse createSnapshot(CreateHealthSnapshotRequest request)`
+- `@Transactional(readOnly=true) PageResponse<HealthSnapshotResponse> getSnapshots(UUID projectId, Pageable pageable)`
+- `@Transactional(readOnly=true) HealthSnapshotResponse getLatestSnapshot(UUID projectId)`
+- `@Transactional(readOnly=true) List<HealthSnapshotResponse> getHealthTrend(UUID projectId, int limit)`
 
-#### MetricsService (core)
-**Injects:** ProjectRepository, QaJobRepository, FindingRepository, AgentRunRepository, TeamMemberRepository, ComplianceItemRepository, TechDebtItemRepository, DependencyScanRepository, DependencyVulnerabilityRepository, HealthSnapshotRepository
-- `getProjectMetrics(UUID)`: ProjectMetricsResponse — readOnly
-- `getTeamMetrics(UUID)`: TeamMetricsResponse — readOnly
-- `getHealthTrend(UUID, int days)`: List\<HealthSnapshotResponse\> — readOnly
+**MetricsService** (`@Transactional(readOnly=true)`):
+- `ProjectMetricsResponse getProjectMetrics(UUID projectId)`
+- `TeamMetricsResponse getTeamMetrics(UUID teamId)`
+- `List<HealthSnapshotResponse> getHealthTrend(UUID projectId, int days)`
 
-#### MfaService
-**Injects:** UserRepository, PasswordEncoder, JwtTokenProvider, EncryptionService, TeamMemberRepository, ObjectMapper, MfaEmailCodeRepository, EmailService
-- `setupMfa(MfaSetupRequest)`: MfaSetupResponse — TOTP setup
-- `verifyAndEnableMfa(MfaVerifyRequest)`: MfaStatusResponse
-- `setupEmailMfa(MfaEmailSetupRequest)`: MfaRecoveryResponse — email MFA setup
-- `verifyEmailSetupAndEnable(MfaVerifyRequest)`: MfaStatusResponse
-- `verifyMfaLogin(MfaLoginRequest)`: AuthResponse — completes MFA login
-- `sendLoginMfaCode(MfaResendRequest)`: void — resend email code
-- `disableMfa(MfaSetupRequest)`: MfaStatusResponse
-- `regenerateRecoveryCodes(MfaSetupRequest)`: MfaRecoveryResponse
-- `getMfaStatus()`: MfaStatusResponse — readOnly
-- `adminResetMfa(UUID)`: void — force reset
-- `@Scheduled cleanupExpiredCodes()`: void — every 15 min
+**PersonaService** (`@Transactional`):
+- `PersonaResponse createPersona(CreatePersonaRequest request)`
+- `@Transactional(readOnly=true) PersonaResponse getPersona(UUID personaId)`
+- `@Transactional(readOnly=true) PageResponse<PersonaResponse> getPersonasForTeam(UUID teamId, Pageable pageable)`
+- `@Transactional(readOnly=true) List<PersonaResponse> getPersonasByAgentType(UUID teamId, AgentType agentType)`
+- `@Transactional(readOnly=true) PersonaResponse getDefaultPersona(UUID teamId, AgentType agentType)`
+- `@Transactional(readOnly=true) List<PersonaResponse> getPersonasByUser(UUID userId)`
+- `@Transactional(readOnly=true) List<PersonaResponse> getSystemPersonas()`
+- `PersonaResponse updatePersona(UUID personaId, UpdatePersonaRequest request)`
+- `void deletePersona(UUID personaId)`
+- `PersonaResponse setAsDefault(UUID personaId)`
+- `PersonaResponse removeDefault(UUID personaId)`
 
-#### NotificationService
-**Injects:** NotificationPreferenceRepository, UserRepository
-- `getPreferences(UUID)`: List — readOnly
-- `updatePreference(UUID, UpdateNotificationPreferenceRequest)`: NotificationPreferenceResponse
-- `updatePreferences(UUID, List)`: List — batch
-- `shouldNotify(UUID, String eventType, String channel)`: boolean — readOnly
+**DirectiveService** (`@Transactional`):
+- `DirectiveResponse createDirective(CreateDirectiveRequest request)`
+- `@Transactional(readOnly=true) DirectiveResponse getDirective(UUID directiveId)`
+- `@Transactional(readOnly=true) List<DirectiveResponse> getDirectivesForTeam(UUID teamId)`
+- `@Transactional(readOnly=true) List<DirectiveResponse> getDirectivesForProject(UUID projectId)`
+- `@Transactional(readOnly=true) List<DirectiveResponse> getDirectivesByCategory(UUID teamId, DirectiveScope scope)`
+- `DirectiveResponse updateDirective(UUID directiveId, UpdateDirectiveRequest request)`
+- `void deleteDirective(UUID directiveId)`
+- `ProjectDirectiveResponse assignToProject(AssignDirectiveRequest request)`
+- `void removeFromProject(UUID projectId, UUID directiveId)`
+- `@Transactional(readOnly=true) List<ProjectDirectiveResponse> getProjectDirectives(UUID projectId)`
+- `@Transactional(readOnly=true) List<DirectiveResponse> getEnabledDirectivesForProject(UUID projectId)`
+- `ProjectDirectiveResponse toggleProjectDirective(UUID projectId, UUID directiveId, boolean enabled)`
 
-#### PersonaService
-**Injects:** PersonaRepository, TeamMemberRepository, UserRepository, TeamRepository
-- `createPersona(CreatePersonaRequest)`: PersonaResponse
-- `getPersona(UUID)`: PersonaResponse — readOnly
-- `getPersonasForTeam(UUID, Pageable)`: PageResponse — readOnly
-- `getPersonasByAgentType(UUID, AgentType)`: List — readOnly
-- `getDefaultPersona(UUID, AgentType)`: PersonaResponse — readOnly
-- `getPersonasByUser(UUID)`: List — readOnly
-- `getSystemPersonas()`: List — readOnly
-- `updatePersona(UUID, UpdatePersonaRequest)`: PersonaResponse — increments version on content change
-- `deletePersona(UUID)`: void — SYSTEM prohibited
-- `setAsDefault(UUID)`: PersonaResponse
-- `removeDefault(UUID)`: PersonaResponse
+**GitHubConnectionService** (`@Transactional`):
+- `GitHubConnectionResponse createConnection(UUID teamId, CreateGitHubConnectionRequest request)` — encrypts credentials with AES-256-GCM
+- `@Transactional(readOnly=true) List<GitHubConnectionResponse> getConnections(UUID teamId)`
+- `@Transactional(readOnly=true) GitHubConnectionResponse getConnection(UUID connectionId)`
+- `void deleteConnection(UUID connectionId)`
+- `String getDecryptedCredentials(UUID connectionId)` — internal use only; never returned via API
 
-#### ProjectService
-**Injects:** 21 repositories (all child entity repos for cascade delete)
-- `createProject(UUID teamId, CreateProjectRequest)`: ProjectResponse
-- `getProject(UUID)`: ProjectResponse — readOnly
-- `getProjectsForTeam(UUID)`: List — readOnly (non-archived)
-- `getAllProjectsForTeam(UUID, boolean, Pageable)`: PageResponse — readOnly
-- `updateProject(UUID, UpdateProjectRequest)`: ProjectResponse
-- `archiveProject(UUID)`: void
-- `unarchiveProject(UUID)`: void
-- `deleteProject(UUID)`: void — FK-safe cascade delete (OWNER only, deletes 15 child tables)
-- `updateHealthScore(UUID, int)`: void
+**JiraConnectionService** (`@Transactional`):
+- `JiraConnectionResponse createConnection(UUID teamId, CreateJiraConnectionRequest request)` — encrypts API token
+- `@Transactional(readOnly=true) List<JiraConnectionResponse> getConnections(UUID teamId)`
+- `@Transactional(readOnly=true) JiraConnectionResponse getConnection(UUID connectionId)`
+- `void deleteConnection(UUID connectionId)`
+- `String getDecryptedApiToken(UUID connectionId)` — internal use only
+- `JiraConnectionDetails getConnectionDetails(UUID connectionId)`
 
-#### QaJobService
-**Injects:** QaJobRepository, AgentRunRepository, FindingRepository, ProjectRepository, UserRepository, TeamMemberRepository, ProjectService
-- `createJob(CreateJobRequest)`: JobResponse — PENDING status
-- `getJob(UUID)`: JobResponse — readOnly
-- `getJobsForProject(UUID, Pageable)`: PageResponse — readOnly
-- `getJobsByUser(UUID, Pageable)`: PageResponse — readOnly
-- `updateJob(UUID, UpdateJobRequest)`: JobResponse — auto-updates health score on COMPLETED
-- `deleteJob(UUID)`: void
+**MfaService** (`@Transactional`):
+- `MfaSetupResponse setupMfa(MfaSetupRequest request)` — TOTP setup; generates TOTP secret
+- `MfaStatusResponse verifyAndEnableMfa(MfaVerifyRequest request)`
+- `MfaRecoveryResponse setupEmailMfa(MfaEmailSetupRequest request)`
+- `MfaStatusResponse verifyEmailSetupAndEnable(MfaVerifyRequest request)`
+- `AuthResponse verifyMfaLogin(MfaLoginRequest request)` — completes MFA challenge
+- `void sendLoginMfaCode(MfaResendRequest request)`
+- `MfaStatusResponse disableMfa(MfaSetupRequest request)`
+- `MfaRecoveryResponse regenerateRecoveryCodes(MfaSetupRequest request)`
+- `@Transactional(readOnly=true) MfaStatusResponse getMfaStatus()`
+- `void adminResetMfa(UUID targetUserId)`
+- `@Transactional void cleanupExpiredCodes()` — scheduled task
 
-#### RemediationTaskService
-**Injects:** RemediationTaskRepository, QaJobRepository, UserRepository, TeamMemberRepository, FindingRepository, S3StorageService
-- `createTask(CreateTaskRequest)`: TaskResponse
-- `createTasks(List)`: List — batch
-- `getTasksForJob(UUID, Pageable)`: PageResponse — readOnly
-- `getTask(UUID)`: TaskResponse — readOnly
-- `getTasksAssignedToUser(UUID, Pageable)`: PageResponse — readOnly
-- `updateTask(UUID, UpdateTaskRequest)`: TaskResponse
-- `uploadTaskPrompt(UUID, int, String)`: String — uploads to S3/local
+**AdminService** (`@Transactional`):
+- `@Transactional(readOnly=true) Page<UserResponse> getAllUsers(Pageable pageable)`
+- `@Transactional(readOnly=true) UserResponse getUserById(UUID userId)`
+- `UserResponse updateUserStatus(UUID userId, AdminUpdateUserRequest request)`
+- `@Transactional(readOnly=true) SystemSettingResponse getSystemSetting(String key)`
+- `SystemSettingResponse updateSystemSetting(UpdateSystemSettingRequest request)`
+- `@Transactional(readOnly=true) List<SystemSettingResponse> getAllSettings()`
+- `@Transactional(readOnly=true) Map<String, Object> getUsageStats()`
 
-#### ReportStorageService
-**Injects:** S3StorageService, AgentRunRepository
-- `uploadReport(UUID jobId, AgentType, String md)`: String
-- `uploadSummaryReport(UUID, String)`: String
-- `downloadReport(String s3Key)`: String
-- `deleteReportsForJob(UUID)`: void
-- `uploadSpecification(UUID, String, byte[], String)`: String
-- `downloadSpecification(String)`: byte[]
+**AuditLogService**:
+- `@Async @Transactional void log(UUID userId, UUID teamId, String action, String entityType, UUID entityId, String details)`
+- `@Transactional(readOnly=true) Page<AuditLogResponse> getTeamAuditLog(UUID teamId, Pageable pageable)`
+- `@Transactional(readOnly=true) Page<AuditLogResponse> getUserAuditLog(UUID userId, Pageable pageable)`
 
-#### S3StorageService
-**Injects:** `@Value s3Enabled, bucket, localStoragePath`, `@Autowired(required=false) S3Client`
-- `upload(String key, byte[], String contentType)`: String — S3 or local filesystem
-- `download(String key)`: byte[]
-- `delete(String key)`: void
-- `generatePresignedUrl(String, Duration)`: String
+**NotificationService** (`@Transactional`):
+- `@Transactional(readOnly=true) List<NotificationPreferenceResponse> getPreferences(UUID userId)`
+- `NotificationPreferenceResponse updatePreference(UUID userId, UpdateNotificationPreferenceRequest request)`
+- `List<NotificationPreferenceResponse> updatePreferences(UUID userId, List<UpdateNotificationPreferenceRequest> requests)`
+- `@Transactional(readOnly=true) boolean shouldNotify(UUID userId, String eventType, String channel)`
 
-#### TeamService
-**Injects:** TeamRepository, TeamMemberRepository, UserRepository, InvitationRepository
-- `createTeam(CreateTeamRequest)`: TeamResponse — adds creator as OWNER
-- `getTeam(UUID)`: TeamResponse — readOnly
-- `getTeamsForUser()`: List — readOnly
-- `updateTeam(UUID, UpdateTeamRequest)`: TeamResponse
-- `deleteTeam(UUID)`: void — OWNER only
-- `getTeamMembers(UUID)`: List — readOnly
-- `updateMemberRole(UUID, UUID, UpdateMemberRoleRequest)`: TeamMemberResponse — ownership transfer
-- `removeMember(UUID, UUID)`: void — self-removal allowed
-- `inviteMember(UUID, InviteMemberRequest)`: InvitationResponse — pessimistic lock
-- `acceptInvitation(String token)`: TeamResponse
-- `getTeamInvitations(UUID)`: List — readOnly
-- `cancelInvitation(UUID)`: void
+**EncryptionService**: AES-256-GCM. `String encrypt(String plaintext)`, `String decrypt(String encryptedBase64)`. Key injected via `@Value("${codeops.encryption.key}")`.
 
-#### TechDebtService
-**Injects:** TechDebtItemRepository, ProjectRepository, TeamMemberRepository, QaJobRepository
-- `createTechDebtItem(CreateTechDebtItemRequest)`: TechDebtItemResponse
-- `createTechDebtItems(List)`: List — batch
-- `getTechDebtItem(UUID)`: TechDebtItemResponse — readOnly
-- `getTechDebtForProject(UUID, Pageable)`: PageResponse — readOnly
-- `getTechDebtByStatus(UUID, DebtStatus, Pageable)`: PageResponse — readOnly
-- `getTechDebtByCategory(UUID, DebtCategory, Pageable)`: PageResponse — readOnly
-- `updateTechDebtStatus(UUID, UpdateTechDebtStatusRequest)`: TechDebtItemResponse
-- `deleteTechDebtItem(UUID)`: void
-- `getDebtSummary(UUID)`: Map — readOnly
+**TokenBlacklistService**: In-memory `ConcurrentHashMap`. `void blacklist(String jti, Instant expiry)`, `boolean isBlacklisted(String jti)`.
 
-#### TokenBlacklistService
-In-memory `ConcurrentHashMap<String, Instant>`. No persistence.
-- `blacklist(String jti, Instant expiry)`: void
-- `isBlacklisted(String jti)`: boolean
+**ReportStorageService**: `String uploadReport(UUID jobId, AgentType agentType, String markdownContent)`, `String uploadSummaryReport(UUID jobId, String markdownContent)`, `String downloadReport(String s3Key)`, `void deleteReportsForJob(UUID jobId)`, `String uploadSpecification(UUID jobId, String fileName, byte[] fileData, String contentType)`, `byte[] downloadSpecification(String s3Key)`.
 
-#### UserService
-**Injects:** UserRepository
-Class-level `@Transactional(readOnly = true)`
-- `getUserById(UUID)`: UserResponse
-- `getUserByEmail(String)`: UserResponse
-- `getCurrentUser()`: UserResponse
-- `updateUser(UUID, UpdateUserRequest)`: UserResponse — @Transactional
-- `searchUsers(String query)`: List — max 20 results
-- `deactivateUser(UUID)`: void — @Transactional
-- `activateUser(UUID)`: void — @Transactional
-
-### Module Services Summary
-
-**Courier (22 services):** CollectionService, FolderService, RequestService, RequestProxyService (HTTP proxy with redirect following via java.net.http.HttpClient, 30s timeout), CollectionRunnerService, CodeGenerationService (GraalVM polyglot), ImportService (Postman/OpenAPI/cURL), GraphQLService, EnvironmentService, EnvironmentVariableService, GlobalVariableService, HistoryService, ShareService, ForkService, MergeService, VariableResolverService, ScriptExecutionService, RequestAuthService, RequestBodyService, RequestHeaderService, RequestParamService, RequestScriptService.
-
-**Fleet (6 services):** ContainerService, ServiceProfileService, SolutionProfileService, WorkstationService, DeploymentService, FleetHealthService.
-
-**Logger (20 services):** LogIngestionService, LogQueryService, AlertService, AlertRuleService, AlertChannelService, MetricsService (bean name: `loggerMetricsService`), MetricAggregationService, RetentionService, DashboardService, DashboardWidgetService, LogSourceService, LogTrapService, SavedQueryService, QueryHistoryService, AnomalyBaselineService, TraceSpanService, RetentionExecutor, AlertHistoryService, LogExportService, TrapConditionService.
-
-**MCP (8 services):** McpService, McpSessionService, DeveloperProfileService, McpApiTokenService, ProjectDocumentService, SessionResultService, SessionToolCallService, ActivityFeedService.
-
-**Registry (10 services):** ServiceRegistrationService, DependencyService (registry), PortService, ApiRouteService, SolutionService, SolutionMemberService, InfraResourceService, EnvironmentConfigService, ConfigTemplateService, RegistryHealthService.
-
-**Relay (8 services):** ChannelService, MessageService, DirectMessageService, FileAttachmentService, ReactionService, UserPresenceService, PlatformEventService, RelayHealthService.
+**S3StorageService**: `String upload(String key, byte[] data, String contentType)`, `byte[] download(String key)`, `void delete(String key)`, `String generatePresignedUrl(String key, Duration expiry)`. When S3 disabled in dev, uses local filesystem at `~/.codeops/storage/`.
 
 ---
 
 ## 10. Controller / API Layer — Method Signatures Only
 
-### Core Controllers (com.codeops.controller) — 18 controllers
+**Base Path:** All controllers under `/api/v1/`
 
-All require `isAuthenticated()` unless noted. All inject `AuditLogService` for mutation logging.
+### `AuthController` — `/api/v1/auth`
+`POST /register` → `authService.register()` | `POST /login` → `authService.login()` | `POST /refresh` → `authService.refreshToken()` | `POST /logout` (auth) | `POST /change-password` (auth) | `POST /mfa/setup` (auth) → `mfaService.setupMfa()` | `POST /mfa/verify` (auth) → `mfaService.verifyAndEnableMfa()` | `POST /mfa/login` → `mfaService.verifyMfaLogin()` | `POST /mfa/disable` (auth) | `POST /mfa/recovery-codes` (auth) | `GET /mfa/status` (auth) | `POST /mfa/setup/email` (auth) | `POST /mfa/verify-setup/email` (auth) | `POST /mfa/resend`
 
-#### AdminController — `/api/v1/admin` — `hasRole('ADMIN') or hasRole('OWNER')`
-- `getSystemStats()` → `adminService.getSystemStats()`
-- `getSystemSettings()` → `adminService.getSystemSettings()`
-- `updateSystemSetting()` → `adminService.updateSystemSetting()`
-- `getAllUsers()` → `adminService.getAllUsers()`
-- `adminResetMfa()` → `mfaService.adminResetMfa()`
+### `UserController` — `/api/v1/users`
+`GET /me` | `GET /{id}` | `PUT /{id}` | `GET /search?q=` | `PUT /{id}/deactivate` (ADMIN/OWNER) | `PUT /{id}/activate` (ADMIN/OWNER)
 
-#### AuthController — `/api/v1/auth` — PUBLIC (no auth)
-- `register()` → `authService.register()`
-- `login()` → `authService.login()`
-- `refreshToken()` → `authService.refreshToken()`
-- `logout()` → `authService.logout()`
-- `changePassword()` → `authService.changePassword()`
-- MFA endpoints: `setupMfa()`, `verifyMfa()`, `setupEmailMfa()`, `verifyEmailMfa()`, `verifyMfaLogin()`, `resendMfaCode()`, `disableMfa()`, `regenerateRecoveryCodes()`, `getMfaStatus()`
+### `TeamController` — `/api/v1/teams`
+`POST /` | `GET /` | `GET /{teamId}` | `PUT /{teamId}` | `DELETE /{teamId}` | `GET /{teamId}/members` | `PUT /{teamId}/members/{userId}/role` | `DELETE /{teamId}/members/{userId}` | `POST /{teamId}/invitations` | `GET /{teamId}/invitations` | `DELETE /{teamId}/invitations/{invitationId}` | `POST /invitations/{token}/accept`
 
-#### ComplianceController — `/api/v1/compliance`
-- CRUD for compliance items + batch create + status filter
+### `ProjectController` — `/api/v1/projects`
+`POST /{teamId}` | `GET /team/{teamId}?page&size&includeArchived` | `GET /{projectId}` | `PUT /{projectId}` | `PUT /{projectId}/archive` | `PUT /{projectId}/unarchive` | `DELETE /{projectId}`
 
-#### DependencyController — `/api/v1/dependencies`
-- Scan CRUD + vulnerability CRUD + batch add + status update
+### `JobController` — `/api/v1/jobs`
+`POST /` | `GET /{jobId}` | `GET /project/{projectId}` | `GET /mine` | `PUT /{jobId}` | `DELETE /{jobId}` | `POST /{jobId}/agents` | `POST /{jobId}/agents/batch` | `GET /{jobId}/agents` | `PUT /agents/{agentRunId}` | `GET /{jobId}/investigation` | `POST /{jobId}/investigation` | `PUT /investigations/{investigationId}`
 
-#### DirectiveController — `/api/v1/directives`
-- Directive CRUD + project assignment/toggle
+### `FindingController` — `/api/v1/findings`
+`POST /` | `POST /batch` | `GET /{findingId}` | `GET /job/{jobId}` | `GET /job/{jobId}/severity/{severity}` | `GET /job/{jobId}/agent/{agentType}` | `GET /job/{jobId}/status/{status}` | `GET /job/{jobId}/counts` | `PUT /{findingId}/status` | `PUT /bulk-status`
 
-#### FindingController — `/api/v1/findings`
-- Finding CRUD + batch create + severity/status filters
+### `TechDebtController` — `/api/v1/tech-debt`
+`POST /` | `POST /batch` | `GET /{itemId}` | `GET /project/{projectId}` | `GET /project/{projectId}/status/{status}` | `GET /project/{projectId}/category/{category}` | `PUT /{itemId}/status` | `DELETE /{itemId}` | `GET /project/{projectId}/summary`
 
-#### HealthMonitorController — `/api/v1/health-monitor`
-- Schedule CRUD + snapshot CRUD
+### `ComplianceController` — `/api/v1/compliance`
+`POST /specs` | `GET /specs/job/{jobId}` | `POST /items` | `POST /items/batch` | `GET /items/job/{jobId}` | `GET /items/job/{jobId}/status/{status}` | `GET /summary/job/{jobId}`
 
-#### IntegrationController — `/api/v1/integrations`
-- GitHub connection CRUD + validation
-- Jira connection CRUD
+### `DependencyController` — `/api/v1/dependencies`
+`POST /scans` | `GET /scans/{scanId}` | `GET /scans/project/{projectId}` | `GET /scans/project/{projectId}/latest` | `POST /vulnerabilities` | `POST /vulnerabilities/batch` | `GET /vulnerabilities/scan/{scanId}` | `GET /vulnerabilities/scan/{scanId}/severity/{severity}` | `GET /vulnerabilities/scan/{scanId}/open` | `PUT /vulnerabilities/{vulnerabilityId}/status`
 
-#### JobController — `/api/v1/jobs`
-- Job CRUD + agent run CRUD (single + batch) + bug investigation CRUD
+### `TaskController` — `/api/v1/tasks`
+`POST /` | `POST /batch` | `GET /job/{jobId}` | `GET /{taskId}` | `GET /assigned-to-me` | `PUT /{taskId}`
 
-#### MetricsController — `/api/v1/metrics`
-- `getProjectMetrics()`, `getTeamMetrics()`, `getHealthTrend()`
+### `DirectiveController` — `/api/v1/directives`
+`POST /` | `GET /{directiveId}` | `GET /team/{teamId}` | `GET /project/{projectId}` | `PUT /{directiveId}` | `DELETE /{directiveId}` | `POST /assign` | `DELETE /project/{projectId}/directive/{directiveId}` | `GET /project/{projectId}/assignments` | `GET /project/{projectId}/enabled` | `PUT /project/{projectId}/directive/{directiveId}/toggle`
 
-#### PersonaController — `/api/v1/personas`
-- Persona CRUD + team list + agent type filter + default management + system personas
+### `PersonaController` — `/api/v1/personas`
+`POST /` | `GET /{personaId}` | `GET /team/{teamId}` | `GET /team/{teamId}/agent/{agentType}` | `GET /team/{teamId}/default/{agentType}` | `GET /mine` | `GET /system` | `PUT /{personaId}` | `DELETE /{personaId}` | `PUT /{personaId}/set-default` | `PUT /{personaId}/remove-default`
 
-#### ProjectController — `/api/v1/projects`
-- Project CRUD + archive/unarchive + delete (cascade)
+### `IntegrationController` — `/api/v1/integrations`
+`POST /github/{teamId}` | `GET /github/{teamId}` | `GET /github/{teamId}/{connectionId}` | `DELETE /github/{teamId}/{connectionId}` | `POST /jira/{teamId}` | `GET /jira/{teamId}` | `GET /jira/{teamId}/{connectionId}` | `DELETE /jira/{teamId}/{connectionId}`
 
-#### ReportController — `/api/v1/reports`
-- Upload/download agent reports, summary reports, specifications (50MB max, content type allow-list, S3 key validation)
+### `HealthMonitorController` — `/api/v1/health-monitor`
+`POST /schedules` | `GET /schedules/project/{projectId}` | `PUT /schedules/{scheduleId}` | `DELETE /schedules/{scheduleId}` | `POST /snapshots` | `GET /snapshots/project/{projectId}` | `GET /snapshots/project/{projectId}/latest` | `GET /snapshots/project/{projectId}/trend`
 
-#### TaskController — `/api/v1/tasks`
-- Task CRUD + batch create + assigned-to-me
+### `MetricsController` — `/api/v1/metrics`
+`GET /project/{projectId}` | `GET /team/{teamId}` | `GET /project/{projectId}/trend`
 
-#### TeamController — `/api/v1/teams`
-- Team CRUD + member management + invitation flow (create, accept, cancel, list)
+### `ReportController` — `/api/v1/reports`
+`POST /job/{jobId}/agent/{agentType}` | `POST /job/{jobId}/summary` | `GET /download?s3Key=` | `POST /job/{jobId}/spec` | `GET /spec/download?s3Key=`
 
-#### TechDebtController — `/api/v1/tech-debt`
-- Tech debt CRUD + batch create + status/category filters + debt summary
+### `AdminController` — `/api/v1/admin` (ADMIN/OWNER role required)
+`GET /users` | `GET /users/{userId}` | `PUT /users/{userId}` | `GET /settings` | `GET /settings/{key}` | `PUT /settings` | `GET /usage` | `GET /audit-log/team/{teamId}` | `GET /audit-log/user/{userId}` | `POST /users/{userId}/reset-mfa`
 
-#### UserController — `/api/v1/users`
-- `getCurrentUser()`, `getUserById()`, `updateUser()`, `searchUsers()`
-- `deactivateUser()`, `activateUser()` — `hasRole('ADMIN') or hasRole('OWNER')`
+### Courier Controllers — `/api/v1/courier/`
+`/collections` (CRUD + duplicate, fork, forks, export, tree), `/requests` (CRUD + duplicate, move, reorder, headers, params, body, auth, scripts, send), `/environments` (CRUD + activate, clone, variables), `/folders` (CRUD + subfolders, requests, move, reorder), `/history` (list, by-user, by-method, search, delete), `/proxy/send` + `/send/{requestId}`, `/runner/start`, `/runner/results` (list, by-collection, detail, cancel, delete), `/graphql` (execute, introspect, validate, format), `/import` (postman, openapi, curl), `/codegen/generate` + `/generate/all` + `/languages`, `/variables/global` (list, save, batch, delete), `/collections/{id}/shares` (CRUD + shared-with-me), `/health`
 
-### Module Controllers
+### Relay Controllers — `/api/v1/relay/`
+`/channels` (CRUD + archive, unarchive, topic, join, leave, members, pins), `/channels/{id}/messages` (send, list, get, edit, delete), `/channels/{id}/messages/{parentId}/thread`, `/channels/{id}/messages/search`, `/messages/search-all`, `/channels/{id}/messages/read`, `/messages/unread-counts`, `/channels/{id}/threads/active`, `/dm/conversations` (CRUD), `/dm/conversations/{id}/messages`, `/dm/messages`, `/presence` (update, list, team, online, dnd, offline, count), `/reactions/messages/{id}/toggle`, `/files/upload` + download + delete, `/events` (list, by-type, by-entity, undelivered, retry), `/health`
 
-**Courier (13 controllers):** CollectionController, FolderController, RequestController, HistoryController, EnvironmentController, VariableController, ShareController, RunnerController, ImportController, ProxyController, GraphQLController, CodeGenerationController, CourierHealthController. Base path: `/api/v1/courier/`. All `@PreAuthorize("hasRole('ADMIN') or hasRole('OWNER')")` with `@RequestHeader("X-Team-ID")`.
+### Fleet Controllers — `/api/v1/fleet/`
+`/containers` (create, stop, restart, delete, get, logs, stats, exec, list, by-status, sync), `/health` (summary, check-container, check-all, history, purge), `/images` (list, pull, delete, prune), `/networks` (list, create, delete, connect, disconnect), `/service-profiles` (CRUD + auto-generate), `/solution-profiles` (CRUD + services management + start/stop), `/volumes` (list, create, delete, prune), `/workstation-profiles` (CRUD + solutions management + start/stop), `/health`
 
-**Fleet (8 controllers):** ServiceProfileController, ContainerController, SolutionProfileController, WorkstationController, DeploymentController, FleetController, FleetHealthController. Base path: `/api/v1/fleet/`.
+### MCP Controllers — `/api/v1/mcp/`
+`/sessions` (create, complete, get, history, mine, cancel, tool-calls), `/developers/profile` + developers list + update + tokens (CRUD), `/documents` (CRUD + by-type + versions + flagged + clear-flag), `/activity` (team, project, since), `/protocol/sse` (SSE stream), `/protocol/sse/message`, `/protocol/message`
 
-**Logger (10 controllers):** LogController, LogSourceController, MetricController, AlertController, AlertRuleController, AlertChannelController, DashboardController, QueryController, RetentionController, TraceController. Base path: `/api/v1/logger/`.
-
-**MCP (5 controllers):** McpController, McpSessionController, DeveloperProfileController, ProjectDocumentController, ActivityFeedController. Base path: `/api/v1/mcp/`.
-
-**Registry (10 controllers):** ServiceController, DependencyController, PortController, RouteController, SolutionController, SolutionMemberController, InfraResourceController, EnvironmentConfigController, ConfigTemplateController, RegistryHealthController. Base path: `/api/v1/registry/`.
-
-**Relay (8 controllers):** ChannelController, MessageController, DirectMessageController, FileAttachmentController, ReactionController, UserPresenceController, PlatformEventController, RelayHealthController. Base path: `/api/v1/relay/`.
+### Registry Controllers — `/api/v1/registry/`
+`/teams/{teamId}/services` + `/services/{serviceId}` (CRUD + status, clone, identity, health, by-slug), `/teams/{teamId}/solutions` + `/solutions/{solutionId}` (CRUD + detail + members + health), `/dependencies` (add, delete, graph, impact, startup-order, cycles), `/ports` (auto-allocate, allocate, by-service, by-team, map, check, conflicts, ranges, seed, update-range), `/infra-resources` (CRUD + orphans + reassign/orphan), `/routes` (add, delete, by-service, by-gateway, check), `/config/generate`, `/health/summary`, `/workstations` (CRUD + default + set-default + from-solution + refresh-startup-order), `/topology` (team, solution, neighborhood, stats)
 
 ---
 
 ## 11. Security Configuration
 
-```
-Authentication: JWT (stateless, HS256)
-Token issuer/validator: Internal (JwtTokenProvider)
-Password encoder: BCrypt strength 12
+**Filter Execution Order:** `RequestCorrelationFilter` → `RateLimitFilter` → `McpTokenAuthFilter` → `JwtAuthFilter` → `UsernamePasswordAuthenticationFilter`
 
-Public endpoints (no auth required):
-  - /api/v1/auth/**
-  - /api/v1/health
-  - /api/v1/courier/health
-  - /api/v1/fleet/health
-  - /swagger-ui/**
-  - /v3/api-docs/**
-  - /ws/relay/**
+**Public Endpoints:**
+- `GET /api/v1/auth/**` — all auth endpoints
+- `GET /api/v1/health`
+- `GET /api/v1/courier/health`
+- `GET /api/v1/fleet/health`
+- `GET /swagger-ui/**`, `/v3/api-docs/**`, `/v3/api-docs.yaml`
+- `WS /ws/relay/**`
 
-Protected endpoints:
-  - /api/v1/admin/** → hasRole('ADMIN') or hasRole('OWNER')
-  - /api/v1/courier/** → hasRole('ADMIN') or hasRole('OWNER')
-  - /api/v1/** → isAuthenticated()
+**Session:** `STATELESS` — no server-side session state.
 
-CORS: Origins from codeops.cors.allowed-origins (dev: localhost:3000,5173), methods GET/POST/PUT/DELETE/PATCH/OPTIONS, credentials enabled, max-age 3600s
+**CSRF:** Disabled (stateless JWT API).
 
-CSRF: Disabled (stateless JWT API)
+**Password Encoder:** `BCryptPasswordEncoder(strength=12)`.
 
-Rate limiting: 10 req/60s on /api/v1/auth/** per IP (in-memory ConcurrentHashMap)
+**Method Security:** `@EnableMethodSecurity` — `@PreAuthorize` on controllers. Admin endpoints require `hasRole('ADMIN') or hasRole('OWNER')`.
 
-Security Headers:
-  - CSP: default-src 'self'; frame-ancestors 'none'
-  - X-Frame-Options: DENY
-  - X-Content-Type-Options: nosniff
-  - HSTS: max-age=31536000; includeSubDomains
+**Security Headers:** CSP `default-src 'self'; frame-ancestors 'none'`, X-Frame-Options DENY, X-Content-Type-Options, HSTS with `includeSubDomains` and `maxAge=31536000`.
 
-Filter Chain Order (before UsernamePasswordAuthenticationFilter):
-  1. RequestCorrelationFilter (@Order HIGHEST_PRECEDENCE)
-  2. RateLimitFilter
-  3. McpTokenAuthFilter
-  4. JwtAuthFilter
-```
+**Authentication Entry Point:** 401 Unauthorized (no redirect).
 
 ---
 
 ## 12. Custom Security Components
 
-#### JwtAuthFilter
-**Extends:** `OncePerRequestFilter`
-Extracts Bearer token from Authorization header. Valid non-MFA tokens → sets `UsernamePasswordAuthenticationToken` with UUID principal, email, roles (with ROLE_ prefix) in SecurityContextHolder. Invalid/missing/MFA challenge tokens → pass through unauthenticated.
+**`JwtTokenProvider`** (`@Component`):
+- `generateToken(User user, List<String> roles)` — HS256, `expirationHours` (24h), claims: `sub=userId`, `email`, `roles`, `jti`
+- `generateRefreshToken(User user)` — HS256, `refreshExpirationDays` (30d), claim: `type=refresh`, `jti`
+- `generateMfaChallengeToken(User user)` — HS256, 5-minute TTL, claim: `type=mfa_challenge`
+- `boolean validateToken(String token)` — verifies signature, expiry, and JTI blacklist
+- `boolean isRefreshToken(String token)` — checks `type=refresh` claim
+- `boolean isMfaChallengeToken(String token)` — checks `type=mfa_challenge` claim
+- `UUID getUserIdFromToken(String token)`, `String getEmailFromToken(String token)`, `List<String> getRolesFromToken(String token)`
+- `Claims parseClaims(String token)` — signature verification via HMAC key
+- `@PostConstruct validateSecret()` — enforces 32-char minimum; throws `IllegalStateException` if invalid
 
-#### JwtTokenProvider
-**Algorithm:** HS256. **Secret:** from `JwtProperties.secret` (min 32 chars, validated @PostConstruct).
-Access token: 24h, claims: sub (UUID), email, roles, jti. Refresh token: 30d, type: "refresh". MFA challenge: 5 min, type: "mfa_challenge". Validates signature, expiration, blacklist (TokenBlacklistService).
+**`JwtAuthFilter`** (`OncePerRequestFilter`): Extracts `Bearer` token from `Authorization` header; sets principal as `UUID` in `SecurityContextHolder`; roles mapped to `ROLE_` prefix authorities. MFA challenge tokens rejected for normal API access.
 
-#### RateLimitFilter
-**Extends:** `OncePerRequestFilter`. Only `/api/v1/auth/**`. 10 req/60s per client IP (X-Forwarded-For or remoteAddr). In-memory `ConcurrentHashMap<String, RateWindow>`. Exceeds → 429 JSON response.
+**`RateLimitFilter`** (`OncePerRequestFilter`): Applies only to `/api/v1/auth/**`. Max 10 requests/minute per IP. Uses `ConcurrentHashMap` sliding window. Returns 429 with JSON body on limit exceeded. IP resolved from `X-Forwarded-For` header or `remoteAddr`.
 
-#### McpTokenAuthFilter
-**Extends:** `OncePerRequestFilter`. Authenticates MCP API tokens (X-MCP-Token header) for MCP module endpoints. Sets authentication with token-derived principal.
+**`McpTokenAuthFilter`** (`OncePerRequestFilter`): Applies only to `/api/v1/mcp/**`. Detects `Bearer mcp_*` tokens. Validates via `DeveloperProfileService.validateToken()`. Builds `McpSessionContext` request attribute. Populates `SecurityContextHolder` with team role. Non-MCP tokens pass through to `JwtAuthFilter`.
 
-#### SecurityUtils
-Static utility: `getCurrentUserId()` → UUID, `hasRole(String)` → boolean, `isAdmin()` → boolean (ADMIN or OWNER).
+**`SecurityUtils`** (static utility): `UUID getCurrentUserId()`, `boolean hasRole(String role)`, `boolean isAdmin()`.
+
+**`McpSecurityService`** (`@Service`): `isWithinSessionLimit(UUID, int)`, `isWithinRateLimit(UUID, int)` (sliding window), `isToolAllowed(String toolName, List<String> allowedScopes)`, `validateSessionOwnership(UUID, UUID)`, `getCurrentContext(HttpServletRequest)`, `buildContextFromJwt(UUID, UUID)`, `resolveTokenScopes(String rawToken)`.
+
+**`EncryptionService`**: AES-256-GCM. Random IV per encryption. Output is `Base64(iv + ciphertext)`. Used for GitHub PAT and Jira API token storage. Credentials never returned in API responses.
+
+**`TokenBlacklistService`**: In-memory `ConcurrentHashMap<String, Instant>` keyed by JWT JTI. Checked on every token validation. No persistence — blacklist lost on server restart.
 
 ---
 
 ## 13. Exception Handling & Error Responses
 
-**File:** `src/main/java/com/codeops/config/GlobalExceptionHandler.java`
-`@RestControllerAdvice`. Returns `ErrorResponse(int status, String message)` record.
+**`GlobalExceptionHandler`** (`@RestControllerAdvice`). All handlers return `ErrorResponse(int status, String message)`.
 
-| Exception | HTTP | Message |
-|-----------|------|---------|
-| EntityNotFoundException | 404 | "Resource not found" |
-| IllegalArgumentException | 400 | "Invalid request" |
-| AccessDeniedException | 403 | "Access denied" |
-| MethodArgumentNotValidException | 400 | Comma-separated field errors |
-| NotFoundException | 404 | Exception message |
-| ValidationException | 400 | Exception message |
-| AuthorizationException | 403 | Exception message |
-| MissingServletRequestParameterException | 400 | "Missing required parameter: {name}" |
-| MissingRequestHeaderException | 400 | "Missing required header: {name}" |
-| MethodArgumentTypeMismatchException | 400 | "Invalid value for parameter '{name}': {value}" |
-| HttpRequestMethodNotSupportedException | 405 | "HTTP method '{method}' is not supported..." |
-| HttpMessageNotReadableException | 400 | "Malformed request body" |
-| NoResourceFoundException | 404 | "Resource not found" |
-| CodeOpsException | 500 | "An internal error occurred" |
-| Exception (catch-all) | 500 | "An internal error occurred" |
+| Exception | HTTP Status | Message |
+|---|---|---|
+| `EntityNotFoundException` (JPA) | 404 | "Resource not found" |
+| `NotFoundException` (CodeOps) | 404 | exception message |
+| `IllegalArgumentException` | 400 | "Invalid request" |
+| `MethodArgumentNotValidException` | 400 | comma-joined field errors |
+| `ValidationException` (CodeOps) | 400 | exception message |
+| `MissingServletRequestParameterException` | 400 | "Missing required parameter: {name}" |
+| `MissingRequestHeaderException` | 400 | "Missing required header: {name}" |
+| `MethodArgumentTypeMismatchException` | 400 | "Invalid value for parameter '{name}': {value}" |
+| `HttpMessageNotReadableException` | 400 | "Malformed request body" |
+| `AccessDeniedException` (Spring) | 403 | "Access denied" |
+| `AuthorizationException` (CodeOps) | 403 | exception message |
+| `HttpRequestMethodNotSupportedException` | 405 | "HTTP method '{}' is not supported..." |
+| `NoResourceFoundException` | 404 | "Resource not found" |
+| `CodeOpsException` | 500 | "An internal error occurred" |
+| `Exception` (catch-all) | 500 | "An internal error occurred" |
 
-Custom exceptions: `CodeOpsException` (500 base), `NotFoundException` (404), `ValidationException` (400), `AuthorizationException` (403).
+Internal details never exposed in 500 responses. All exceptions logged at WARN (4xx) or ERROR (5xx) level.
+
+**Custom Exception Hierarchy:**
+- `CodeOpsException extends RuntimeException` — base
+- `NotFoundException extends CodeOpsException` — 3 constructors: message, (entityName, UUID id), (entityName, field, value)
+- `ValidationException extends CodeOpsException`
+- `AuthorizationException extends CodeOpsException`
 
 ---
 
 ## 14. Mappers / DTOs
 
-**Framework:** MapStruct 1.5.5.Final. All mappers: `@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))`.
+MapStruct mappers (55 total). All annotated `@Mapper(componentModel = "spring")`.
 
-**55 MapStruct mapper interfaces total:**
-- Core: No mappers (manual mapping in services)
-- Courier: 13 (CollectionMapper, FolderMapper, RequestMapper, RequestAuthMapper, RequestBodyMapper, RequestHeaderMapper, RequestParamMapper, RequestScriptMapper, RequestHistoryMapper, EnvironmentMapper, EnvironmentVariableMapper, GlobalVariableMapper, RunResultMapper)
-- Fleet: 10 (ServiceProfileMapper, ContainerInstanceMapper, ContainerLogMapper, ContainerHealthCheckMapper, NetworkConfigMapper, VolumeMountMapper, SolutionProfileMapper, SolutionServiceMapper, WorkstationProfileMapper, WorkstationSolutionMapper)
-- Logger: 15 (LogEntryMapper, LogSourceMapper, AlertRuleMapper, AlertChannelMapper, AlertHistoryMapper, MetricMapper, RetentionPolicyMapper, DashboardMapper, LogTrapMapper, SavedQueryMapper, QueryHistoryMapper, AnomalyBaselineMapper, TraceSpanMapper, DashboardMapper — 2 separate, plus others)
-- MCP: 8 (McpSessionMapper, ActivityFeedEntryMapper, DeveloperProfileMapper, McpApiTokenMapper, ProjectDocumentMapper, ProjectDocumentVersionMapper, SessionResultMapper, SessionToolCallMapper)
-- Relay: 11 (ChannelMapper, ChannelMemberMapper, MessageMapper, MessageThreadMapper, DirectConversationMapper, DirectMessageMapper, FileAttachmentMapper, ReactionMapper, PinnedMessageMapper, PlatformEventMapper, UserPresenceMapper)
+### Core Mappers
+No dedicated mapper layer for core subsystem — services perform manual mapping via private `mapToXxxResponse()` methods using Java record constructors.
 
-**Notable @Mapping annotations:**
-- `CollectionMapper`: `@Mapping(target = "isShared", source = "shared")` — Lombok boolean field naming
-- `ServiceProfileMapper`: `@Mapping(target = "isAutoGenerated", source = "autoGenerated")`, `@Mapping(target = "isEnabled", source = "enabled")`
-- `McpSessionMapper`: `@Mapping(source = "project.name", target = "projectName")`, `@Mapping(source = "developerProfile.user.displayName", target = "developerName")`
-- `ChannelMapper`: `@Mapping(target = "isArchived", source = "archived")`
-- `LogEntryMapper`: `@Mapping(source = "source.id", target = "sourceId")`, `@Mapping(source = "source.name", target = "sourceName")`
+### Courier Mappers (`com.codeops.courier.dto.mapper`)
+`CollectionMapper`, `EnvironmentMapper`, `EnvironmentVariableMapper`, `FolderMapper`, `GlobalVariableMapper`, `RequestAuthMapper`, `RequestBodyMapper`, `RequestHeaderMapper`, `RequestHistoryMapper`, `RequestMapper`, `RequestParamMapper`, `RequestScriptMapper`, `RunResultMapper`
+
+### Relay Mappers (`com.codeops.relay.dto.mapper`)
+`ChannelMapper`, `ChannelMemberMapper`, `DirectConversationMapper`, `DirectMessageMapper`, `FileAttachmentMapper`, `MessageMapper`, `MessageThreadMapper`, `PinnedMessageMapper`, `PlatformEventMapper`, `ReactionMapper`, `UserPresenceMapper`
+
+### Fleet Mappers (`com.codeops.fleet.dto.mapper`)
+Various fleet entity mappers (per `FleetMapperTest`).
+
+### MCP Mappers (`com.codeops.mcp.dto.mapper`)
+`McpMapper` (per `McpMapperTest`).
+
+### Registry Mappers
+Registry subsystem mappers (per registry controller/service tests).
+
+**Note:** Known `boolean isXxx` → Lombok/MapStruct mapping issue. Fields `isShared`, `isEnabled`, `isSecret`, `isActive` require explicit `@Mapping(target = "isShared", source = "shared")` on mapper methods due to JavaBeans `isXxx()` naming convention stripping the `is` prefix.
 
 ---
 
 ## 15. Utility Classes & Shared Components
 
-#### AppConstants
-**File:** `src/main/java/com/codeops/config/AppConstants.java`
-Final class with 300+ `public static final` constants. Key values: `MAX_TEAM_MEMBERS=50`, `MAX_PROJECTS_PER_TEAM=100`, `JWT_EXPIRY_HOURS=24`, `REFRESH_TOKEN_EXPIRY_DAYS=30`, `INVITATION_EXPIRY_DAYS=7`, `MIN_PASSWORD_LENGTH=1`, `DEFAULT_PAGE_SIZE=20`, `MAX_PAGE_SIZE=100`, `MAX_CONCURRENT_AGENTS=5`, `AGENT_TIMEOUT_MINUTES=15`, `DEFAULT_HEALTH_SCORE=100`, `MAX_REPORT_SIZE_MB=25`, `MAX_SPEC_FILE_SIZE_MB=50`. Also contains module-specific constants (Courier, Fleet, Logger, Registry, Relay, MCP prefixes and limits).
+**`AppConstants`** (`config/AppConstants.java`): Final class; all `public static final`. Defines: team limits (`MAX_TEAM_MEMBERS=50`, `MAX_PROJECTS_PER_TEAM=100`, `MAX_PERSONAS_PER_TEAM=50`, `MAX_DIRECTIVES_PER_PROJECT=20`), file size limits, auth constants (`JWT_EXPIRY_HOURS=24`, `REFRESH_TOKEN_EXPIRY_DAYS=30`, `MIN_PASSWORD_LENGTH=1`), S3 prefixes, QA constants, pagination defaults, port ranges, Registry constants, Logger constants, Courier constants, Relay constants, Fleet constants, MCP constants.
 
-#### SecurityUtils
-**File:** `src/main/java/com/codeops/security/SecurityUtils.java`
-Static methods: `getCurrentUserId()`: UUID, `hasRole(String)`: boolean, `isAdmin()`: boolean.
+**`RequestCorrelationFilter`** (`config/RequestCorrelationFilter.java`): Injects `correlationId` and `userId` into MDC on each request for structured logging.
 
-#### SlugUtils
-**File:** `src/main/java/com/codeops/registry/util/SlugUtils.java`
-Static methods: `generateSlug(String name)`: String (lowercase, hyphenated, validated), `makeUnique(String, Predicate)`: String (appends -2, -3...), `validateSlug(String)`: void (throws ValidationException).
+**`LoggingInterceptor`** (`config/LoggingInterceptor.java`): `HandlerInterceptor` — logs HTTP method, URI, duration, status at DEBUG level.
+
+**`AsyncConfig`** (`config/AsyncConfig.java`): `ThreadPoolTaskExecutor` with 5 core / 20 max / 100-queue, `codeops-async-` prefix, `CallerRunsPolicy` rejection. `AsyncUncaughtExceptionHandler` logs at ERROR.
+
+**`CorsConfig`** (`config/CorsConfig.java`): Configures allowed origins from `${codeops.cors.allowed-origins}`.
+
+**`JacksonConfig`** (`config/JacksonConfig.java`): `LenientInstantDeserializer` — accepts ISO-8601 timestamps without timezone; interprets as UTC. Registered via `Jackson2ObjectMapperBuilderCustomizer`.
+
+**`KafkaConsumerConfig`** (`config/KafkaConsumerConfig.java`): `ConsumerFactory` with String key/value deserializers. `ConcurrentKafkaListenerContainerFactory` with `DefaultErrorHandler` (3 retries, 1s fixed backoff).
+
+**`DataSeeder`** (`config/DataSeeder.java`): Seeds system personas and default directives on startup.
+
+**`HealthController`** (`config/HealthController.java`): `GET /api/v1/health` — public endpoint returning 200 OK.
+
+**`PageResponse<T>`**: Generic record for paginated responses: `List<T> content`, `int page`, `int size`, `long totalElements`, `int totalPages`, `boolean last`.
+
+**`SlugUtils`** (`registry/util/SlugUtils.java`): Slug generation and validation for service registry.
 
 ---
 
 ## 16. Database Schema (Live)
 
-84 tables in `public` schema. PostgreSQL 16. Managed by Hibernate `ddl-auto: update`.
+**Database:** PostgreSQL 16 (`public` schema). 84 tables. Managed by Hibernate `ddl-auto: update` (dev) / `validate` (prod).
 
-**Core (27 tables):** `users`, `teams`, `team_members`, `invitations`, `projects`, `project_directives`, `directives`, `personas`, `specifications`, `findings`, `compliance_items`, `remediation_tasks`, `remediation_task_findings` (join table), `bug_investigations`, `dependency_scans`, `dependency_vulnerabilities`, `tech_debt_items`, `qa_jobs`, `agent_runs`, `health_schedules`, `health_snapshots`, `github_connections`, `jira_connections`, `notification_preferences`, `system_settings`, `audit_log`, `mfa_email_codes`
+**All 84 Tables:**
+`agent_runs`, `alert_channels`, `alert_history`, `alert_rules`, `anomaly_baselines`, `api_route_registrations`, `audit_log`, `bug_investigations`, `channel_members`, `channels`, `code_snippet_templates`, `collection_shares`, `collections`, `compliance_items`, `config_templates`, `dashboard_widgets`, `dashboards`, `dependency_scans`, `dependency_vulnerabilities`, `direct_conversations`, `direct_messages`, `directives`, `environment_configs`, `environment_variables`, `environments`, `file_attachments`, `findings`, `folders`, `forks`, `github_connections`, `global_variables`, `health_schedules`, `health_snapshots`, `infra_resources`, `invitations`, `jira_connections`, `log_entries`, `log_sources`, `log_traps`, `merge_requests`, `message_threads`, `messages`, `metric_series`, `metrics`, `mfa_email_codes`, `notification_preferences`, `personas`, `pinned_messages`, `platform_events`, `port_allocations`, `port_ranges`, `project_directives`, `projects`, `qa_jobs`, `query_history`, `reactions`, `read_receipts`, `remediation_task_findings`, `remediation_tasks`, `request_auths`, `request_bodies`, `request_headers`, `request_history`, `request_params`, `request_scripts`, `requests`, `retention_policies`, `run_iterations`, `run_results`, `saved_queries`, `service_dependencies`, `service_registrations`, `solution_members`, `solutions`, `specifications`, `system_settings`, `team_members`, `teams`, `tech_debt_items`, `trace_spans`, `trap_conditions`, `user_presences`, `users`, `workstation_profiles`
 
-**Courier (18 tables):** `collections`, `collection_shares`, `folders`, `requests`, `request_auths`, `request_bodies`, `request_headers`, `request_params`, `request_scripts`, `request_history`, `environments`, `environment_variables`, `global_variables`, `run_results`, `run_iterations`, `forks`, `merge_requests`, `code_snippet_templates`
-
-**Fleet (14 tables):** `fleet_service_profiles`, `container_instances`, `container_logs`, `container_health_check`, `network_configs`, `volume_mounts`, `port_mappings`, `fleet_environment_variables`, `solution_profiles`, `solution_services`, `workstation_profiles`, `workstation_solutions`, `deployment_records`, `deployment_containers`
-
-**Logger (16 tables):** `log_sources`, `log_entries`, `log_traps`, `trap_conditions`, `metrics`, `metric_series`, `dashboards`, `dashboard_widgets`, `alert_rules`, `alert_channels`, `alert_history`, `anomaly_baselines`, `saved_queries`, `query_history`, `retention_policies`, `trace_spans`
-
-**MCP (8 tables):** `mcp_sessions`, `session_results`, `session_tool_calls`, `developer_profiles`, `project_documents`, `project_document_versions`, `mcp_api_tokens`, `activity_feed_entries`
-
-**Registry (8 tables):** `service_registrations`, `service_dependencies`, `api_route_registrations`, `solutions`, `solution_members`, `infra_resources`, `environment_configs`, `config_templates`
-
-**Relay (12 tables):** `channels`, `channel_members`, `messages`, `message_threads`, `direct_conversations`, `direct_messages`, `file_attachments`, `reactions`, `pinned_messages`, `read_receipts`, `user_presences`, `platform_events`
+**Notable Index Coverage:** `agent_runs(job_id)`, `audit_log(user_id, team_id)`, `compliance_items(job_id)`, `dependency_scans(project_id)`, `dependency_vulnerabilities(scan_id)`, `directives(team_id)`, `findings(job_id, status)`, `health_schedules(project_id)`, `health_snapshots(project_id)`, `invitations(team_id, email)`, `notification_preferences(user_id)`, `personas(team_id)`, `projects(team_id)`, `qa_jobs(project_id, started_by)`, `remediation_tasks(job_id)`, `tech_debt_items(project_id)`, `team_members(team_id, user_id)`.
 
 ---
 
 ## 17. Message Broker Configuration
 
-```
-Broker: Kafka (Confluent 7.5.0)
-Connection: localhost:9094 (internal: 29092)
-Group ID: codeops-server
-Auto Offset Reset: earliest
-Deserialization: String/String
+**Kafka:** Apache Kafka 7.5.0 via Confluent CP. Bootstrap: `localhost:9094` (dev), `localhost:9092` (docker internal `29092`).
 
-Topics (created by kafka-init):
-  - codeops.core.decision.created
-  - codeops.core.decision.resolved
-  - codeops.core.decision.escalated
-  - codeops.core.outcome.created
-  - codeops.core.outcome.validated
-  - codeops.core.outcome.invalidated
-  - codeops.core.hypothesis.created
-  - codeops.core.hypothesis.concluded
-  - codeops.integrations.sync
-  - codeops.notifications
+**Consumer:** `KafkaConsumerConfig` — group `codeops-server`, StringDeserializer, earliest offset, 3 retries with 1s backoff.
 
-Consumer Config (KafkaConsumerConfig):
-  - @EnableKafka
-  - DefaultErrorHandler with 3 retries, 1s backoff
-  - StringDeserializer for keys and values
-```
+**Active Consumer:**
+- `KafkaLogConsumer` (`logger` subsystem) — `@KafkaListener` on `codeops-logs` and/or `codeops-metrics` topics (topic from `AppConstants.KAFKA_LOG_TOPIC`, `KAFKA_METRICS_TOPIC`).
 
-No `@KafkaListener` methods detected in source code. Topics are declared and infrastructure is provisioned but consumers are not yet implemented.
+**Defined Topics (docker `kafka-init`):**
+`codeops.core.decision.created`, `.resolved`, `.escalated`, `codeops.core.outcome.created`, `.validated`, `.invalidated`, `codeops.core.hypothesis.created`, `.concluded`, `codeops.integrations.sync`, `codeops.notifications`
+
+**Note:** The defined Kafka topics in `docker-compose.yml` (`codeops.core.*`) do not match `AppConstants` topic constants (`codeops-logs`, `codeops-metrics`). The logger subsystem consumes from `AppConstants`-defined topics. The `codeops.core.*` topics appear defined for future use.
 
 ---
 
 ## 18. Cache Layer
 
-Redis 7 Alpine is declared in `docker-compose.yml` (port 6379, AOF persistence) but **no Redis client dependency** exists in `pom.xml` and **no `@Cacheable`, `@CacheEvict`, or `CacheManager`** usage found in source code.
-
-In-memory caching:
-- `TokenBlacklistService`: `ConcurrentHashMap<String, Instant>` for JWT blacklist
-- `RateLimitFilter`: `ConcurrentHashMap<String, RateWindow>` for rate limiting
-
-No Redis or distributed caching layer detected in application code.
+**No caching framework configured.** No `@Cacheable`, `@CacheEvict`, or `CacheManager` beans found in source. Redis is provisioned in `docker-compose.yml` (port 6379) but is not wired into the Spring application. In-memory caching is used only for:
+- `TokenBlacklistService`: `ConcurrentHashMap<String, Instant>` (JTI blacklist)
+- `RateLimitFilter`: `ConcurrentHashMap<String, RateWindow>` (auth rate limiting)
+- `McpSecurityService`: `ConcurrentHashMap<UUID, List<Long>>` (MCP tool call rate limiting)
 
 ---
 
 ## 19. Environment Variable Inventory
 
-| Variable | Used In | Default | Required in Prod |
-|----------|---------|---------|------------------|
-| `DATABASE_URL` | application-prod.yml | localhost:5432/codeops | YES |
-| `DATABASE_USERNAME` | application-prod.yml | codeops | YES |
-| `DATABASE_PASSWORD` | application-prod.yml | codeops | YES |
-| `JWT_SECRET` | application-dev/prod.yml | dev fallback (32+ chars) | YES |
-| `ENCRYPTION_KEY` | application-dev/prod.yml | dev fallback (32+ chars) | YES |
-| `CORS_ALLOWED_ORIGINS` | application-prod.yml | localhost:3000 | YES |
-| `S3_BUCKET` | application-prod.yml | codeops-dev | YES |
-| `AWS_REGION` | application-prod.yml | (none) | YES |
-| `MAIL_FROM_EMAIL` | application-prod.yml | noreply@codeops.dev | YES |
-| `codeops.aws.s3.enabled` | S3Config.java, S3StorageService | false | NO (optional) |
-| `codeops.fleet.docker.host` | DockerConfig.java | unix:///var/run/docker.sock | NO |
-| `codeops.fleet.docker.api-version` | DockerConfig.java | v1.43 | NO |
+| Variable | Profile | Required | Purpose |
+|---|---|---|---|
+| `JWT_SECRET` | dev/prod | YES | JWT HMAC signing key (min 32 chars) |
+| `ENCRYPTION_KEY` | prod | YES | AES-256-GCM encryption key |
+| `DATABASE_URL` | prod | YES | PostgreSQL JDBC URL |
+| `DATABASE_USERNAME` | prod | YES | DB username |
+| `DATABASE_PASSWORD` | prod | YES | DB password |
+| `CORS_ALLOWED_ORIGINS` | prod | YES | Comma-separated allowed origins |
+| `AWS_REGION` | prod | YES | AWS region for S3 |
+| `S3_BUCKET` | prod | YES | S3 bucket name |
+| `MAIL_FROM_EMAIL` | prod | YES | SES sender address |
+| `DB_USERNAME` | dev | NO | Dev DB username (default: `codeops`) |
+| `DB_PASSWORD` | dev | NO | Dev DB password (default: `codeops`) |
+
+**Dev Hardcoded Values (not for production):**
+- `JWT_SECRET` default: `dev-secret-key-minimum-32-characters-long-for-hs256`
+- `ENCRYPTION_KEY` default: `dev-only-encryption-key-minimum-32ch`
+- `CORS` default: `http://localhost:3000,http://localhost:5173`
 
 ---
 
 ## 20. Service Dependency Map
 
 ```
-This Service → Depends On
---------------------------
-PostgreSQL 16: localhost:5432 (required)
-Kafka: localhost:9094 (required for startup, consumers not implemented)
-Redis: localhost:6379 (declared but unused)
-Docker Engine: tcp://localhost:2375 (Fleet module, optional)
-AWS S3: Optional (disabled in dev, fallback to local filesystem)
-SMTP Server: Optional (disabled in dev, logged to console)
-Microsoft Teams: Webhook URLs (outbound, SSRF-protected)
-```
+AuthController → AuthService → UserRepository, JwtTokenProvider, PasswordEncoder,
+                               TeamMemberRepository, MfaEmailCodeRepository, EmailService
 
-Standalone service — no inter-service HTTP dependencies. CodeOps-Client (Flutter desktop app) consumes this API. CodeOps-Analytics (port 8081) is a separate service.
+TeamController → TeamService → TeamRepository, TeamMemberRepository,
+                               UserRepository, InvitationRepository
+
+ProjectController → ProjectService → ProjectRepository, TeamMemberRepository,
+                                     UserRepository, TeamRepository,
+                                     GitHubConnectionRepository, JiraConnectionRepository,
+                                     (10 other repos for cascade delete)
+
+JobController → QaJobService, AgentRunService, BugInvestigationService
+              → QaJobRepository, AgentRunRepository, BugInvestigationRepository
+
+FindingController → FindingService → FindingRepository
+
+JwtAuthFilter → JwtTokenProvider → JwtProperties, TokenBlacklistService
+McpTokenAuthFilter → DeveloperProfileService, McpSecurityService, TeamMemberRepository
+SecurityConfig → JwtAuthFilter, McpTokenAuthFilter, RateLimitFilter, RequestCorrelationFilter
+
+EncryptionService ← GitHubConnectionService, JiraConnectionService
+
+AuditLogService (@Async) → AuditLogRepository, UserRepository, TeamRepository
+
+S3StorageService ← ReportStorageService ← JobController/ReportController
+
+Kafka Consumer: KafkaLogConsumer → LogEntry/MetricSeries persistence (Logger subsystem)
+```
 
 ---
 
 ## 21. Known Technical Debt & Issues
 
-| Issue | Location | Severity | Notes |
-|-------|----------|----------|-------|
-| TODO: Key rotation | EncryptionService.java:56 | CRITICAL | Comment indicates key rotation not implemented |
-| TODO: Docker config | DockerConfig.java:17 | CRITICAL | Configuration placeholder |
-| "not yet implemented" | RetentionExecutor.java:82 | CRITICAL | Incomplete implementation |
-| "not yet implemented" | S3StorageService.java:157 | CRITICAL | Incomplete implementation |
-| Redis declared but unused | docker-compose.yml | Medium | Infrastructure cost with no app benefit |
-| Kafka consumers not implemented | KafkaConsumerConfig.java | Medium | 10 topics provisioned, no @KafkaListener |
-| TokenBlacklistService in-memory | TokenBlacklistService.java | Medium | Lost on restart, not cluster-safe |
-| RateLimitFilter in-memory | RateLimitFilter.java | Medium | Not cluster-safe |
-| MIN_PASSWORD_LENGTH = 1 | AppConstants.java | Low | Dev convenience, must increase for prod |
-| System.out/printStackTrace usage | 4 occurrences | Low | Should use SLF4J |
-| Field injection (2 instances) | S3StorageService, 1 other | Low | Should use constructor injection |
-| 63 Snyk dependency vulnerabilities | pom.xml dependencies | CRITICAL | 5 critical, 28 high — see Section 22 |
-| Doc coverage gaps (classes) | 48 undocumented classes | CRITICAL | 269/317 = 84.9% (BLOCKING) |
-| Doc coverage gaps (methods) | 612 undocumented methods | CRITICAL | 373/985 = 37.9% (BLOCKING) |
+### TODO / FIXME Scan Results
+
+| File | Line | Issue |
+|---|---|---|
+| `EncryptionService.java` | 56 | `TODO: Changing key derivation invalidates existing encrypted data — requires re-encryption migration` |
+| `fleet/config/DockerConfig.java` | 17 | `TODO: Add junixsocket-common dependency` for Docker Unix socket support |
+
+**Note:** All other "placeholder" hits in the scan are in Javadoc comments describing `{{variable}}` substitution syntax in `CodeGenerationService` and `VariableService` — not actual code defects.
+
+### Architectural Observations
+
+1. **TokenBlacklistService is in-memory only** — JWT revocations (logout) are lost on server restart. Redis is provisioned but not wired. This is a security gap in production.
+
+2. **Manual cascade delete in `ProjectService.deleteProject()`** — 14 manual repository delete calls in FK-safe order rather than JPA cascade configuration. Fragile — any new child entity would require a code change.
+
+3. **Kafka topic mismatch** — Topics in `docker-compose.yml` (`codeops.core.decision.created` etc.) do not match `AppConstants` Logger topic constants (`codeops-logs`, `codeops-metrics`). The `codeops.core.*` topics appear unused by any current `@KafkaListener`.
+
+4. **Redis provisioned but unused** — Redis container runs but no `CacheManager` or Spring Data Redis is configured. Rate limiting and token blacklist use in-memory maps instead.
+
+5. **`AppConstants.MIN_PASSWORD_LENGTH = 1`** — Minimal password requirement (length 1) with upper, lower, digit, and special char requirements applied only in `AuthService`. Production environments may need stronger defaults.
+
+6. **`open-in-view: false`** — Correctly disabled (no N+1 via lazy loading in presentation layer), but services use LAZY fetch throughout. Careful attention needed for any lazy-loading outside of transactions.
+
+7. **Fleet Docker host `tcp://localhost:2375`** — Unauthenticated TCP Docker socket configured in dev. Requires TLS configuration for production.
 
 ---
 
-## 22. Security Vulnerability Scan (Snyk)
+## 22. Security Vulnerability Scan
 
-Scan Date: 2026-02-28T21:02:36Z
-Snyk CLI Version: Latest
+**Snyk:** Not installed. Manual assessment only.
 
-### Dependency Vulnerabilities (Open Source)
-Critical: 5
-High: 28
-Medium: 21
-Low: 9
-Total unique: 63
+| Finding | Severity | Notes |
+|---|---|---|
+| `JWT_SECRET` has dev default | HIGH | Default `dev-secret-key-...` in `application-dev.yml`. Prod requires env var override. Enforced by `@PostConstruct` validation (32-char min). |
+| `ENCRYPTION_KEY` dev hardcoded | HIGH | `dev-only-encryption-key-minimum-32ch` in dev profile. No enforcement beyond minimum length. |
+| TokenBlacklistService in-memory | MEDIUM | Logout revocations lost on restart. Redis not wired. |
+| MFA safety fallback bypass | MEDIUM | `AuthService.login()` logs ERROR but bypasses MFA if `mfaEnabled=true` but `mfaSecret=null`. Intentional defensive behavior but should alert operations. |
+| Docker API unauthenticated TCP | MEDIUM | `tcp://localhost:2375` in dev config. Production must use TLS. |
+| Rate limit in-memory | LOW | `RateLimitFilter` and `McpSecurityService` rate buckets reset on server restart. Redis would provide persistence and multi-instance support. |
+| Swagger UI publicly accessible | INFO | `/swagger-ui/**` and `/v3/api-docs/**` are in `permitAll()`. Intentional for dev; should be restricted in prod. |
+| X-Forwarded-For trusted blindly | LOW | `RateLimitFilter` trusts first `X-Forwarded-For` value without validation. Can be spoofed if no reverse proxy is present. |
 
-| Severity | Package | Version | Vulnerability | Fix Available |
-|----------|---------|---------|---------------|---------------|
-| CRITICAL | tomcat-embed-core | 10.1.24 | Uncaught Exception | 9.0.96 |
-| CRITICAL | tomcat-embed-core | 10.1.24 | TOCTOU Race Condition (x2) | 9.0.98 |
-| CRITICAL | spring-security-web | 6.3.0 | Missing Authorization | 5.7.13 |
-| CRITICAL | spring-security-crypto | 6.3.0 | Authentication Bypass | 6.3.8 |
-| HIGH | netty-codec-http2 | 4.1.110 | Resource Allocation / Data Amplification | 4.1.125 |
-| HIGH | netty-codec-http | 4.1.110 | HTTP Request Smuggling / Data Amplification | 4.1.125 |
-| HIGH | netty-handler | 4.1.110 | Input Validation | 4.1.118 |
-| HIGH | commons-lang3 | 3.14.0 | Uncontrolled Recursion | 3.18.0 |
-| HIGH | kafka-clients | 3.7.0 | SSRF / Deserialization (x3) / Auth Algorithm | 3.9.1 |
-| HIGH | tomcat-embed-core | 10.1.24 | Multiple (10 HIGH) | Various |
-| HIGH | lz4-java | 1.8.0 | Out-of-bounds Read / Info Leak | 1.8.1 |
-| HIGH | spring-beans | 6.1.8 | Path Traversal | 6.2.10 |
-| HIGH | spring-core | 6.1.8 | Incorrect Authorization | 6.2.11 |
-| HIGH | spring-webmvc | 6.1.8 | Path Traversal (x2) | 6.1.13/14 |
-| MEDIUM | logback-core | 1.5.6 | Multiple (2) | 1.3.15/16 |
-| MEDIUM | jcommander | 1.72 | Unsafe Dependency Resolution | 1.75 |
-| MEDIUM | Various netty/tomcat/spring | Various | Multiple (21 total) | Various |
-| LOW | Various | Various | 9 low severity | Various |
-
-### Code Vulnerabilities (SAST)
-Errors: 0
-Warnings: 0
-Notes: 0
-**PASS** — No code vulnerabilities detected.
-
-### IaC Findings
-Snyk IaC scan not available (exit code 3).
-
-**Root cause:** Spring Boot 3.3.0 ships with older transitive dependencies. Fix by upgrading Spring Boot to 3.4.x+ or overriding individual dependency versions in pom.xml.
+**Positive Security Posture:**
+- HS256 JWT with JTI blacklist support
+- BCrypt strength 12 for passwords
+- AES-256-GCM for credential encryption (GitHub PAT, Jira API token)
+- Decrypted credentials never returned in API responses
+- Per-IP rate limiting on auth endpoints
+- HSTS, CSP, X-Frame-Options, X-Content-Type-Options headers configured
+- MFA support: TOTP and Email OTP
+- `@PreAuthorize` on all protected endpoints
+- Team membership verified in service layer for all mutations
+- `@Version` optimistic locking on `QaJob`, `AgentRun`, `Finding`, `RemediationTask`, `TechDebtItem`
