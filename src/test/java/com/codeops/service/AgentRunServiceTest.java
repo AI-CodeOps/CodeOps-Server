@@ -404,6 +404,164 @@ class AgentRunServiceTest {
         assertNotNull(response.completedAt());
     }
 
+    // --- getEligibleAdversarialAgents ---
+
+    @Test
+    void getEligibleAdversarialAgents_chaosMonkey_whenTestCoveragePassed() {
+        project.setTechStack("Go 1.22");
+        project.setDescription("CLI utility");
+        AgentRun testCoverageRun = AgentRun.builder()
+                .job(job).agentType(AgentType.TEST_COVERAGE)
+                .status(AgentStatus.COMPLETED).findingsCount(0).criticalCount(0).highCount(0).build();
+        testCoverageRun.setResult(AgentResult.PASS);
+
+        when(qaJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)).thenReturn(true);
+        when(agentRunRepository.findByJobIdAndAgentType(jobId, AgentType.TEST_COVERAGE))
+                .thenReturn(Optional.of(testCoverageRun));
+
+        List<AgentType> eligible = agentRunService.getEligibleAdversarialAgents(jobId);
+
+        assertTrue(eligible.contains(AgentType.CHAOS_MONKEY),
+                "CHAOS_MONKEY should be eligible when TEST_COVERAGE passed");
+    }
+
+    @Test
+    void getEligibleAdversarialAgents_noChaosMonkey_whenTestCoverageFailed() {
+        project.setTechStack("Go 1.22");
+        project.setDescription("CLI utility");
+        AgentRun testCoverageRun = AgentRun.builder()
+                .job(job).agentType(AgentType.TEST_COVERAGE)
+                .status(AgentStatus.COMPLETED).findingsCount(0).criticalCount(0).highCount(0).build();
+        testCoverageRun.setResult(AgentResult.FAIL);
+
+        when(qaJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)).thenReturn(true);
+        when(agentRunRepository.findByJobIdAndAgentType(jobId, AgentType.TEST_COVERAGE))
+                .thenReturn(Optional.of(testCoverageRun));
+
+        List<AgentType> eligible = agentRunService.getEligibleAdversarialAgents(jobId);
+
+        assertFalse(eligible.contains(AgentType.CHAOS_MONKEY),
+                "CHAOS_MONKEY should not be eligible when TEST_COVERAGE failed");
+    }
+
+    @Test
+    void getEligibleAdversarialAgents_hostileUser_whenProjectHasApiEndpoints() {
+        project.setTechStack("Spring Boot 3.3, Java 21, PostgreSQL");
+        project.setDescription("REST API microservice");
+
+        when(qaJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)).thenReturn(true);
+        when(agentRunRepository.findByJobIdAndAgentType(jobId, AgentType.TEST_COVERAGE))
+                .thenReturn(Optional.empty());
+
+        List<AgentType> eligible = agentRunService.getEligibleAdversarialAgents(jobId);
+
+        assertTrue(eligible.contains(AgentType.HOSTILE_USER),
+                "HOSTILE_USER should be eligible for projects with API endpoints");
+        assertTrue(eligible.contains(AgentType.LOAD_SABOTEUR),
+                "LOAD_SABOTEUR should be eligible for backend API projects");
+    }
+
+    @Test
+    void getEligibleAdversarialAgents_complianceAuditor_whenPiiInDescription() {
+        project.setTechStack("Node.js, Express");
+        project.setDescription("Healthcare service handling HIPAA-regulated patient data");
+
+        when(qaJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)).thenReturn(true);
+        when(agentRunRepository.findByJobIdAndAgentType(jobId, AgentType.TEST_COVERAGE))
+                .thenReturn(Optional.empty());
+
+        List<AgentType> eligible = agentRunService.getEligibleAdversarialAgents(jobId);
+
+        assertTrue(eligible.contains(AgentType.COMPLIANCE_AUDITOR),
+                "COMPLIANCE_AUDITOR should be eligible for projects handling HIPAA data");
+    }
+
+    @Test
+    void getEligibleAdversarialAgents_empty_whenNoIndicators() {
+        project.setTechStack("Haskell");
+        project.setDescription("Pure math library");
+
+        when(qaJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)).thenReturn(true);
+        when(agentRunRepository.findByJobIdAndAgentType(jobId, AgentType.TEST_COVERAGE))
+                .thenReturn(Optional.empty());
+
+        List<AgentType> eligible = agentRunService.getEligibleAdversarialAgents(jobId);
+
+        assertTrue(eligible.isEmpty(),
+                "No adversarial agents should be eligible for a project with no matching indicators");
+    }
+
+    @Test
+    void getEligibleAdversarialAgents_jobNotFound_throws() {
+        when(qaJobRepository.findById(jobId)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> agentRunService.getEligibleAdversarialAgents(jobId));
+    }
+
+    @Test
+    void getEligibleAdversarialAgents_notTeamMember_throws() {
+        when(qaJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class,
+                () -> agentRunService.getEligibleAdversarialAgents(jobId));
+    }
+
+    @Test
+    void createAgentRun_withAdversarialType_success() {
+        AgentRun adversarialRun = AgentRun.builder()
+                .job(job).agentType(AgentType.CHAOS_MONKEY)
+                .status(AgentStatus.PENDING).findingsCount(0).criticalCount(0).highCount(0).build();
+        adversarialRun.setId(UUID.randomUUID());
+        adversarialRun.setCreatedAt(Instant.now());
+
+        CreateAgentRunRequest request = new CreateAgentRunRequest(jobId, AgentType.CHAOS_MONKEY);
+
+        when(qaJobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)).thenReturn(true);
+        when(agentRunRepository.save(any(AgentRun.class))).thenReturn(adversarialRun);
+
+        AgentRunResponse response = agentRunService.createAgentRun(request);
+
+        assertNotNull(response);
+        assertEquals(AgentType.CHAOS_MONKEY, response.agentType());
+        assertEquals(AgentStatus.PENDING, response.status());
+    }
+
+    // --- heuristic helper tests ---
+
+    @Test
+    void hasApiOrUiIndicators_matchesTechStackKeywords() {
+        assertTrue(AgentRunService.hasApiOrUiIndicators("", "rest api service"));
+        assertTrue(AgentRunService.hasApiOrUiIndicators("react, node.js", ""));
+        assertTrue(AgentRunService.hasApiOrUiIndicators("flutter", ""));
+        assertTrue(AgentRunService.hasApiOrUiIndicators("", "graphql endpoint"));
+        assertFalse(AgentRunService.hasApiOrUiIndicators("haskell", "math library"));
+    }
+
+    @Test
+    void hasComplianceIndicators_matchesComplianceKeywords() {
+        assertTrue(AgentRunService.hasComplianceIndicators("", "handles pii data"));
+        assertTrue(AgentRunService.hasComplianceIndicators("", "hipaa regulated"));
+        assertTrue(AgentRunService.hasComplianceIndicators("", "payment processing"));
+        assertFalse(AgentRunService.hasComplianceIndicators("go", "utility tool"));
+    }
+
+    @Test
+    void hasBackendApiIndicators_matchesBackendKeywords() {
+        assertTrue(AgentRunService.hasBackendApiIndicators("spring boot 3.3", ""));
+        assertTrue(AgentRunService.hasBackendApiIndicators("express", ""));
+        assertTrue(AgentRunService.hasBackendApiIndicators("django", ""));
+        assertTrue(AgentRunService.hasBackendApiIndicators("", "microservice for orders"));
+        assertFalse(AgentRunService.hasBackendApiIndicators("haskell", "pure library"));
+    }
+
     private void setSecurityContext(UUID userId) {
         var auth = new UsernamePasswordAuthenticationToken(userId, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);

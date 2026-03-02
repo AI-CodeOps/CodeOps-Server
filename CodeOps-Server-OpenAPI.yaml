@@ -21851,6 +21851,10 @@ components:
       - PERFORMANCE
       - DEPENDENCY
       - ARCHITECTURE
+      - CHAOS_MONKEY
+      - HOSTILE_USER
+      - COMPLIANCE_AUDITOR
+      - LOAD_SABOTEUR
     AlertChannelResponse:
       type: object
       properties:

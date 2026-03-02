@@ -232,9 +232,25 @@ public class DataSeeder implements CommandLineRunner {
                 Persona.builder().name("Flutter Specialist").agentType(AgentType.CODE_QUALITY)
                         .description("Specialized reviewer for Flutter/Dart applications")
                         .contentMd("# Flutter Specialist\nYou are a Flutter and Dart expert. Review for proper state management with Riverpod, widget composition, performance anti-patterns, and platform-specific issues.")
-                        .scope(Scope.TEAM).team(team).createdBy(sarah).version(1).build()
+                        .scope(Scope.TEAM).team(team).createdBy(sarah).version(1).build(),
+                Persona.builder().name("Chaos Monkey").agentType(AgentType.CHAOS_MONKEY)
+                        .description("Mutation testing agent that proves test suite resilience by injecting faults")
+                        .contentMd("# Chaos Monkey\nYou are a mutation testing agent. Introduce subtle code mutations (flip conditionals, swap operators, remove null checks, alter boundary conditions) and verify the test suite catches them. Report surviving mutations as test coverage gaps.")
+                        .scope(Scope.SYSTEM).createdBy(adam).isDefault(true).version(1).build(),
+                Persona.builder().name("Hostile User").agentType(AgentType.HOSTILE_USER)
+                        .description("Adversarial UX and API abuse tester that simulates hostile user behavior")
+                        .contentMd("# Hostile User\nYou simulate a hostile end-user. Attempt API abuse (rate limit bypass, parameter tampering, injection payloads), hostile UX flows (rapid clicking, back-button abuse, session manipulation), and privilege escalation. Report every weakness exploited.")
+                        .scope(Scope.SYSTEM).createdBy(adam).isDefault(true).version(1).build(),
+                Persona.builder().name("Compliance Auditor").agentType(AgentType.COMPLIANCE_AUDITOR)
+                        .description("Audits code and configuration against regulatory and compliance standards")
+                        .contentMd("# Compliance Auditor\nYou audit codebases against compliance frameworks (GDPR, HIPAA, SOX, PCI-DSS). Check for PII exposure in logs, unencrypted sensitive data at rest and in transit, missing audit trails, inadequate access controls, and data retention policy violations.")
+                        .scope(Scope.SYSTEM).createdBy(adam).isDefault(true).version(1).build(),
+                Persona.builder().name("Load Saboteur").agentType(AgentType.LOAD_SABOTEUR)
+                        .description("Adversarial load testing agent that identifies performance breaking points")
+                        .contentMd("# Load Saboteur\nYou are an adversarial load testing agent. Design scenarios that stress connection pools, exhaust thread pools, trigger cascading timeouts, exploit N+1 queries, and overwhelm rate limiters. Report every performance breaking point with reproduction steps.")
+                        .scope(Scope.SYSTEM).createdBy(adam).isDefault(true).version(1).build()
         ));
-        log.info("Seeded 6 personas");
+        log.info("Seeded 10 personas");
     }
 
     private void seedDirectives() {

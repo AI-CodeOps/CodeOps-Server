@@ -4,6 +4,8 @@ import com.codeops.dto.request.CreateAgentRunRequest;
 import com.codeops.dto.request.UpdateAgentRunRequest;
 import com.codeops.dto.response.AgentRunResponse;
 import com.codeops.entity.AgentRun;
+import com.codeops.entity.Project;
+import com.codeops.entity.enums.AgentResult;
 import com.codeops.entity.enums.AgentStatus;
 import com.codeops.entity.enums.AgentType;
 import com.codeops.repository.AgentRunRepository;
@@ -18,8 +20,11 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Manages the lifecycle of agent runs within QA jobs, including creation, retrieval, and status updates.
@@ -179,6 +184,106 @@ public class AgentRunService {
             log.info("Agent run completed: id={}, status={}, score={}, findingsCount={}", agentRunId, run.getStatus(), run.getScore(), run.getFindingsCount());
         }
         return mapToResponse(run);
+    }
+
+    /**
+     * Determines which Tier 3 (adversarial) agent types are eligible to run for a given QA job
+     * based on the job's current agent run results and the project's characteristics.
+     *
+     * <p>Eligibility rules:</p>
+     * <ul>
+     *   <li>{@link AgentType#CHAOS_MONKEY} — Only when the {@link AgentType#TEST_COVERAGE} worker
+     *       has completed with a {@link AgentResult#PASS} result.</li>
+     *   <li>{@link AgentType#HOSTILE_USER} — When the project has API endpoints or UI components
+     *       (determined by tech stack and description heuristics).</li>
+     *   <li>{@link AgentType#COMPLIANCE_AUDITOR} — When the project handles PII, financial data,
+     *       or has compliance-related requirements.</li>
+     *   <li>{@link AgentType#LOAD_SABOTEUR} — When the project is a backend service with API endpoints.</li>
+     * </ul>
+     *
+     * @param jobId the UUID of the QA job to evaluate
+     * @return a list of eligible adversarial agent types (may be empty)
+     * @throws EntityNotFoundException if the referenced job does not exist
+     * @throws AccessDeniedException if the current user is not a member of the job's team
+     */
+    @Transactional(readOnly = true)
+    public List<AgentType> getEligibleAdversarialAgents(UUID jobId) {
+        log.debug("getEligibleAdversarialAgents called with jobId={}", jobId);
+        var job = qaJobRepository.findById(jobId)
+                .orElseThrow(() -> new EntityNotFoundException("Job not found"));
+        verifyTeamMembership(job.getProject().getTeam().getId());
+
+        Project project = job.getProject();
+        List<AgentType> eligible = new ArrayList<>();
+
+        // CHAOS_MONKEY: spawn only when TEST_COVERAGE worker confirms all tests pass
+        agentRunRepository.findByJobIdAndAgentType(jobId, AgentType.TEST_COVERAGE)
+                .filter(run -> run.getStatus() == AgentStatus.COMPLETED
+                        && run.getResult() == AgentResult.PASS)
+                .ifPresent(run -> eligible.add(AgentType.CHAOS_MONKEY));
+
+        String techStack = project.getTechStack() != null
+                ? project.getTechStack().toLowerCase(Locale.ROOT) : "";
+        String description = project.getDescription() != null
+                ? project.getDescription().toLowerCase(Locale.ROOT) : "";
+
+        // HOSTILE_USER: spawn when project has API endpoints or UI components
+        if (hasApiOrUiIndicators(techStack, description)) {
+            eligible.add(AgentType.HOSTILE_USER);
+        }
+
+        // COMPLIANCE_AUDITOR: spawn when project handles PII, financial data, or compliance
+        if (hasComplianceIndicators(techStack, description)) {
+            eligible.add(AgentType.COMPLIANCE_AUDITOR);
+        }
+
+        // LOAD_SABOTEUR: spawn when project is a backend service with API endpoints
+        if (hasBackendApiIndicators(techStack, description)) {
+            eligible.add(AgentType.LOAD_SABOTEUR);
+        }
+
+        log.info("Eligible adversarial agents for jobId={}: {}", jobId, eligible);
+        return eligible;
+    }
+
+    private static final Pattern API_UI_PATTERN = Pattern.compile(
+            "rest|graphql|grpc|swagger|openapi|endpoint|api|react|angular|vue|flutter|"
+                    + "swing|javafx|ui|frontend|web\\s*app|mobile",
+            Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern COMPLIANCE_PATTERN = Pattern.compile(
+            "pii|gdpr|hipaa|sox|pci|financial|payment|billing|healthcare|"
+                    + "compliance|regulated|phi|ferpa|personal\\s*data|credit\\s*card",
+            Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern BACKEND_API_PATTERN = Pattern.compile(
+            "spring\\s*boot|express|fastify|django|flask|rails|"
+                    + "gin|chi|fiber|actix|axum|nest|koa|hapi|"
+                    + "microservice|backend|server|api\\s*gateway|rest\\s*api",
+            Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Checks if project indicators suggest it has API endpoints or UI components.
+     */
+    static boolean hasApiOrUiIndicators(String techStack, String description) {
+        return API_UI_PATTERN.matcher(techStack).find()
+                || API_UI_PATTERN.matcher(description).find();
+    }
+
+    /**
+     * Checks if project indicators suggest it handles PII, financial data, or compliance requirements.
+     */
+    static boolean hasComplianceIndicators(String techStack, String description) {
+        return COMPLIANCE_PATTERN.matcher(techStack).find()
+                || COMPLIANCE_PATTERN.matcher(description).find();
+    }
+
+    /**
+     * Checks if project indicators suggest it is a backend service with API endpoints.
+     */
+    static boolean hasBackendApiIndicators(String techStack, String description) {
+        return BACKEND_API_PATTERN.matcher(techStack).find()
+                || BACKEND_API_PATTERN.matcher(description).find();
     }
 
     private AgentRunResponse mapToResponse(AgentRun run) {
