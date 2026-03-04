@@ -13,9 +13,16 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     open-in-view: false
+  flyway:
+    enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   kafka:
-    bootstrap-servers: localhost:9094
+    bootstrap-servers: localhost:9092
     consumer:
       group-id: codeops-server
       auto-offset-reset: earliest

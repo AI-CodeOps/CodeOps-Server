@@ -1,12 +1,12 @@
 #!/bin/bash
-# Stop CodeOps infrastructure
+# Stop CodeOps infrastructure.
+#
+# Usage: ./scripts/stop-infra.sh
 
 set -e
 
-echo "Stopping CodeOps infrastructure..."
-
 cd "$(dirname "$0")/.."
 
-docker-compose down
-
-echo "Infrastructure stopped"
+echo "Stopping CodeOps infrastructure..."
+docker compose down
+echo "Infrastructure stopped."

@@ -1,22 +1,16 @@
 #!/bin/bash
-# Reset CodeOps infrastructure (WARNING: destroys all data)
+# Reset CodeOps infrastructure — destroys all data and volumes.
+#
+# Usage: ./scripts/reset-infra.sh
 
 set -e
 
-echo "WARNING: This will destroy all data!"
-read -p "Are you sure? (y/N) " -n 1 -r
-echo
+cd "$(dirname "$0")/.."
 
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cd "$(dirname "$0")/.."
+echo "WARNING: This will destroy ALL Docker volumes (databases, Redis, Kafka)."
+echo "Proceeding in 3 seconds... (Ctrl+C to cancel)"
+sleep 3
 
-    echo "Removing containers and volumes..."
-    docker-compose down -v
-
-    echo "Starting fresh infrastructure..."
-    ./scripts/start-infra.sh
-
-    echo "Infrastructure reset complete"
-else
-    echo "Cancelled"
-fi
+echo "Removing containers and volumes..."
+docker compose down -v
+echo "Infrastructure reset complete. All data removed."

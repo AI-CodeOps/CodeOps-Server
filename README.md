@@ -19,26 +19,26 @@ CodeOps Server is the cloud backend for the CodeOps desktop application. It prov
 | API Docs | SpringDoc OpenAPI / Swagger UI |
 | Container | Docker |
 
-## Quick Start
+## Getting Started
 
 ### Prerequisites
-- Java 21 (JDK)
-- Maven 3.9+
-- Docker & Docker Compose
-- PostgreSQL 16 (via Docker Compose)
 
-### Setup
+- **Java 21** (JDK) — `java -version`
+- **Maven 3.9+** — `mvn -version`
+- **Docker & Docker Compose** — `docker compose version`
+
+### Start Infrastructure
 
 ```bash
-# Clone the repository
-git clone <repo-url>
-cd codeops-server
+# Start all Docker containers (Postgres, Redis, Zookeeper, Kafka)
+chmod +x scripts/start-infra.sh scripts/stop-infra.sh scripts/reset-infra.sh
+./scripts/start-infra.sh
+```
 
-# Start PostgreSQL
-docker-compose up -d
+### Start the Server
 
-# Build and run
-mvn clean compile
+```bash
+mvn clean compile -DskipTests
 mvn spring-boot:run
 ```
 
@@ -47,12 +47,31 @@ The server starts on **http://localhost:8090**.
 ### Verify
 
 ```bash
-# Health check (no auth required)
+# Health check
 curl http://localhost:8090/api/v1/health
 
 # Swagger UI
 open http://localhost:8090/swagger-ui/index.html
 ```
+
+### Stop / Reset
+
+```bash
+./scripts/stop-infra.sh      # Stop containers (data preserved)
+./scripts/reset-infra.sh     # Stop containers AND delete all data
+```
+
+### Port Reference
+
+| Service | Port | Credentials |
+|---------|------|-------------|
+| CodeOps Server | 8090 | — |
+| CodeOps Vault | 8097 | — |
+| PostgreSQL (Server) | 5432 | codeops / codeops / codeops |
+| PostgreSQL (Vault) | 5433 | codeops_vault / codeops_vault / codeops_vault |
+| Redis | 6379 | — |
+| Zookeeper | 2181 | — |
+| Kafka | 9092 | — |
 
 ## Environment Variables
 
