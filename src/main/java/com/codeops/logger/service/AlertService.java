@@ -93,6 +93,7 @@ public class AlertService {
      * @param teamId the team scope
      * @return list of rule responses
      */
+    @Transactional(readOnly = true)
     public List<AlertRuleResponse> getRulesByTeam(UUID teamId) {
         List<AlertRule> rules = alertRuleRepository.findByTeamId(teamId);
         return alertRuleMapper.toResponseList(rules);
@@ -106,6 +107,7 @@ public class AlertService {
      * @param size   page size
      * @return paginated rule responses
      */
+    @Transactional(readOnly = true)
     public PageResponse<AlertRuleResponse> getRulesByTeamPaged(UUID teamId, int page, int size) {
         Page<AlertRule> springPage = alertRuleRepository.findByTeamId(teamId,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));

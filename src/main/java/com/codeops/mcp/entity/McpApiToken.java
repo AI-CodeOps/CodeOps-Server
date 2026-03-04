@@ -35,7 +35,7 @@ public class McpApiToken extends BaseEntity {
     private String tokenHash;
 
     /** First 8 characters of the token for display (e.g., "mcp_a1b2..."). */
-    @Column(name = "token_prefix", nullable = false, length = 10)
+    @Column(name = "token_prefix", nullable = false, length = 20)
     private String tokenPrefix;
 
     /** Current lifecycle state of this token. */
