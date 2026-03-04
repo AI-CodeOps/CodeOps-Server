@@ -92,6 +92,7 @@ public class LogQueryService {
         // Build data query
         CriteriaQuery<LogEntry> cq = cb.createQuery(LogEntry.class);
         Root<LogEntry> root = cq.from(LogEntry.class);
+        root.fetch("source", jakarta.persistence.criteria.JoinType.LEFT);
         List<Predicate> predicates = buildStructuredPredicates(cb, root, request, teamId);
         cq.where(predicates.toArray(new Predicate[0]));
         cq.orderBy(cb.desc(root.get("timestamp")));
@@ -143,6 +144,7 @@ public class LogQueryService {
         // Data query
         CriteriaQuery<LogEntry> cq = cb.createQuery(LogEntry.class);
         Root<LogEntry> root = cq.from(LogEntry.class);
+        root.fetch("source", jakarta.persistence.criteria.JoinType.LEFT);
         List<Predicate> predicates = buildSearchPredicates(cb, root, searchTerm, teamId, startTime, endTime);
         cq.where(predicates.toArray(new Predicate[0]));
         cq.orderBy(cb.desc(root.get("timestamp")));
@@ -192,6 +194,7 @@ public class LogQueryService {
         // Data query
         CriteriaQuery<LogEntry> cq = cb.createQuery(LogEntry.class);
         Root<LogEntry> root = cq.from(LogEntry.class);
+        root.fetch("source", jakarta.persistence.criteria.JoinType.LEFT);
         Predicate dslPredicate = buildDslPredicate(cb, root, conditions);
         Predicate teamPredicate = cb.equal(root.get("teamId"), teamId);
         cq.where(cb.and(teamPredicate, dslPredicate));
