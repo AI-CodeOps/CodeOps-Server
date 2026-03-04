@@ -63,7 +63,7 @@ codeops:
   fleet:
     docker:
       host: tcp://localhost:2375
-      api-version: v1.43
+      api-version: v1.47
       connect-timeout-seconds: 5
       read-timeout-seconds: 30
 

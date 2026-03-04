@@ -128,7 +128,7 @@ start_infra() {
     fi
 
     # Start containers
-    docker-compose up -d postgres redis zookeeper kafka
+    docker-compose up -d postgres-server postgres-vault redis zookeeper kafka
 
     # Wait for services
     wait_for_postgres

@@ -23,7 +23,7 @@ public class DockerConfig {
     @Value("${codeops.fleet.docker.host:unix:///var/run/docker.sock}")
     private String dockerHost;
 
-    @Value("${codeops.fleet.docker.api-version:v1.43}")
+    @Value("${codeops.fleet.docker.api-version:v1.47}")
     private String apiVersion;
 
     @Value("${codeops.fleet.docker.connect-timeout-seconds:5}")
